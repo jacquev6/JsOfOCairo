@@ -6,49 +6,83 @@ module type S = module type of JsOfOCairo_S
 
 (* http://www.w3schools.com/tags/ref_canvas.asp *)
 
-module M = struct
-  type t = {xx: float; xy: float; yx: float; yy: float; dx: float; dy: float}
+type matrix = {
+  mutable xx: float;
+  mutable yx: float;
+  mutable xy: float;
+  mutable yy: float;
+  mutable x0: float;
+  mutable y0: float;
+}
 
-  let one = {xx=1.; xy=0.; yx=0.; yy=1.; dx=0.; dy=0.}
+module Matrix = struct
+  type t = matrix
 
-  let apply_dist {xx; xy; yx; yy; _} (x, y) =
+
+  let transform_distance' {xx; xy; yx; yy; _} (x, y) =
     let x = xx *. x +. xy *. y
     and y = yx *. x +. yy *. y
     in (x, y)
 
-  let rev_apply_dist {xx; xy; yx; yy; _} (x, y) =
+  let transform_point' ({x0; y0; _} as m) (x, y) =
+    let (x, y) = transform_distance' m (x, y) in
+    (x +. x0, y +. y0)
+
+  let rev_transform_distance' {xx; xy; yx; yy; _} (x, y) =
     let d = xx *. yy -. xy *. yx in
     let xx = yy /. d
     and xy = -. xy /. d
     and yx = -. yx /. d
     and yy = xx /. d in
-    apply_dist {xx; xy; yx; yy; dx=0.; dy=0.} (x, y)
+    transform_distance' {xx; xy; yx; yy; x0=0.; y0=0.} (x, y)
 
-  let apply_point ({dx; dy; _} as m) (x, y) =
-    let (x, y) = apply_dist m (x, y) in
-    (x +. dx, y +. dy)
+  let rev_transform_point' ({x0; y0; _} as m) (x, y) =
+    let (x, y) = (x -. x0, y -. y0) in
+    rev_transform_distance' m (x, y)
 
-  let rev_apply_point ({dx; dy; _} as m) (x, y) =
-    let (x, y) = (x -. dx, y -. dy) in
-    rev_apply_dist m (x, y)
 
-  let compose ({xx; xy; yx; yy; dx; dy} as m) {xx=xx'; xy=xy'; yx=yx'; yy=yy'; dx=dx'; dy=dy'} =
-    let (dx', dy') = apply_dist m (dx', dy') in
+  let init_identity () =
+    {xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.}
+
+  let init_translate ~x ~y =
+    {xx=1.; xy=0.; yx=0.; yy=1.; x0=x; y0=y}
+
+  let init_scale ~x ~y =
+    {xx=x; xy=0.; yx=0.; yy=y; x0=0.; y0=0.}
+
+  let init_rotate ~angle =
+    {
+      xx = Math.cos angle;
+      xy = -. Math.sin angle;
+      yx = Math.sin angle;
+      yy = Math.cos angle;
+      x0 = 0.;
+      y0 = 0.;
+    }
+
+  let transform_distance m ~dx ~dy =
+    transform_distance' m (dx, dy)
+
+  let transform_point m ~x ~y =
+    transform_point' m (x, y)
+
+  let multiply ({xx; xy; yx; yy; x0; y0} as m) {xx=xx'; xy=xy'; yx=yx'; yy=yy'; x0=x0'; y0=y0'} =
+    let (x0', y0') = transform_distance' m (x0', y0') in
     let xx = xx *. xx' +. xy *. yx'
     and xy = xx *. xy' +. xy *. yy'
     and yx = yx *. xx' +. yy *. yx'
     and yy = yx *. xy' +. yy *. yy'
-    and dx = dx +. dx'
-    and dy = dy +. dy'
-    in {xx; xy; yx; yy; dx; dy}
+    and x0 = x0 +. x0'
+    and y0 = y0 +. y0'
+    in {xx; xy; yx; yy; x0; y0}
 end
 
 type context = {
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   mutable start_point: float * float;
   mutable current_point: float * float;
-  mutable transformation: M.t;
-  mutable saved_transformations: M.t list;
+  mutable transformation: Matrix.t;
+  mutable saved_transformations: Matrix.t list;
 }
 
 let set_line_width context width =
@@ -62,7 +96,7 @@ let create ctx =
     ctx;
     start_point = (0., 0.);
     current_point = (0., 0.);
-    transformation = M.one;
+    transformation = Matrix.init_identity ();
     saved_transformations = [];
   } in
   set_line_width context 2.0;
@@ -121,45 +155,46 @@ let set_source_rgb context ~r ~g ~b =
   context.ctx##.strokeStyle := color
 
 let device_to_user context ~x ~y =
-  M.rev_apply_point context.transformation (x, y)
+  Matrix.rev_transform_point' context.transformation (x, y)
 
 let device_to_user_distance context ~x ~y =
-  M.rev_apply_dist context.transformation (x, y)
+  Matrix.rev_transform_distance' context.transformation (x, y)
 
 let user_to_device context ~x ~y =
-  M.apply_point context.transformation (x, y)
+  Matrix.transform_point' context.transformation (x, y)
 
 let user_to_device_distance context ~x ~y =
-  M.apply_dist context.transformation (x, y)
+  Matrix.transform_distance' context.transformation (x, y)
 
-let transform_state context m =
-  context.transformation <- M.compose context.transformation m;
-  context.current_point <- M.rev_apply_point m context.current_point;
-  context.start_point <- M.rev_apply_point m context.start_point
+let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
+  context.ctx##setTransform xx yx xy yy x0 y0;
+  context.current_point <-
+    context.current_point
+    |> Matrix.transform_point' context.transformation
+    |> Matrix.rev_transform_point' m;
+  context.start_point <-
+    context.start_point
+    |> Matrix.transform_point' context.transformation
+    |> Matrix.rev_transform_point' m;
+  context.transformation <- m
+
+let get_matrix context =
+  context.transformation
+
+let transform context m =
+  set_matrix context (Matrix.multiply context.transformation m)
 
 let scale context ~x ~y =
-  context.ctx##scale x y;
-  transform_state context {M.one with M.xx=x; yy=y}
+  transform context (Matrix.init_scale ~x ~y)
 
 let translate context ~x ~y =
-  context.ctx##translate x y;
-  transform_state context {M.one with M.dx=x; dy=y}
+  transform context (Matrix.init_translate ~x ~y)
 
 let rotate context ~angle =
-  context.ctx##rotate angle;
-  transform_state context {
-    M.one with
-    M.xx = Math.cos angle;
-    xy = -. Math.sin angle;
-    yx = Math.sin angle;
-    yy = Math.cos angle;
-  }
+  transform context (Matrix.init_rotate ~angle)
 
 let identity_matrix context =
-  context.current_point <- M.apply_point context.transformation context.current_point;
-  context.start_point <- M.apply_point context.transformation context.start_point;
-  context.transformation <- M.one;
-  context.ctx##setTransform 1. 0. 0. 1. 0. 0.
+  set_matrix context (Matrix.init_identity ())
 
 let save context =
   context.ctx##save;
@@ -167,17 +202,8 @@ let save context =
 
 let restore context =
   context.ctx##restore;
-  let transformation = Li.head context.saved_transformations in
-  context.current_point <-
-    context.current_point
-    |> M.apply_point context.transformation
-    |> M.rev_apply_point transformation;
-  context.start_point <-
-    context.start_point
-    |> M.apply_point context.transformation
-    |> M.rev_apply_point transformation;
+  set_matrix context (Li.head context.saved_transformations);
   context.saved_transformations <- Li.tail context.saved_transformations;
-  context.transformation <- transformation
 
 type line_cap = BUTT | ROUND | SQUARE
 

@@ -10,30 +10,30 @@
 
 type context
 
-(* type matrix = {
+type matrix = {
   mutable xx: float;
   mutable yx: float;
   mutable xy: float;
   mutable yy: float;
   mutable x0: float;
   mutable y0: float;
-} *)
+}
 
-(* module Matrix: sig
+module Matrix: sig
   type t = matrix
 
   val init_identity: unit -> t
   val init_translate: x:float -> y:float -> t
   val init_scale: x:float -> y:float -> t
   val init_rotate: angle:float -> t
-  val translate: t -> x:float -> y:float -> unit
-  val scale: t -> x:float -> y:float -> unit
-  val rotate: t -> angle:float -> unit
-  val invert: t -> unit
+  (* val translate: t -> x:float -> y:float -> unit *)
+  (* val scale: t -> x:float -> y:float -> unit *)
+  (* val rotate: t -> angle:float -> unit *)
+  (* val invert: t -> unit *)
   val multiply: t -> t -> t
   val transform_distance: t -> dx:float -> dy:float -> float * float
   val transform_point: t -> x:float -> y:float -> float * float
-end *)
+end
 
 type text_extents = {
   x_bearing: float;
@@ -377,9 +377,9 @@ val rel_move_to: context -> x:float -> y:float -> unit
 val translate: context -> x:float -> y:float -> unit
 val scale: context -> x:float -> y:float -> unit
 val rotate: context -> angle:float -> unit
-(* val transform: context -> Matrix.t -> unit *)
-(* val set_matrix: context -> Matrix.t -> unit *)
-(* val get_matrix: context -> Matrix.t *)
+val transform: context -> Matrix.t -> unit
+val set_matrix: context -> Matrix.t -> unit
+val get_matrix: context -> Matrix.t
 val identity_matrix: context -> unit
 val user_to_device: context -> x:float -> y:float -> float * float
 val user_to_device_distance: context -> x:float -> y:float -> float * float
