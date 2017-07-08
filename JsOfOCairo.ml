@@ -7,40 +7,40 @@ module type S = module type of JsOfOCairo_S
 (* http://www.w3schools.com/tags/ref_canvas.asp *)
 
 module M = struct
-    type t = {xx: float; xy: float; yx: float; yy: float; dx: float; dy: float}
+  type t = {xx: float; xy: float; yx: float; yy: float; dx: float; dy: float}
 
-    let one = {xx=1.; xy=0.; yx=0.; yy=1.; dx=0.; dy=0.}
+  let one = {xx=1.; xy=0.; yx=0.; yy=1.; dx=0.; dy=0.}
 
-    let apply_dist {xx; xy; yx; yy; _} (x, y) =
-        let x = xx *. x +. xy *. y
-        and y = yx *. x +. yy *. y
-        in (x, y)
+  let apply_dist {xx; xy; yx; yy; _} (x, y) =
+    let x = xx *. x +. xy *. y
+    and y = yx *. x +. yy *. y
+    in (x, y)
 
-    let rev_apply_dist {xx; xy; yx; yy; _} (x, y) =
-        let d = xx *. yy -. xy *. yx in
-        let xx = yy /. d
-        and xy = -. xy /. d
-        and yx = -. yx /. d
-        and yy = xx /. d in
-        apply_dist {xx; xy; yx; yy; dx=0.; dy=0.} (x, y)
+  let rev_apply_dist {xx; xy; yx; yy; _} (x, y) =
+    let d = xx *. yy -. xy *. yx in
+    let xx = yy /. d
+    and xy = -. xy /. d
+    and yx = -. yx /. d
+    and yy = xx /. d in
+    apply_dist {xx; xy; yx; yy; dx=0.; dy=0.} (x, y)
 
-    let apply_point ({dx; dy; _} as m) (x, y) =
-        let (x, y) = apply_dist m (x, y) in
-        (x +. dx, y +. dy)
+  let apply_point ({dx; dy; _} as m) (x, y) =
+    let (x, y) = apply_dist m (x, y) in
+    (x +. dx, y +. dy)
 
-    let rev_apply_point ({dx; dy; _} as m) (x, y) =
-        let (x, y) = (x -. dx, y -. dy) in
-        rev_apply_dist m (x, y)
+  let rev_apply_point ({dx; dy; _} as m) (x, y) =
+    let (x, y) = (x -. dx, y -. dy) in
+    rev_apply_dist m (x, y)
 
-    let compose ({xx; xy; yx; yy; dx; dy} as m) {xx=xx'; xy=xy'; yx=yx'; yy=yy'; dx=dx'; dy=dy'} =
-        let (dx', dy') = apply_dist m (dx', dy') in
-        let xx = xx *. xx' +. xy *. yx'
-        and xy = xx *. xy' +. xy *. yy'
-        and yx = yx *. xx' +. yy *. yx'
-        and yy = yx *. xy' +. yy *. yy'
-        and dx = dx +. dx'
-        and dy = dy +. dy'
-        in {xx; xy; yx; yy; dx; dy}
+  let compose ({xx; xy; yx; yy; dx; dy} as m) {xx=xx'; xy=xy'; yx=yx'; yy=yy'; dx=dx'; dy=dy'} =
+    let (dx', dy') = apply_dist m (dx', dy') in
+    let xx = xx *. xx' +. xy *. yx'
+    and xy = xx *. xy' +. xy *. yy'
+    and yx = yx *. xx' +. yy *. yx'
+    and yy = yx *. xy' +. yy *. yy'
+    and dx = dx +. dx'
+    and dy = dy +. dy'
+    in {xx; xy; yx; yy; dx; dy}
 end
 
 type context = {
@@ -133,33 +133,33 @@ let user_to_device_distance context ~x ~y =
   M.apply_dist context.transformation (x, y)
 
 let transform_state context m =
-    context.transformation <- M.compose context.transformation m;
-    context.current_point <- M.rev_apply_point m context.current_point;
-    context.start_point <- M.rev_apply_point m context.start_point
+  context.transformation <- M.compose context.transformation m;
+  context.current_point <- M.rev_apply_point m context.current_point;
+  context.start_point <- M.rev_apply_point m context.start_point
 
 let scale context ~x ~y =
-    context.ctx##scale x y;
-    transform_state context {M.one with M.xx=x; yy=y}
+  context.ctx##scale x y;
+  transform_state context {M.one with M.xx=x; yy=y}
 
 let translate context ~x ~y =
-    context.ctx##translate x y;
-    transform_state context {M.one with M.dx=x; dy=y}
+  context.ctx##translate x y;
+  transform_state context {M.one with M.dx=x; dy=y}
 
 let rotate context ~angle =
-    context.ctx##rotate angle;
-    transform_state context {
-        M.one with
-        M.xx = Math.cos angle;
-        xy = -. Math.sin angle;
-        yx = Math.sin angle;
-        yy = Math.cos angle;
-    }
+  context.ctx##rotate angle;
+  transform_state context {
+    M.one with
+    M.xx = Math.cos angle;
+    xy = -. Math.sin angle;
+    yx = Math.sin angle;
+    yy = Math.cos angle;
+  }
 
 let identity_matrix context =
-    context.current_point <- M.apply_point context.transformation context.current_point;
-    context.start_point <- M.apply_point context.transformation context.start_point;
-    context.transformation <- M.one;
-    context.ctx##setTransform 1. 0. 0. 1. 0. 0.
+  context.current_point <- M.apply_point context.transformation context.current_point;
+  context.start_point <- M.apply_point context.transformation context.start_point;
+  context.transformation <- M.one;
+  context.ctx##setTransform 1. 0. 0. 1. 0. 0.
 
 let save context =
   context.ctx##save;
@@ -215,30 +215,30 @@ let get_miter_limit context =
   context.ctx##.miterLimit
 
 let make_rel context ~x:dx ~y:dy =
-    let (x, y) = context.current_point in
-    (x +. dx, y +. dy)
+  let (x, y) = context.current_point in
+  (x +. dx, y +. dy)
 
 let rel_move_to context ~x ~y =
-    let (x, y) = make_rel context ~x ~y in
-    move_to context ~x ~y
+  let (x, y) = make_rel context ~x ~y in
+  move_to context ~x ~y
 
 let rel_line_to context ~x ~y =
-    let (x, y) = make_rel context ~x ~y in
-    line_to context ~x ~y
+  let (x, y) = make_rel context ~x ~y in
+  line_to context ~x ~y
 
 let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-    context.current_point <- (x3, y3);
-    context.ctx##bezierCurveTo x1 y1 x2 y2 x3 y3
+  context.current_point <- (x3, y3);
+  context.ctx##bezierCurveTo x1 y1 x2 y2 x3 y3
 
 let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-    let (x1, y1) = make_rel context ~x:x1 ~y:y1
-    and (x2, y2) = make_rel context ~x:x2 ~y:y2
-    and (x3, y3) = make_rel context ~x:x3 ~y:y3 in
-    curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
+  let (x1, y1) = make_rel context ~x:x1 ~y:y1
+  and (x2, y2) = make_rel context ~x:x2 ~y:y2
+  and (x3, y3) = make_rel context ~x:x3 ~y:y3 in
+  curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
 
 let rectangle context ~x ~y ~w ~h =
-    context.current_point <- (x, y);
-    context.ctx##rect x y w h
+  context.current_point <- (x, y);
+  context.ctx##rect x y w h
 
 type font_extents = {
   ascent: float;
