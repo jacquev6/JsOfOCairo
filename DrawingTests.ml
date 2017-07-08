@@ -32,6 +32,15 @@ module Make(C: Context.S) = struct
     in
     make (sprintf "current point: %s" name) width height draw
 
+  let make_save_restore name width height modify draw =
+    let draw ctx =
+      C.save ctx;
+      modify ctx;
+      C.restore ctx;
+      draw ctx
+    in
+    make (sprintf "save restore: %s" name) width height draw
+
   let tests = [
     make "move-line_to stroke" 100 100 (fun ctx ->
       C.move_to ctx ~x:10. ~y:10.;
@@ -262,6 +271,105 @@ module Make(C: Context.S) = struct
       check_transform C.device_to_user ctx (9., 20.) (-0.81, -3.26);
       check_transform C.device_to_user_distance ctx (9., 20.) (0.87, 63.57);
       C.line_to ctx ~x:(-24.) ~y:205.;
+      C.stroke ctx;
+    );
+    make_save_restore "line_width" 100 40 (fun ctx ->
+      C.set_line_width ctx 10.;
+    ) (fun ctx ->
+      C.move_to ctx ~x:10. ~y:20.;
+      C.line_to ctx ~x:90. ~y:20.;
+      C.stroke ctx;
+    );
+    make_save_restore "source" 100 40 (fun ctx ->
+      C.set_source_rgb ctx ~r:1. ~g:0. ~b:0.;
+    ) (fun ctx ->
+      C.move_to ctx ~x:10. ~y:20.;
+      C.line_to ctx ~x:90. ~y:20.;
+      C.stroke ctx;
+    );
+    make_save_restore "translate" 100 40 (fun ctx ->
+      C.translate ctx ~x:50. ~y:20.;
+    ) (fun ctx ->
+      C.move_to ctx ~x:10. ~y:20.;
+      C.line_to ctx ~x:90. ~y:20.;
+      C.stroke ctx;
+      check_transform C.user_to_device ctx (10., 10.) (10., 10.);
+    );
+    make_save_restore "scale" 100 40 (fun ctx ->
+      C.scale ctx ~x:5. ~y:2.;
+    ) (fun ctx ->
+      C.move_to ctx ~x:10. ~y:20.;
+      C.line_to ctx ~x:90. ~y:20.;
+      C.stroke ctx;
+      check_transform C.user_to_device ctx (10., 10.) (10., 10.);
+    );
+    make_save_restore "rotate" 100 40 (fun ctx ->
+      C.rotate ctx ~angle:0.1;
+    ) (fun ctx ->
+      C.move_to ctx ~x:10. ~y:20.;
+      C.line_to ctx ~x:90. ~y:20.;
+      C.stroke ctx;
+      check_transform C.user_to_device ctx (10., 10.) (10., 10.);
+    );
+    make_save_restore "move_to" 100 40 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:20.;
+    ) (fun ctx ->
+      C.line_to ctx ~x:90. ~y:20.;
+      C.stroke ctx;
+    );
+    make "save restore: current point" 100 40 (fun ctx ->
+      C.move_to ctx ~x:50. ~y:20.;
+      C.save ctx;
+      C.translate ctx ~x:20. ~y:10.;
+      C.restore ctx;
+      let (x, y) = C.Path.get_current_point ctx in
+      C.arc ctx ~x ~y ~r:10. ~a1:0. ~a2:6.28;
+      C.fill ctx
+    );
+    make "save restore: current point 2" 100 40 (fun ctx ->
+      C.save ctx;
+      C.translate ctx ~x:20. ~y:10.;
+      C.move_to ctx ~x:30. ~y:10.;
+      C.restore ctx;
+      let (x, y) = C.Path.get_current_point ctx in
+      C.arc ctx ~x ~y ~r:10. ~a1:0. ~a2:6.28;
+      C.fill ctx
+    );
+    make "save restore: current point 3" 100 40 (fun ctx ->
+      C.translate ctx ~x:5. ~y:15.;
+      C.save ctx;
+      C.translate ctx ~x:20. ~y:10.;
+      C.move_to ctx ~x:25. ~y:(-5.);
+      C.restore ctx;
+      let (x, y) = C.Path.get_current_point ctx in
+      C.arc ctx ~x ~y ~r:10. ~a1:0. ~a2:6.28;
+      C.fill ctx
+    );
+    make "save restore: nested" 400 200 (fun ctx ->
+      let rec aux = function
+        | 0 ->
+          C.line_to ctx ~x:1. ~y:0.;
+          C.translate ctx ~x:1. ~y:0.;
+        | n ->
+          C.save ctx;
+          C.scale ctx ~x:(1. /. 3.) ~y:(1. /. 3.);
+          aux (n - 1);
+          C.rotate ctx ~angle:(-.Math.pi /. 3.);
+          aux (n - 1);
+          C.rotate ctx ~angle:(2. *. Math.pi /. 3.);
+          aux (n - 1);
+          C.rotate ctx ~angle:(-.Math.pi /. 3.);
+          aux (n - 1);
+          C.restore ctx;
+          C.translate ctx ~x:1. ~y:0.;
+      in
+      C.translate ctx ~x:0. ~y:150.;
+      C.scale ctx ~x:400. ~y:400.;
+      C.move_to ctx ~x:0. ~y:0.;
+      aux 3;
+      C.identity_matrix ctx;
+      C.line_to ctx ~x:200. ~y:200.;
+      C.Path.close ctx;
       C.stroke ctx;
     );
   ]

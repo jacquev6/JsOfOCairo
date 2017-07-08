@@ -277,8 +277,8 @@ module type S = sig
   end *)
 
   (* val create: Surface.t -> context *)
-  (* val save: context -> unit *)
-  (* val restore: context -> unit *)
+  val save: context -> unit
+  val restore: context -> unit
   (* val get_target: context -> Surface.t *)
 
   (* module Group: sig

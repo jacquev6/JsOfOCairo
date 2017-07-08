@@ -23,7 +23,7 @@
 </head>
 <body>
   <div class="container">
-    <div id="drawing_tests" class="row">
+    <div id="drawing_tests">
     </div>
   </div>
 
@@ -46,12 +46,12 @@
         // @todo Use https://github.com/mapbox/pixelmatch to compare Cairo and HTML5 images
         var test = drawing_tests[i];
         var html_template =
-            '<div id="{0}" class="col-md-6 failure">'
+            '<div id="{0}" class="failure">'
           + '<p>{0}</p>'
           + '<div class="row">'
-          + '<div class="col-sm-4"><canvas class="img-fluid cairo" width="{1}" height="{2}" /></div>'
-          + '<div class="col-sm-4"><canvas class="img-fluid html5" width="{1}" height="{2}" /></div>'
-          + '<div class="col-sm-4"><canvas class="img-fluid diff" width="{1}" height="{2}" /></div>'
+          + '<div class="col-4"><canvas class="img-fluid cairo" width="{1}" height="{2}" /></div>'
+          + '<div class="col-4"><canvas class="img-fluid html5" width="{1}" height="{2}" /></div>'
+          + '<div class="col-4"><canvas class="img-fluid diff" width="{1}" height="{2}" /></div>'
           + '</div>'
           + '</div>';
         $("#drawing_tests").append(html_template.format(test.name, test.width, test.height))
@@ -78,7 +78,7 @@
 
           var diff_context = div.find("canvas.diff").get(0).getContext("2d");
           var diff_data = diff_context.createImageData(test.width, test.height);
-          var differences = pixelmatch(cairo_data.data, html5_data.data, diff_data.data, test.width, test.height, {threshold: 0.04, includeAA: false});
+          var differences = pixelmatch(cairo_data.data, html5_data.data, diff_data.data, test.width, test.height, {threshold: 0.09, includeAA: false});
           diff_context.putImageData(diff_data, 0, 0);
           if(differences == 0) {
             div.removeClass("failure");

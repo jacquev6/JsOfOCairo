@@ -7,29 +7,29 @@ module M = struct
 
     let one = {xx=1.; xy=0.; yx=0.; yy=1.; dx=0.; dy=0.}
 
-    let apply_dist {xx; xy; yx; yy; _} ~x ~y =
+    let apply_dist {xx; xy; yx; yy; _} (x, y) =
         let x = xx *. x +. xy *. y
         and y = yx *. x +. yy *. y
         in (x, y)
 
-    let rev_apply_dist {xx; xy; yx; yy; _} ~x ~y =
+    let rev_apply_dist {xx; xy; yx; yy; _} (x, y) =
         let d = xx *. yy -. xy *. yx in
         let xx = yy /. d
         and xy = -. xy /. d
         and yx = -. yx /. d
         and yy = xx /. d in
-        apply_dist {xx; xy; yx; yy; dx=0.; dy=0.} ~x ~y
+        apply_dist {xx; xy; yx; yy; dx=0.; dy=0.} (x, y)
 
-    let apply_point ({dx; dy; _} as m) ~x ~y =
-        let (x, y) = apply_dist m ~x ~y in
+    let apply_point ({dx; dy; _} as m) (x, y) =
+        let (x, y) = apply_dist m (x, y) in
         (x +. dx, y +. dy)
 
-    let rev_apply_point ({dx; dy; _} as m) ~x ~y =
+    let rev_apply_point ({dx; dy; _} as m) (x, y) =
         let (x, y) = (x -. dx, y -. dy) in
-        rev_apply_dist m ~x ~y
+        rev_apply_dist m (x, y)
 
     let compose ({xx; xy; yx; yy; dx; dy} as m) {xx=xx'; xy=xy'; yx=yx'; yy=yy'; dx=dx'; dy=dy'} =
-        let (dx', dy') = apply_dist m ~x:dx' ~y:dy' in
+        let (dx', dy') = apply_dist m (dx', dy') in
         let xx = xx *. xx' +. xy *. yx'
         and xy = xx *. xy' +. xy *. yy'
         and yx = yx *. xx' +. yy *. yx'
@@ -44,6 +44,7 @@ type context = {
   mutable start_point: float * float;
   mutable current_point: float * float;
   mutable transformation: M.t;
+  mutable saved_transformations: M.t list;
 }
 
 let set_line_width context width =
@@ -58,6 +59,7 @@ let create ctx =
     start_point = (0., 0.);
     current_point = (0., 0.);
     transformation = M.one;
+    saved_transformations = [];
   } in
   set_line_width context 2.0;
   context
@@ -115,23 +117,21 @@ let set_source_rgb context ~r ~g ~b =
   context.ctx##.strokeStyle := color
 
 let device_to_user context ~x ~y =
-  M.rev_apply_point context.transformation ~x ~y
+  M.rev_apply_point context.transformation (x, y)
 
 let device_to_user_distance context ~x ~y =
-  M.rev_apply_dist context.transformation ~x ~y
+  M.rev_apply_dist context.transformation (x, y)
 
 let user_to_device context ~x ~y =
-  M.apply_point context.transformation ~x ~y
+  M.apply_point context.transformation (x, y)
 
 let user_to_device_distance context ~x ~y =
-  M.apply_dist context.transformation ~x ~y
+  M.apply_dist context.transformation (x, y)
 
 let transform_state context m =
     context.transformation <- M.compose context.transformation m;
-    let (x, y) = context.current_point in
-    context.current_point <- M.rev_apply_point m ~x ~y;
-    let (x, y) = context.start_point in
-    context.start_point <- M.rev_apply_point m ~x ~y
+    context.current_point <- M.rev_apply_point m context.current_point;
+    context.start_point <- M.rev_apply_point m context.start_point
 
 let scale context ~x ~y =
     context.ctx##scale x y;
@@ -152,9 +152,21 @@ let rotate context ~angle =
     }
 
 let identity_matrix context =
-    let (x, y) = context.current_point in
-    context.current_point <- M.apply_point context.transformation ~x ~y;
-    let (x, y) = context.start_point in
-    context.start_point <- M.apply_point context.transformation ~x ~y;
+    context.current_point <- M.apply_point context.transformation context.current_point;
+    context.start_point <- M.apply_point context.transformation context.start_point;
     context.transformation <- M.one;
     context.ctx##setTransform 1. 0. 0. 1. 0. 0.
+
+let save context =
+  context.ctx##save;
+  context.saved_transformations <- context.transformation::context.saved_transformations
+
+let restore context =
+  context.ctx##restore;
+  let transformation = Li.head context.saved_transformations in
+  context.current_point <-
+    context.current_point
+    |> M.apply_point context.transformation
+    |> M.rev_apply_point transformation;
+  context.saved_transformations <- Li.tail context.saved_transformations;
+  context.transformation <- transformation
