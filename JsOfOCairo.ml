@@ -210,3 +210,29 @@ let set_miter_limit context l =
 
 let get_miter_limit context =
   context.ctx##.miterLimit
+
+let make_rel context ~x:dx ~y:dy =
+    let (x, y) = context.current_point in
+    (x +. dx, y +. dy)
+
+let rel_move_to context ~x ~y =
+    let (x, y) = make_rel context ~x ~y in
+    move_to context ~x ~y
+
+let rel_line_to context ~x ~y =
+    let (x, y) = make_rel context ~x ~y in
+    line_to context ~x ~y
+
+let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
+    context.current_point <- (x3, y3);
+    context.ctx##bezierCurveTo x1 y1 x2 y2 x3 y3
+
+let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
+    let (x1, y1) = make_rel context ~x:x1 ~y:y1
+    and (x2, y2) = make_rel context ~x:x2 ~y:y2
+    and (x3, y3) = make_rel context ~x:x3 ~y:y3 in
+    curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
+
+let rectangle context ~x ~y ~w ~h =
+    context.current_point <- (x, y);
+    context.ctx##rect x y w h

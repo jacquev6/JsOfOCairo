@@ -441,5 +441,23 @@ module Make(C: JsOfOCairo_Context.S) = struct
         C.line_to ctx ~x:10. ~y:(70. +. 2.);
         C.stroke ctx;
     );
+    make "rel_move-line_to" 100 40 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:30.;
+      C.rel_line_to ctx ~x:10. ~y:(-20.);
+      C.rel_move_to ctx ~x:10. ~y:20.;
+      C.rel_line_to ctx ~x:10. ~y:(-20.);
+      C.rel_line_to ctx ~x:10. ~y:20.;
+      C.stroke ctx;
+    );
+    make "rel_curve_to" 100 40 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:30.;
+      C.curve_to ctx ~x1:10. ~y1:10. ~x2:50. ~y2:30. ~x3:50. ~y3:10.;
+      C.rel_curve_to ctx ~x1:10. ~y1:10. ~x2:30. ~y2:30. ~x3:40. ~y3:10.;
+      C.stroke ctx;
+    );
+    make_current_point "rectangle" 100 100 (fun ctx ->
+        C.rectangle ctx ~x:30. ~y:20. ~w:50. ~h:60.;
+        C.stroke_preserve ctx;
+    );
   ]
 end
