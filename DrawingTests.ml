@@ -4,7 +4,7 @@ open General.Abbr
 
 let sprintf = OCamlStandard.Printf.sprintf
 
-module Make(C: JsOfOCairo_Context.S) = struct
+module Make(C: module type of JsOfOCairo_S) = struct
   type test = {name: string; width: int; height: int; draw: C.context -> unit}
 
   let check_transform transform ctx (x, y) (x', y') =

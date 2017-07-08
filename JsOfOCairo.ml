@@ -2,7 +2,7 @@
 
 open General.Abbr
 
-module type S = JsOfOCairo_Context.S
+module type S = module type of JsOfOCairo_S
 
 (* http://www.w3schools.com/tags/ref_canvas.asp *)
 
