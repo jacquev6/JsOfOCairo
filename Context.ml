@@ -288,7 +288,7 @@ module type S = sig
     val get_target: context -> Surface.t
   end *)
 
-  (* val set_source_rgb: context -> r:float -> g:float -> b:float -> unit *)
+  val set_source_rgb: context -> r:float -> g:float -> b:float -> unit
   (* val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit *)
   (* val set_source: context -> 'a Pattern.t -> unit *)
   (* val set_source_surface: context -> Surface.t -> x:float -> y:float -> unit *)

@@ -42,3 +42,9 @@ let fill {ctx} =
 
 let fill_preserve {ctx} =
   ctx##fill
+
+let set_source_rgb {ctx} ~r ~g ~b =
+    let convert x = OCamlStandard.Printf.sprintf "%02x" (Int.of_float (255.0 *. x)) in
+    let color = Js.string (OCamlStandard.Printf.sprintf "#%s%s%s" (convert r) (convert g) (convert b)) in
+    ctx##.fillStyle := color;
+    ctx##.strokeStyle := color

@@ -16,35 +16,43 @@ module Make(C: Context.S) = struct
             C.line_to ctx ~x:80. ~y:60.;
             C.stroke ctx;
         );
-        make "set-get_line_width" 100 40 (fun ctx ->
-            (* set width before, during and after path *)
+        make "set-get_line_width set_source_rgb" 100 40 (fun ctx ->
+            (* set before, during and after path *)
             C.set_line_width ctx 4.;
+            C.set_source_rgb ctx ~r:0.9 ~g:0.1 ~b:0.1;
             C.move_to ctx ~x:10. ~y:10.;
             C.line_to ctx ~x:90. ~y:10.;
             C.stroke ctx;
 
+            C.set_source_rgb ctx ~r:1. ~g:1.0 ~b:1.;
             C.set_line_width ctx 12.;
             C.move_to ctx ~x:10. ~y:20.;
             C.line_to ctx ~x:50. ~y:20.;
+            C.set_source_rgb ctx ~r:0.1 ~g:0.9 ~b:0.1;
             C.set_line_width ctx 1.;
             C.line_to ctx ~x:90. ~y:20.;
             C.stroke ctx;
 
             C.move_to ctx ~x:10. ~y:30.;
             C.line_to ctx ~x:90. ~y:30.;
+            C.set_source_rgb ctx ~r:0.1 ~g:0.1 ~b:0.9;
             C.set_line_width ctx 6.;
             C.stroke ctx;
         );
         make "arc stroke_preserve fill" 100 100 (fun ctx ->
             C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:5.;
             C.set_line_width ctx 10.;
+            C.set_source_rgb ctx ~r:0.1 ~g:0.1 ~b:0.9;
             C.stroke_preserve ctx;
+            C.set_source_rgb ctx ~r:0.1 ~g:0.9 ~b:0.1;
             C.fill ctx;
         );
         make "arc_negative stroke fill_preserve" 100 100 (fun ctx ->
             C.arc_negative ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:4.;
             C.set_line_width ctx 10.;
+            C.set_source_rgb ctx ~r:0.9 ~g:0.1 ~b:0.1;
             C.fill_preserve ctx;
+            C.set_source_rgb ctx ~r:0.1 ~g:0.1 ~b:0.9;
             C.stroke ctx;
         );
     ]
