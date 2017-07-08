@@ -168,9 +168,12 @@ let save context =
 let restore context =
   context.ctx##restore;
   let transformation = Li.head context.saved_transformations in
-  (* @todo Add a test showing we need to do the same thing to start_point *)
   context.current_point <-
     context.current_point
+    |> M.apply_point context.transformation
+    |> M.rev_apply_point transformation;
+  context.start_point <-
+    context.start_point
     |> M.apply_point context.transformation
     |> M.rev_apply_point transformation;
   context.saved_transformations <- Li.tail context.saved_transformations;

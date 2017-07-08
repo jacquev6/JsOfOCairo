@@ -354,33 +354,41 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.line_to ctx ~x:90. ~y:20.;
       C.stroke ctx;
     );
-    make "save restore: current point" 100 40 (fun ctx ->
+    make "move save translate restore" 100 40 (fun ctx ->
       C.move_to ctx ~x:50. ~y:20.;
       C.save ctx;
       C.translate ctx ~x:20. ~y:10.;
       C.restore ctx;
-      let (x, y) = C.Path.get_current_point ctx in
-      C.arc ctx ~x ~y ~r:10. ~a1:0. ~a2:6.28;
-      C.fill ctx
     );
-    make "save restore: current point 2" 100 40 (fun ctx ->
+    make "save translate move restore" 100 40 (fun ctx ->
       C.save ctx;
       C.translate ctx ~x:20. ~y:10.;
       C.move_to ctx ~x:30. ~y:10.;
       C.restore ctx;
-      let (x, y) = C.Path.get_current_point ctx in
-      C.arc ctx ~x ~y ~r:10. ~a1:0. ~a2:6.28;
-      C.fill ctx
     );
-    make "save restore: current point 3" 100 40 (fun ctx ->
+    make_current_point "translate save translate move restore" 100 40 (fun ctx ->
       C.translate ctx ~x:5. ~y:15.;
       C.save ctx;
       C.translate ctx ~x:20. ~y:10.;
       C.move_to ctx ~x:25. ~y:(-5.);
       C.restore ctx;
-      let (x, y) = C.Path.get_current_point ctx in
-      C.arc ctx ~x ~y ~r:10. ~a1:0. ~a2:6.28;
-      C.fill ctx
+    );
+    make_current_point "save arc translate restore" 100 100 (fun ctx ->
+      C.set_line_width ctx 3.;
+      C.save ctx;
+      C.translate ctx ~x:20. ~y:10.;
+      C.arc ctx ~x:30. ~y:40. ~r:40. ~a1:1. ~a2:5.;
+      C.restore ctx;
+      C.stroke_preserve ctx;
+    );
+    make_current_point "save arc translate restore close" 100 100 (fun ctx ->
+      C.set_line_width ctx 3.;
+      C.save ctx;
+      C.translate ctx ~x:20. ~y:10.;
+      C.arc ctx ~x:30. ~y:40. ~r:40. ~a1:1. ~a2:5.;
+      C.restore ctx;
+      C.Path.close ctx;
+      C.stroke_preserve ctx;
     );
     make "save restore: nested" 400 200 (fun ctx ->
       let rec aux = function
