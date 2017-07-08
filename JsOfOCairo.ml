@@ -4,6 +4,8 @@ open General.Abbr
 
 module type S = JsOfOCairo_Context.S
 
+(* http://www.w3schools.com/tags/ref_canvas.asp *)
+
 module M = struct
     type t = {xx: float; xy: float; yx: float; yy: float; dx: float; dy: float}
 
@@ -166,6 +168,7 @@ let save context =
 let restore context =
   context.ctx##restore;
   let transformation = Li.head context.saved_transformations in
+  (* @todo Add a test showing we need to do the same thing to start_point *)
   context.current_point <-
     context.current_point
     |> M.apply_point context.transformation
@@ -236,3 +239,62 @@ let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
 let rectangle context ~x ~y ~w ~h =
     context.current_point <- (x, y);
     context.ctx##rect x y w h
+
+type font_extents = {
+  ascent: float;
+  descent: float;
+  baseline: float;
+  max_x_advance: float;
+  max_y_advance: float;
+}
+
+type text_extents = {
+  x_bearing: float;
+  y_bearing: float;
+  width: float;
+  height: float;
+  x_advance: float;
+  y_advance: float;
+}
+
+let set_font_size context size =
+  context.ctx##.font := Js.string (OCamlStandard.Printf.sprintf "%npx sans-serif" (Int.of_float size))
+
+let show_text context s =
+  let (x, y) = context.current_point in
+  context.ctx##fillText (Js.string s) x y
+
+let font_extents context =
+  let h =
+    context.ctx##.font
+    |> Js.to_string
+    |> Str.split ~sep:" "
+    |> Li.head
+    |> Str.drop_suffix ~suf:"px"
+    |> Fl.of_string
+  in
+  {
+    ascent = h;
+    descent = h /. 4.;
+    baseline = 0.;
+    max_x_advance = 2. *. h;
+    max_y_advance = 0.;
+  }
+
+let text_extents context s =
+  let h =
+    context.ctx##.font
+    |> Js.to_string
+    |> Str.split ~sep:" "
+    |> Li.head
+    |> Str.drop_suffix ~suf:"px"
+    |> Fl.of_string
+  and w = (context.ctx##measureText (Js.string s))##.width in
+  {
+    x_bearing = 0.;
+    y_bearing = 0.;
+    width = w;
+    height = h;
+    x_advance = w;
+    y_advance = 0.;
+  }

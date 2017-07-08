@@ -36,14 +36,14 @@ module type S = sig
     val transform_point: t -> x:float -> y:float -> float * float
   end *)
 
-  (* type text_extents = {
+  type text_extents = {
     x_bearing: float;
     y_bearing: float;
     width: float;
     height: float;
     x_advance: float;
     y_advance: float;
-  } *)
+  }
 
   (* module Glyph: sig
     type t = {
@@ -109,13 +109,13 @@ module type S = sig
     val get_weight: [`Toy] t -> weight
   end *)
 
-  (* type font_extents = {
+  type font_extents = {
     ascent: float;
     descent: float;
     baseline: float;
     max_x_advance: float;
     max_y_advance: float;
-  } *)
+  }
 
   (* module Scaled_font: sig
     type 'a t
@@ -136,12 +136,12 @@ module type S = sig
   end *)
 
   (* val select_font_face: context -> ?slant:slant -> ?weight:weight -> string -> unit *)
-  (* val set_font_size: context -> float -> unit *)
+  val set_font_size: context -> float -> unit
   (* val set_font_matrix: context -> Matrix.t -> unit *)
   (* val get_font_matrix: context -> Matrix.t *)
-  (* val show_text: context -> string -> unit *)
-  (* val font_extents: context -> font_extents *)
-  (* val text_extents: context -> string -> text_extents *)
+  val show_text: context -> string -> unit
+  val font_extents: context -> font_extents
+  val text_extents: context -> string -> text_extents
 
   (* type rectangle = {
     x: float;

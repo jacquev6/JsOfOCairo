@@ -41,6 +41,43 @@ module Make(C: JsOfOCairo_Context.S) = struct
     in
     make (sprintf "save restore: %s" name) width height draw
 
+  let make_text name width height draw =
+    let s = "jMyH" in
+    let draw ctx =
+      draw ctx;
+      let (x, y) = C.Path.get_current_point ctx in
+      C.show_text ctx s;
+      let {C.x_bearing; y_bearing; width; height; x_advance; y_advance} =
+        C.text_extents ctx s
+      in
+      ignore (x_bearing, y_bearing);
+      C.set_source_rgb ctx ~r:0.3 ~g:0.3 ~b:1.;
+      [(width, -.height); (x_advance, y_advance)]
+      |> Li.iter ~f:(fun (x', y') ->
+        C.save ctx;
+        C.move_to ctx ~x ~y;
+        C.rel_line_to ctx ~x:x' ~y:y';
+        C.identity_matrix ctx;
+        C.stroke ctx;
+        C.restore ctx;
+      );
+      let {C.ascent; descent; baseline; max_x_advance; max_y_advance} =
+        C.font_extents ctx;
+      in
+      ignore (baseline);
+      C.set_source_rgb ctx ~r:0.3 ~g:1. ~b:0.3;
+      [(0., -.ascent); (0., descent); (max_x_advance, max_y_advance)]
+      |> Li.iter ~f:(fun (x', y') ->
+        C.save ctx;
+        C.move_to ctx ~x ~y;
+        C.rel_line_to ctx ~x:x' ~y:y';
+        C.identity_matrix ctx;
+        C.stroke ctx;
+        C.restore ctx;
+      );
+    in
+    make (sprintf "text: %s" name) width height draw
+
   let tests = [
     make "move-line_to stroke" 100 100 (fun ctx ->
       C.move_to ctx ~x:10. ~y:10.;
@@ -421,25 +458,25 @@ module Make(C: JsOfOCairo_Context.S) = struct
       C.stroke ctx;
     );
     make "miter limit" 100 90 (fun ctx ->
-        C.set_line_width ctx 5.;
-        C.set_line_join ctx C.JOIN_MITER;
-        assert (C.get_miter_limit ctx = 10.);
-        C.move_to ctx ~x:10. ~y:10.;
-        C.line_to ctx ~x:50. ~y:10.;
-        C.line_to ctx ~x:10. ~y:(10. +. 8.3);
-        C.move_to ctx ~x:10. ~y:30.;
-        C.line_to ctx ~x:50. ~y:30.;
-        C.line_to ctx ~x:10. ~y:(30. +. 8.);
-        C.stroke ctx;
-        C.set_miter_limit ctx 30.;
-        assert (C.get_miter_limit ctx = 30.);
-        C.move_to ctx ~x:10. ~y:50.;
-        C.line_to ctx ~x:50. ~y:50.;
-        C.line_to ctx ~x:10. ~y:(50. +. 3.);
-        C.move_to ctx ~x:10. ~y:70.;
-        C.line_to ctx ~x:50. ~y:70.;
-        C.line_to ctx ~x:10. ~y:(70. +. 2.);
-        C.stroke ctx;
+      C.set_line_width ctx 5.;
+      C.set_line_join ctx C.JOIN_MITER;
+      assert (C.get_miter_limit ctx = 10.);
+      C.move_to ctx ~x:10. ~y:10.;
+      C.line_to ctx ~x:50. ~y:10.;
+      C.line_to ctx ~x:10. ~y:(10. +. 8.3);
+      C.move_to ctx ~x:10. ~y:30.;
+      C.line_to ctx ~x:50. ~y:30.;
+      C.line_to ctx ~x:10. ~y:(30. +. 8.);
+      C.stroke ctx;
+      C.set_miter_limit ctx 30.;
+      assert (C.get_miter_limit ctx = 30.);
+      C.move_to ctx ~x:10. ~y:50.;
+      C.line_to ctx ~x:50. ~y:50.;
+      C.line_to ctx ~x:10. ~y:(50. +. 3.);
+      C.move_to ctx ~x:10. ~y:70.;
+      C.line_to ctx ~x:50. ~y:70.;
+      C.line_to ctx ~x:10. ~y:(70. +. 2.);
+      C.stroke ctx;
     );
     make "rel_move-line_to" 100 40 (fun ctx ->
       C.move_to ctx ~x:10. ~y:30.;
@@ -456,8 +493,25 @@ module Make(C: JsOfOCairo_Context.S) = struct
       C.stroke ctx;
     );
     make_current_point "rectangle" 100 100 (fun ctx ->
-        C.rectangle ctx ~x:30. ~y:20. ~w:50. ~h:60.;
-        C.stroke_preserve ctx;
+      C.rectangle ctx ~x:30. ~y:20. ~w:50. ~h:60.;
+      C.stroke_preserve ctx;
+    );
+    make_text "move_to" 100 40 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:20.;
+    );
+    make_text "scale" 100 40 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:30.;
+      C.scale ctx ~x:3. ~y:1.5;
+    );
+    make_text "transform" 100 60 (fun ctx ->
+      C.translate ctx ~x:10. ~y:30.;
+      C.rotate ctx ~angle:0.2;
+      C.scale ctx ~x:3. ~y:2.;
+      C.move_to ctx ~x:0. ~y:0.;
+    );
+    make_text "set_font_size" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.set_font_size ctx 30.;
     );
   ]
 end
