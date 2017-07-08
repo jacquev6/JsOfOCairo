@@ -2,6 +2,8 @@
 
 open General.Abbr
 
+module type S = JsOfOCairo_Context.S
+
 module M = struct
     type t = {xx: float; xy: float; yx: float; yy: float; dx: float; dy: float}
 

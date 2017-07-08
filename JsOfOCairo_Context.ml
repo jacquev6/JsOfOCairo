@@ -368,13 +368,13 @@ module type S = sig
 
   val arc: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit
   val arc_negative: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit
-  (* val curve_to: context -> x1:float -> y1:float -> x2:float -> y2:float -> x3:float -> y3:float -> unit *)
+  val curve_to: context -> x1:float -> y1:float -> x2:float -> y2:float -> x3:float -> y3:float -> unit
   val line_to: context -> x:float -> y:float -> unit
   val move_to: context -> x:float -> y:float -> unit
-  (* val rectangle: context -> x:float -> y:float -> w:float -> h:float -> unit *)
-  (* val rel_curve_to: context -> x1:float -> y1:float -> x2:float -> y2:float -> x3:float -> y3:float -> unit *)
-  (* val rel_line_to: context -> x:float -> y:float -> unit *)
-  (* val rel_move_to: context -> x:float -> y:float -> unit *)
+  val rectangle: context -> x:float -> y:float -> w:float -> h:float -> unit
+  val rel_curve_to: context -> x1:float -> y1:float -> x2:float -> y2:float -> x3:float -> y3:float -> unit
+  val rel_line_to: context -> x:float -> y:float -> unit
+  val rel_move_to: context -> x:float -> y:float -> unit
   val translate: context -> x:float -> y:float -> unit
   val scale: context -> x:float -> y:float -> unit
   val rotate: context -> angle:float -> unit
