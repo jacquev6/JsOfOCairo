@@ -170,3 +170,41 @@ let restore context =
     |> M.rev_apply_point transformation;
   context.saved_transformations <- Li.tail context.saved_transformations;
   context.transformation <- transformation
+
+type line_cap = BUTT | ROUND | SQUARE
+
+let set_line_cap context cap =
+  let cap = match cap with
+    | BUTT -> "butt"
+    | ROUND -> "round"
+    | SQUARE -> "square"
+  in
+  context.ctx##.lineCap := Js.string cap
+
+let get_line_cap context =
+  match Js.to_string context.ctx##.lineCap with
+    | "round" -> ROUND
+    | "square" -> SQUARE
+    | _ -> BUTT
+
+type line_join = JOIN_MITER | JOIN_ROUND | JOIN_BEVEL
+
+let set_line_join context join =
+  let join = match join with
+    | JOIN_MITER ->  "miter"
+    | JOIN_ROUND -> "round"
+    | JOIN_BEVEL -> "bevel"
+  in
+  context.ctx##.lineJoin := Js.string join
+
+let get_line_join context =
+  match Js.to_string context.ctx##.lineJoin with
+    | "round" -> JOIN_ROUND
+    | "bevel" -> JOIN_BEVEL
+    | _ -> JOIN_MITER
+
+let set_miter_limit context l =
+  context.ctx##.miterLimit := l
+
+let get_miter_limit context =
+  context.ctx##.miterLimit

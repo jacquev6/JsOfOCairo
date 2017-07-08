@@ -50,7 +50,7 @@ module Make(C: Context.S) = struct
       C.line_to ctx ~x:80. ~y:60.;
       C.stroke ctx;
     );
-    make "set-get_line_width set_source_rgb" 100 40 (fun ctx ->
+    make "line width set_source_rgb" 100 40 (fun ctx ->
       (* set before, during and after path *)
       C.set_line_width ctx 4.;
       C.set_source_rgb ctx ~r:0.9 ~g:0.1 ~b:0.1;
@@ -371,6 +371,75 @@ module Make(C: Context.S) = struct
       C.line_to ctx ~x:200. ~y:200.;
       C.Path.close ctx;
       C.stroke ctx;
+    );
+    make "line cap" 100 50 (fun ctx ->
+      C.set_line_width ctx 8.;
+      assert (C.get_line_cap ctx = C.BUTT);
+      C.move_to ctx ~x:10. ~y:10.;
+      C.line_to ctx ~x:90. ~y:10.;
+      C.stroke ctx;
+      C.set_line_cap ctx C.ROUND;
+      assert (C.get_line_cap ctx = C.ROUND);
+      C.move_to ctx ~x:10. ~y:20.;
+      C.line_to ctx ~x:90. ~y:20.;
+      C.stroke ctx;
+      C.set_line_cap ctx C.SQUARE;
+      assert (C.get_line_cap ctx = C.SQUARE);
+      C.move_to ctx ~x:10. ~y:30.;
+      C.line_to ctx ~x:90. ~y:30.;
+      C.stroke ctx;
+      C.set_line_cap ctx C.BUTT;
+      assert (C.get_line_cap ctx = C.BUTT);
+      C.move_to ctx ~x:10. ~y:40.;
+      C.line_to ctx ~x:90. ~y:40.;
+      C.stroke ctx;
+    );
+    make "line join" 100 100 (fun ctx ->
+      C.set_line_width ctx 8.;
+      assert (C.get_line_join ctx = C.JOIN_MITER);
+      C.move_to ctx ~x:10. ~y:10.;
+      C.line_to ctx ~x:90. ~y:10.;
+      C.line_to ctx ~x:90. ~y:90.;
+      C.stroke ctx;
+      C.set_line_join ctx C.JOIN_ROUND;
+      assert (C.get_line_join ctx = C.JOIN_ROUND);
+      C.move_to ctx ~x:10. ~y:20.;
+      C.line_to ctx ~x:80. ~y:20.;
+      C.line_to ctx ~x:80. ~y:90.;
+      C.stroke ctx;
+      C.set_line_join ctx C.JOIN_BEVEL;
+      assert (C.get_line_join ctx = C.JOIN_BEVEL);
+      C.move_to ctx ~x:10. ~y:30.;
+      C.line_to ctx ~x:70. ~y:30.;
+      C.line_to ctx ~x:70. ~y:90.;
+      C.stroke ctx;
+      C.set_line_join ctx C.JOIN_MITER;
+      assert (C.get_line_join ctx = C.JOIN_MITER);
+      C.move_to ctx ~x:10. ~y:40.;
+      C.line_to ctx ~x:60. ~y:40.;
+      C.line_to ctx ~x:60. ~y:90.;
+      C.stroke ctx;
+    );
+    make "miter limit" 100 90 (fun ctx ->
+        C.set_line_width ctx 5.;
+        C.set_line_join ctx C.JOIN_MITER;
+        assert (C.get_miter_limit ctx = 10.);
+        C.move_to ctx ~x:10. ~y:10.;
+        C.line_to ctx ~x:50. ~y:10.;
+        C.line_to ctx ~x:10. ~y:(10. +. 8.3);
+        C.move_to ctx ~x:10. ~y:30.;
+        C.line_to ctx ~x:50. ~y:30.;
+        C.line_to ctx ~x:10. ~y:(30. +. 8.);
+        C.stroke ctx;
+        C.set_miter_limit ctx 30.;
+        assert (C.get_miter_limit ctx = 30.);
+        C.move_to ctx ~x:10. ~y:50.;
+        C.line_to ctx ~x:50. ~y:50.;
+        C.line_to ctx ~x:10. ~y:(50. +. 3.);
+        C.move_to ctx ~x:10. ~y:70.;
+        C.line_to ctx ~x:50. ~y:70.;
+        C.line_to ctx ~x:10. ~y:(70. +. 2.);
+        C.stroke ctx;
     );
   ]
 end

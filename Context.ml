@@ -303,19 +303,19 @@ module type S = sig
   (* val set_fill_rule: context -> fill_rule -> unit *)
   (* val get_fill_rule: context -> fill_rule *)
 
-  (* type line_cap = BUTT | ROUND | SQUARE *)
+  type line_cap = BUTT | ROUND | SQUARE
 
-  (* val set_line_cap: context -> line_cap -> unit *)
-  (* val get_line_cap: context -> line_cap *)
+  val set_line_cap: context -> line_cap -> unit
+  val get_line_cap: context -> line_cap
 
-  (* type line_join = JOIN_MITER | JOIN_ROUND | JOIN_BEVEL *)
+  type line_join = JOIN_MITER | JOIN_ROUND | JOIN_BEVEL
 
-  (* val set_line_join: context -> line_join -> unit *)
-  (* val get_line_join: context -> line_join *)
+  val set_line_join: context -> line_join -> unit
+  val get_line_join: context -> line_join
   val set_line_width: context -> float -> unit
   val get_line_width: context -> float
-  (* val set_miter_limit: context -> float -> unit *)
-  (* val get_miter_limit: context -> float *)
+  val set_miter_limit: context -> float -> unit
+  val get_miter_limit: context -> float
 
   (* type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE *)
 
