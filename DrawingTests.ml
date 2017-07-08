@@ -558,5 +558,15 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.Path.close ctx;
       C.stroke_preserve ctx;
     );
+    (* @todo make_current_point "arc on more than 2 pi" 100 100 (fun ctx ->
+      (* This test gives different results. Canvas seems to ignore the portion after 2 pi.
+      How can we emulate Cairo's behavior? Re-drawing the missing part will be seen if source
+      has alpha. Moving to the Cairo end position breaks the path. Erf. *)
+      C.move_to ctx ~x:30. ~y:40.;
+      C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:1. ~a2:8.;
+      C.set_line_width ctx 3.;
+      C.Path.close ctx;
+      C.stroke_preserve ctx;
+    ); *)
   ]
 end
