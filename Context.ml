@@ -348,23 +348,23 @@ module type S = sig
     | CURVE_TO of float * float * float * float * float * float
     | CLOSE_PATH *)
 
-  (* module Path: sig
-    type t
+  module Path: sig
+    (* type t *)
 
-    val copy: context -> t
-    val copy_flat: context -> t
-    val append: context -> t -> unit
+    (* val copy: context -> t *)
+    (* val copy_flat: context -> t *)
+    (* val append: context -> t -> unit *)
     val get_current_point: context -> float * float
     val clear: context -> unit
-    val sub: context -> unit
+    (* val sub: context -> unit *)
     val close: context -> unit
-    val glyph: context -> Glyph.t array -> unit
-    val text: context -> string -> unit
-    val extents: context -> rectangle
-    val fold: t -> ('a -> path_data -> 'a) -> 'a -> 'a
-    val to_array: t -> path_data array
-    val of_array: path_data array -> t
-  end *)
+    (* val glyph: context -> Glyph.t array -> unit *)
+    (* val text: context -> string -> unit *)
+    (* val extents: context -> rectangle *)
+    (* val fold: t -> ('a -> path_data -> 'a) -> 'a -> 'a *)
+    (* val to_array: t -> path_data array *)
+    (* val of_array: path_data array -> t *)
+  end
 
   val arc: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit
   val arc_negative: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit
