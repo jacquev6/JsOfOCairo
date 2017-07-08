@@ -79,7 +79,7 @@ end
 
 type context = {
   ctx: Dom_html.canvasRenderingContext2D Js.t;
-  mutable start_point: float * float;
+  mutable start_point: (float * float) option;
   mutable current_point: float * float;
   mutable transformation: Matrix.t;
   mutable saved_transformations: Matrix.t list;
@@ -94,7 +94,7 @@ let get_line_width context =
 let create ctx =
   let context = {
     ctx;
-    start_point = (0., 0.);
+    start_point = None;
     current_point = (0., 0.);
     transformation = Matrix.init_identity ();
     saved_transformations = [];
@@ -112,13 +112,13 @@ module Path = struct
 
   let close context =
     context.ctx##closePath;
-    context.current_point <- context.start_point
+    context.current_point <- Opt.value context.start_point
 end
 
 let move_to context ~x ~y =
   context.ctx##moveTo x y;
   context.current_point <- (x, y);
-  context.start_point <- (x, y)
+  context.start_point <- Some (x, y)
 
 let line_to context ~x ~y =
   context.ctx##lineTo x y;
@@ -126,12 +126,14 @@ let line_to context ~x ~y =
 
 let arc context ~x ~y ~r ~a1 ~a2 =
   context.ctx##arc x y r a1 a2 Js._false;
-  context.start_point <- (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
+  if Opt.is_none context.start_point then
+  context.start_point <- Some (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
   context.current_point <- (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
 
 let arc_negative context ~x ~y ~r ~a1 ~a2 =
   context.ctx##arc x y r a1 a2 Js._true;
-  context.start_point <- (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
+  if Opt.is_none context.start_point then
+  context.start_point <- Some (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
   context.current_point <- (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
 
 let stroke_preserve context =
@@ -181,8 +183,8 @@ let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
     |> Matrix.rev_transform_point' m;
   context.start_point <-
     context.start_point
-    |> Matrix.transform_point' context.transformation
-    |> Matrix.rev_transform_point' m;
+    |> Opt.map ~f:(Matrix.transform_point' context.transformation)
+    |> Opt.map ~f:(Matrix.rev_transform_point' m);
   context.transformation <- m
 
 let get_matrix context =

@@ -551,5 +551,12 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_line_width ctx 10.;
       C.stroke ctx;
     );
+    make_current_point "move then arc" 100 100 (fun ctx ->
+      C.move_to ctx ~x:30. ~y:40.;
+      C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:5.;
+      C.set_line_width ctx 3.;
+      C.Path.close ctx;
+      C.stroke_preserve ctx;
+    );
   ]
 end
