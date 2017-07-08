@@ -328,15 +328,15 @@ module type S = sig
   (* val clip_extents: context -> rectangle *)
   (* val clip_reset: context -> unit *)
   (* val clip_rectangle_list: context -> rectangle list *)
-  (* val fill: context -> unit *)
-  (* val fill_preserve: context -> unit *)
+  val fill: context -> unit
+  val fill_preserve: context -> unit
   (* val fill_extents: context -> rectangle *)
   (* val in_fill: context -> x:float -> y:float -> bool *)
   (* val mask: context -> 'a Pattern.t -> unit *)
   (* val mask_surface: context -> Surface.t -> x:float -> y:float -> unit *)
   (* val paint: ?alpha:float -> context -> unit *)
   val stroke: context -> unit
-  (* val stroke_preserve: context -> unit *)
+  val stroke_preserve: context -> unit
   (* val stroke_extents: context -> rectangle *)
   (* val in_stroke: context -> x:float -> y:float -> bool *)
   (* val copy_page: context -> unit *)
@@ -366,8 +366,8 @@ module type S = sig
     val of_array: path_data array -> t
   end *)
 
-  (* val arc: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit *)
-  (* val arc_negative: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit *)
+  val arc: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit
+  val arc_negative: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit
   (* val curve_to: context -> x1:float -> y1:float -> x2:float -> y2:float -> x3:float -> y3:float -> unit *)
   val line_to: context -> x:float -> y:float -> unit
   val move_to: context -> x:float -> y:float -> unit

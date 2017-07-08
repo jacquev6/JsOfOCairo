@@ -35,5 +35,17 @@ module Make(C: Context.S) = struct
             C.set_line_width ctx 6.;
             C.stroke ctx;
         );
+        make "arc stroke_preserve fill" 100 100 (fun ctx ->
+            C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:5.;
+            C.set_line_width ctx 10.;
+            C.stroke_preserve ctx;
+            C.fill ctx;
+        );
+        make "arc_negative stroke fill_preserve" 100 100 (fun ctx ->
+            C.arc_negative ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:4.;
+            C.set_line_width ctx 10.;
+            C.fill_preserve ctx;
+            C.stroke ctx;
+        );
     ]
 end

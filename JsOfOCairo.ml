@@ -23,6 +23,22 @@ let move_to {ctx} ~x ~y =
 let line_to {ctx} ~x ~y =
   ctx##lineTo x y
 
+let arc {ctx} ~x ~y ~r ~a1 ~a2 =
+  ctx##arc x y r a1 a2 Js._false
+
+let arc_negative {ctx} ~x ~y ~r ~a1 ~a2 =
+  ctx##arc x y r a1 a2 Js._true
+
 let stroke {ctx} =
   ctx##stroke;
   ctx##beginPath
+
+let stroke_preserve {ctx} =
+  ctx##stroke
+
+let fill {ctx} =
+  ctx##fill;
+  ctx##beginPath
+
+let fill_preserve {ctx} =
+  ctx##fill
