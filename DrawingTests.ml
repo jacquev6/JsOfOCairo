@@ -521,5 +521,35 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
     );
+    make_current_point "paint" 100 40 (fun ctx ->
+      C.move_to ctx ~x:50. ~y:20.;
+      C.set_source_rgb ctx ~r:0.9 ~g:0.2 ~b:0.9;
+      C.paint ctx;
+      C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.;
+    );
+    make_current_point "translate paint" 100 40 (fun ctx ->
+      C.move_to ctx ~x:50. ~y:20.;
+      C.translate ctx ~x:100. ~y:100.;
+      C.set_source_rgb ctx ~r:0.9 ~g:0.2 ~b:0.9;
+      C.paint ctx;
+      C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.;
+    );
+    (* @todo make "paint with alpha" 100 100 (fun ctx ->
+      C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
+      C.fill ctx;
+      C.set_source_rgb ctx ~r:0. ~g:1. ~b:1.;
+      C.paint ctx ~alpha:0.5;
+    ); *)
+    make_current_point "clip" 100 40 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:10.;
+      C.line_to ctx ~x:90. ~y:10.;
+      C.line_to ctx ~x:90. ~y:30.;
+      C.Path.close ctx;
+      C.clip ctx;
+      C.move_to ctx ~x:10. ~y:20.;
+      C.line_to ctx ~x:90. ~y:20.;
+      C.set_line_width ctx 10.;
+      C.stroke ctx;
+    );
   ]
 end

@@ -322,8 +322,8 @@ val get_miter_limit: context -> float
 (* val get_operator: context -> operator *)
 (* val set_tolerance: context -> float -> unit *)
 (* val get_tolerance: context -> float *)
-(* val clip: context -> unit *)
-(* val clip_preserve: context -> unit *)
+val clip: context -> unit
+val clip_preserve: context -> unit
 (* val clip_extents: context -> rectangle *)
 (* val clip_reset: context -> unit *)
 (* val clip_rectangle_list: context -> rectangle list *)
@@ -333,7 +333,7 @@ val fill_preserve: context -> unit
 (* val in_fill: context -> x:float -> y:float -> bool *)
 (* val mask: context -> 'a Pattern.t -> unit *)
 (* val mask_surface: context -> Surface.t -> x:float -> y:float -> unit *)
-(* val paint: ?alpha:float -> context -> unit *)
+val paint: ?alpha:float -> context -> unit
 val stroke: context -> unit
 val stroke_preserve: context -> unit
 (* val stroke_extents: context -> rectangle *)

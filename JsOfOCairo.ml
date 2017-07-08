@@ -134,19 +134,26 @@ let arc_negative context ~x ~y ~r ~a1 ~a2 =
   context.start_point <- (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
   context.current_point <- (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
 
-let stroke context =
-  context.ctx##stroke;
-  Path.clear context
-
 let stroke_preserve context =
   context.ctx##stroke
 
-let fill context =
-  context.ctx##fill;
+let stroke context =
+  stroke_preserve context;
   Path.clear context
 
 let fill_preserve context =
   context.ctx##fill
+
+let fill context =
+  fill_preserve context;
+  Path.clear context
+
+let clip_preserve context =
+  context.ctx##clip
+
+let clip context =
+  clip_preserve context;
+  Path.clear context
 
 let set_source_rgb context ~r ~g ~b =
   let convert x = OCamlStandard.Printf.sprintf "%02x" (Int.of_float (255.0 *. x)) in
@@ -327,3 +334,14 @@ let text_extents context s =
     x_advance = w;
     y_advance = 0.;
   }
+
+let paint ?alpha:_ context =
+  save context;
+  identity_matrix context;
+  let width = (float_of_int context.ctx##.canvas##.width)
+  and height = (float_of_int context.ctx##.canvas##.height) in
+  (* @todo Implement alpha with something like:
+  context.ctx##.fillStyle := Js.string "rgba(0, 255, 255, 0.5)";
+  But this needs to be more general: we should handle all kinds of sources. *)
+  context.ctx##fillRect 0. 0. width height;
+  restore context
