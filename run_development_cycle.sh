@@ -15,3 +15,9 @@ rm -f drawing_tests/*.png
 _build/drawing_tests.byte
 
 echo "Have a look at $(pwd)/drawing_tests.html"
+
+# OPAM package
+# ============
+
+opam pin --yes --no-action add .
+opam reinstall --yes JsOfOCairo
