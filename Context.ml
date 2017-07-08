@@ -375,15 +375,15 @@ module type S = sig
   (* val rel_curve_to: context -> x1:float -> y1:float -> x2:float -> y2:float -> x3:float -> y3:float -> unit *)
   (* val rel_line_to: context -> x:float -> y:float -> unit *)
   (* val rel_move_to: context -> x:float -> y:float -> unit *)
-  (* val translate: context -> x:float -> y:float -> unit *)
-  (* val scale: context -> x:float -> y:float -> unit *)
-  (* val rotate: context -> angle:float -> unit *)
+  val translate: context -> x:float -> y:float -> unit
+  val scale: context -> x:float -> y:float -> unit
+  val rotate: context -> angle:float -> unit
   (* val transform: context -> Matrix.t -> unit *)
   (* val set_matrix: context -> Matrix.t -> unit *)
   (* val get_matrix: context -> Matrix.t *)
-  (* val identity_matrix: context -> unit *)
-  (* val user_to_device: context -> x:float -> y:float -> float * float *)
-  (* val user_to_device_distance: context -> x:float -> y:float -> float * float *)
-  (* val device_to_user: context -> x:float -> y:float -> float * float *)
-  (* val device_to_user_distance: context -> x:float -> y:float -> float * float *)
+  val identity_matrix: context -> unit
+  val user_to_device: context -> x:float -> y:float -> float * float
+  val user_to_device_distance: context -> x:float -> y:float -> float * float
+  val device_to_user: context -> x:float -> y:float -> float * float
+  val device_to_user_distance: context -> x:float -> y:float -> float * float
 end

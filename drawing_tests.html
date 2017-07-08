@@ -46,7 +46,7 @@
         // @todo Use https://github.com/mapbox/pixelmatch to compare Cairo and HTML5 images
         var test = drawing_tests[i];
         var html_template =
-            '<div id="{0}" class="col-md-6">'
+            '<div id="{0}" class="col-md-6 failure">'
           + '<p>{0}</p>'
           + '<div class="row">'
           + '<div class="col-sm-4"><canvas class="img-fluid cairo" width="{1}" height="{2}" /></div>'
@@ -68,16 +68,20 @@
           var cairo_data = cairo_context.getImageData(0, 0, test.width, test.height);
 
           var html5_context = div.find("canvas.html5").get(0).getContext("2d");
-          test.draw(html5_context);
+          try {
+            test.draw(html5_context);
+          } catch(err) {
+            div.append("<p>Exception: {0}</p>".format(err))
+            return;
+          }
           var html5_data = html5_context.getImageData(0, 0, test.width, test.height);
 
           var diff_context = div.find("canvas.diff").get(0).getContext("2d");
           var diff_data = diff_context.createImageData(test.width, test.height);
           var differences = pixelmatch(cairo_data.data, html5_data.data, diff_data.data, test.width, test.height, {threshold: 0.04, includeAA: false});
           diff_context.putImageData(diff_data, 0, 0);
-          if(differences > 0) {
-            div.addClass("failure");
-          } else {
+          if(differences == 0) {
+            div.removeClass("failure");
             div.addClass("success");
           }
         })
