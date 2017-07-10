@@ -1,5 +1,5 @@
 description="JsOfOCairo"
-requires="General"
+requires="General, js_of_ocaml"
 version="0.1.0"
 
 archive(byte)="JsOfOCairo.cma"

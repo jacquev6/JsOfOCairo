@@ -14,7 +14,9 @@ ocamlbuild \
 rm -f drawing_tests/*.png
 _build/drawing_tests.byte
 
+echo
 echo "Have a look at $(pwd)/drawing_tests.html"
+echo
 
 # OPAM package
 # ============
