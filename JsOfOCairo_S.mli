@@ -90,9 +90,9 @@ end *)
   val get_hint_metrics: t -> hint_metrics
 end *)
 
-(* type slant = Upright | Italic | Oblique *)
+type slant = Upright | Italic | Oblique
 
-(* type weight = Normal | Bold *)
+type weight = Normal | Bold
 
 (* type font_type = [ `Toy | `Ft | `Win32 | `Quartz | `User ] *)
 
@@ -134,7 +134,7 @@ type font_extents = {
   val get_type: 'a t -> font_type
 end *)
 
-(* val select_font_face: context -> ?slant:slant -> ?weight:weight -> string -> unit *)
+val select_font_face: context -> ?slant:slant -> ?weight:weight -> string -> unit
 val set_font_size: context -> float -> unit
 (* val set_font_matrix: context -> Matrix.t -> unit *)
 (* val get_font_matrix: context -> Matrix.t *)

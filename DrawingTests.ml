@@ -521,6 +521,46 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
     );
+    make_text "set_font_face serif upright normal" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.set_font_size ctx 30.;
+      C.select_font_face ctx "serif" ~slant:C.Upright ~weight:C.Normal;
+    );
+    make_text "set_font_face serif upright bold" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.set_font_size ctx 30.;
+      C.select_font_face ctx "serif" ~slant:C.Upright ~weight:C.Bold;
+    );
+    make_text "set_font_face serif italic normal" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.select_font_face ctx "serif" ~slant:C.Italic ~weight:C.Normal;
+      C.set_font_size ctx 30.;
+    );
+    make_text "set_font_face serif oblique normal" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.set_font_size ctx 30.;
+      C.select_font_face ctx "serif" ~slant:C.Oblique ~weight:C.Normal;
+    );
+    make_text "set_font_face sans-serif" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.set_font_size ctx 30.;
+      C.select_font_face ctx "sans-serif";
+    );
+    make_text "set_font_face cursive" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.set_font_size ctx 30.;
+      C.select_font_face ctx "cursive";
+    );
+    make_text "set_font_face fantasy" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.set_font_size ctx 30.;
+      C.select_font_face ctx "fantasy";
+    );
+    make_text "set_font_face monospace" 100 60 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.set_font_size ctx 30.;
+      C.select_font_face ctx "monospace";
+    );
     make_current_point "paint" 100 40 (fun ctx ->
       C.move_to ctx ~x:50. ~y:20.;
       C.set_source_rgb ctx ~r:0.9 ~g:0.2 ~b:0.9;

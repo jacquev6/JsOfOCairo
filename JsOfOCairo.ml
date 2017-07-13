@@ -295,44 +295,75 @@ type text_extents = {
   y_advance: float;
 }
 
+type slant = Upright | Italic | Oblique
+
+type weight = Normal | Bold
+
+type _font = {
+  slant: slant;
+  weight: weight;
+  size: float;
+  family: string;
+}
+
+let _set_font context {slant; weight; size; family} =
+  let font_style = match slant with
+    | Upright -> "normal"
+    | Italic -> "italic"
+    | Oblique -> "oblique"
+  and font_weight = match weight with
+    | Normal -> "normal"
+    | Bold -> "bold"
+  in
+  let font = OCamlStandard.Printf.sprintf "%s %s %npx %s" font_style font_weight (Int.of_float size) family in
+  context.ctx##.font := Js.string font
+
+let _get_font context =
+  (* @todo Test performance. This looks costly in DrawGrammar: we change fonts a lot, for each Token, Terminal, and NonTerminal.
+  We could cache this data in the context, and invalidate the cache on C.restore *)
+  context.ctx##.font
+  |> Js.to_string
+  |> Str.split ~sep:" "
+  |> Li.fold ~init:{slant=Upright; weight=Normal; size=10.; family="sans-serif"} ~f:(fun font -> function
+    | "normal" -> font
+    | "italic" -> {font with slant=Italic}
+    | "oblique" -> {font with slant=Oblique}
+    | "bold" -> {font with weight=Bold}
+    | part -> begin
+      match Str.try_drop_suffix part ~suf:"px" with
+        | None -> {font with family=part}
+        | Some size -> {font with size=Fl.of_string size}
+    end
+  )
+
+let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
+  _set_font context {(_get_font context) with slant; weight; family}
+
 let set_font_size context size =
-  context.ctx##.font := Js.string (OCamlStandard.Printf.sprintf "%npx sans-serif" (Int.of_float size))
+  _set_font context {(_get_font context) with size}
 
 let show_text context s =
   let (x, y) = context.current_point in
   context.ctx##fillText (Js.string s) x y
 
 let font_extents context =
-  let h =
-    context.ctx##.font
-    |> Js.to_string
-    |> Str.split ~sep:" "
-    |> Li.head
-    |> Str.drop_suffix ~suf:"px"
-    |> Fl.of_string
-  in
+  let {size; _} = _get_font context in
   {
-    ascent = h;
-    descent = h /. 4.;
+    ascent = size;
+    descent = size /. 4.;
     baseline = 0.;
-    max_x_advance = 2. *. h;
+    max_x_advance = 2. *. size;
     max_y_advance = 0.;
   }
 
 let text_extents context s =
-  let h =
-    context.ctx##.font
-    |> Js.to_string
-    |> Str.split ~sep:" "
-    |> Li.head
-    |> Str.drop_suffix ~suf:"px"
-    |> Fl.of_string
+  let {size; _} = _get_font context
   and w = (context.ctx##measureText (Js.string s))##.width in
   {
     x_bearing = 0.;
     y_bearing = 0.;
     width = w;
-    height = h;
+    height = size;
     x_advance = w;
     y_advance = 0.;
   }
