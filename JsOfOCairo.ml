@@ -1,6 +1,7 @@
 (* Copyright 2017 Vincent Jacques <vincent@vincent-jacques.net> *)
 
 open General.Abbr
+module Printf = OCamlStandard.Printf
 
 module type S = module type of JsOfOCairo_S
 
@@ -163,8 +164,8 @@ let clip context =
   Path.clear context
 
 let set_source_rgb context ~r ~g ~b =
-  let convert x = OCamlStandard.Printf.sprintf "%02x" (Int.of_float (255.0 *. x)) in
-  let color = Js.string (OCamlStandard.Printf.sprintf "#%s%s%s" (convert r) (convert g) (convert b)) in
+  let convert x = Printf.sprintf "%02x" (Int.of_float (255.0 *. x)) in
+  let color = Js.string (Printf.sprintf "#%s%s%s" (convert r) (convert g) (convert b)) in
   context.ctx##.fillStyle := color;
   context.ctx##.strokeStyle := color
 
@@ -305,7 +306,7 @@ let _set_font context ({slant; weight; size; family} as font) =
     | Normal -> "normal"
     | Bold -> "bold"
   in
-  let font = OCamlStandard.Printf.sprintf "%s %s %npx %s" font_style font_weight (Int.of_float size) family in
+  let font = Printf.sprintf "%s %s %npx %s" font_style font_weight (Int.of_float size) family in
   context.ctx##.font := Js.string font
 
 let _get_font ctx =
@@ -387,3 +388,38 @@ let create canvas =
   } in
   set_line_width context 2.0;
   context
+
+type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE
+
+let set_operator context operator =
+  let operator = match operator with
+    | CLEAR -> failwith "Unsupported operator CLEAR"
+    | SOURCE -> failwith "Unsupported operator SOURCE"
+    | OVER -> "source-over"
+    | ATOP -> "source-atop"
+    | IN -> "source-in"
+    | OUT -> "source-out"
+    | DEST_OVER -> "destination-over"
+    | DEST_ATOP -> "destination-atop"
+    | DEST_IN -> "destination-in"
+    | DEST_OUT -> "destination-out"
+    | ADD -> "lighter"
+    | XOR -> "xor"
+    | DEST -> failwith "Unsupported operator DEST"
+    | SATURATE -> failwith "Unsupported operator SATURATE"
+  in
+  context.ctx##.globalCompositeOperation := Js.string operator
+
+let get_operator context =
+  match Js.to_string context.ctx##.globalCompositeOperation with
+    | "source-over" -> OVER
+    | "source-atop" -> ATOP
+    | "source-in" -> IN
+    | "source-out" -> OUT
+    | "destination-over" -> DEST_OVER
+    | "destination-atop" -> DEST_ATOP
+    | "destination-in" -> DEST_IN
+    | "destination-out" -> DEST_OUT
+    | "lighter" -> ADD
+    | "xor" -> XOR
+    | op -> failwith (Printf.sprintf "Unexpected globalCompositeOperation %S" op)

@@ -639,6 +639,35 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.Path.close ctx;
       C.stroke_preserve ctx;
     );
+    C.[
+      (* (CLEAR, "CLEAR"); *)
+      (* (SOURCE, "SOURCE"); *)
+      (OVER, "OVER");
+      (IN, "IN");
+      (OUT, "OUT");
+      (ATOP, "ATOP");
+      (* (DEST, "DEST"); *)
+      (DEST_OVER, "DEST_OVER");
+      (DEST_IN, "DEST_IN");
+      (DEST_OUT, "DEST_OUT");
+      (DEST_ATOP, "DEST_ATOP");
+      (XOR, "XOR");
+      (ADD, "ADD");
+      (* (SATURATE, "SATURATE"); *)
+    ]
+    |> Li.map ~f:(fun (operator, operator_name) ->
+      make_one ~known_failure:false (Printf.sprintf "set_operator get_operator %s" operator_name) 100 100 (fun ctx ->
+        C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.8;
+        C.rectangle ctx ~x:10. ~y:10. ~w:50. ~h:50.;
+        C.fill ctx;
+        assert (C.get_operator ctx = C.OVER);
+        C.set_operator ctx operator;
+        assert (C.get_operator ctx = operator);
+        C.set_source_rgb ctx ~r:0.8 ~g:0. ~b:0.;
+        C.arc ctx ~x:50. ~y:50. ~r:30. ~a1:0. ~a2:6.28;
+        C.fill ctx;
+      )
+    )
   ]
   |> Li.concat
 end

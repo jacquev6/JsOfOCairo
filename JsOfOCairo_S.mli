@@ -316,23 +316,23 @@ val set_source_rgb: context -> r:float -> g:float -> b:float -> unit
 (* @todo val get_source: context -> Pattern.any *)
 
 type line_cap = BUTT | ROUND | SQUARE
-
 val set_line_cap: context -> line_cap -> unit
 val get_line_cap: context -> line_cap
 
 type line_join = JOIN_MITER | JOIN_ROUND | JOIN_BEVEL
-
 val set_line_join: context -> line_join -> unit
 val get_line_join: context -> line_join
+
 val set_line_width: context -> float -> unit
 val get_line_width: context -> float
+
 val set_miter_limit: context -> float -> unit
 val get_miter_limit: context -> float
 
-(* @todo type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE *)
+type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE
+val set_operator: context -> operator -> unit
+val get_operator: context -> operator
 
-(* @todo val set_operator: context -> operator -> unit *)
-(* @todo val get_operator: context -> operator *)
 val clip: context -> unit
 val clip_preserve: context -> unit
 (* val clip_extents: context -> rectangle *)
