@@ -583,7 +583,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
     );
     make "select_font_face set_font_size performance" 100 50 (fun ctx ->
       let start = Unix.gettimeofday () in
-      for _ = 1 to 1 do (* 50000: 4750ms in Firefox; 16ms in Cairo *)
+      for _ = 1 to 1 do (* 50000: 3900ms in Firefox; 16ms in Cairo *)
         C.set_font_size ctx 30.;
         C.select_font_face ctx "sans-serif";
       done;

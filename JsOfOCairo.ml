@@ -77,12 +77,24 @@ module Matrix = struct
     in {xx; xy; yx; yy; x0; y0}
 end
 
+type slant = Upright | Italic | Oblique
+
+type weight = Normal | Bold
+
+type _font = {
+  slant: slant;
+  weight: weight;
+  size: float;
+  family: string;
+}
+
 type context = {
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   mutable start_point: (float * float) option;
   mutable current_point: float * float;
   mutable transformation: Matrix.t;
   mutable saved_transformations: Matrix.t list;
+  mutable font: _font;
 }
 
 let set_line_width context width =
@@ -90,18 +102,6 @@ let set_line_width context width =
 
 let get_line_width context =
   context.ctx##.lineWidth
-
-let create canvas =
-  let ctx = canvas##getContext Dom_html._2d_ in
-  let context = {
-    ctx;
-    start_point = None;
-    current_point = (0., 0.);
-    transformation = Matrix.init_identity ();
-    saved_transformations = [];
-  } in
-  set_line_width context 2.0;
-  context
 
 module Path = struct
   let get_current_point {current_point; _} =
@@ -210,11 +210,6 @@ let save context =
   context.ctx##save;
   context.saved_transformations <- context.transformation::context.saved_transformations
 
-let restore context =
-  context.ctx##restore;
-  set_matrix context (Li.head context.saved_transformations);
-  context.saved_transformations <- Li.tail context.saved_transformations;
-
 type line_cap = BUTT | ROUND | SQUARE
 
 let set_line_cap context cap =
@@ -296,18 +291,8 @@ type text_extents = {
   y_advance: float;
 }
 
-type slant = Upright | Italic | Oblique
-
-type weight = Normal | Bold
-
-type _font = {
-  slant: slant;
-  weight: weight;
-  size: float;
-  family: string;
-}
-
-let _set_font context {slant; weight; size; family} =
+let _set_font context ({slant; weight; size; family} as font) =
+  context.font <- font;
   let font_style = match slant with
     | Upright -> "normal"
     | Italic -> "italic"
@@ -319,10 +304,10 @@ let _set_font context {slant; weight; size; family} =
   let font = OCamlStandard.Printf.sprintf "%s %s %npx %s" font_style font_weight (Int.of_float size) family in
   context.ctx##.font := Js.string font
 
-let _get_font context =
+let _get_font ctx =
   (* @todo Test performance. This looks costly in DrawGrammar: we change fonts a lot, for each Token, Terminal, and NonTerminal.
   We could cache this data in the context, and invalidate the cache on C.restore *)
-  context.ctx##.font
+  ctx##.font
   |> Js.to_string
   |> Str.split ~sep:" "
   |> Li.fold ~init:{slant=Upright; weight=Normal; size=10.; family="sans-serif"} ~f:(fun font -> function
@@ -337,18 +322,24 @@ let _get_font context =
     end
   )
 
+let restore context =
+  context.ctx##restore;
+  set_matrix context (Li.head context.saved_transformations);
+  context.saved_transformations <- Li.tail context.saved_transformations;
+  context.font <- _get_font context.ctx
+
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
-  _set_font context {(_get_font context) with slant; weight; family}
+  _set_font context {context.font with slant; weight; family}
 
 let set_font_size context size =
-  _set_font context {(_get_font context) with size}
+  _set_font context {context.font with size}
 
 let show_text context s =
   let (x, y) = context.current_point in
   context.ctx##fillText (Js.string s) x y
 
 let font_extents context =
-  let {size; _} = _get_font context in
+  let {size; _} = context.font in
   {
     ascent = size;
     descent = size /. 4.;
@@ -358,7 +349,7 @@ let font_extents context =
   }
 
 let text_extents context s =
-  let {size; _} = _get_font context
+  let {size; _} = context.font
   and w = (context.ctx##measureText (Js.string s))##.width in
   {
     x_bearing = 0.;
@@ -379,3 +370,16 @@ let paint ?alpha:_ context =
   But this needs to be more general: we should handle all kinds of sources. *)
   context.ctx##fillRect 0. 0. width height;
   restore context
+
+let create canvas =
+  let ctx = canvas##getContext Dom_html._2d_ in
+  let context = {
+    ctx;
+    start_point = None;
+    current_point = (0., 0.);
+    transformation = Matrix.init_identity ();
+    saved_transformations = [];
+    font = _get_font ctx;
+  } in
+  set_line_width context 2.0;
+  context
