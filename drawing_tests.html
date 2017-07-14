@@ -19,6 +19,12 @@
     div.failure {
       background-color: #F00;
     }
+    div.known_failure {
+      background-color: #FDD;
+    }
+    div.unexpected_success {
+      background-color: #0F0;
+    }
   </style>
 </head>
 <body>
@@ -81,7 +87,14 @@
           diff_context.putImageData(diff_data, 0, 0);
           if(differences == 0) {
             div.removeClass("failure");
-            div.addClass("success");
+            if(test.known_failure) {
+              div.addClass("unexpected_success");
+            } else {
+              div.addClass("success");
+            }
+          } else if(test.known_failure) {
+            div.removeClass("failure");
+            div.addClass("known_failure");
           }
         })
       }

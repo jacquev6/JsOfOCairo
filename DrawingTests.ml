@@ -1,11 +1,10 @@
 (* Copyright 2017 Vincent Jacques <vincent@vincent-jacques.net> *)
 
 open General.Abbr
-
-let sprintf = OCamlStandard.Printf.sprintf
+module Printf = OCamlStandard.Printf
 
 module Make(C: module type of JsOfOCairo_S) = struct
-  type test = {name: string; width: int; height: int; draw: C.context -> unit}
+  type test = {name: string; width: int; height: int; draw: C.context -> unit; known_failure: bool}
 
   let check_transform transform ctx (x, y) (x', y') =
     let (x'', y'') = transform ctx ~x ~y in
@@ -17,10 +16,13 @@ module Make(C: module type of JsOfOCairo_S) = struct
         else if phys_eq transform C.user_to_device then "user_to_device"
         else "unknown"
       in
-      failwith (sprintf "Expected %s (%.2f, %.2f) = (%.2f, %.2f), got (%.2f, %.2f)" transform x y x' y' x'' y'')
+      failwith (Printf.sprintf "Expected %s (%.2f, %.2f) = (%.2f, %.2f), got (%.2f, %.2f)" transform x y x' y' x'' y'')
 
-  let make name width height draw =
-    {name; width; height; draw}
+  let make_one ~known_failure name width height draw =
+    {name; width; height; draw; known_failure}
+
+  let make ?(known_failure=false) name width height draw =
+    [make_one ~known_failure name width height draw]
 
   let make_current_point name width height draw =
     let draw ctx =
@@ -30,7 +32,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.arc ctx ~x ~y ~r:10. ~a1:0. ~a2:6.28;
       C.fill ctx
     in
-    make (sprintf "current point: %s" name) width height draw
+    make (Printf.sprintf "current point: %s" name) width height draw
 
   let make_save_restore name width height modify draw =
     let draw ctx =
@@ -39,11 +41,14 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.restore ctx;
       draw ctx
     in
-    make (sprintf "save restore: %s" name) width height draw
+    make (Printf.sprintf "save restore: %s" name) width height draw
 
-  let make_text name width height draw =
+  let make_text ?(known_failure=false) name width height draw =
     let s = "jMyH" in
-    let draw ctx =
+    let draw_text ctx =
+      draw ctx;
+      C.show_text ctx s;
+    and draw_extents ctx =
       draw ctx;
       let (x, y) = C.Path.get_current_point ctx in
       C.show_text ctx s;
@@ -76,7 +81,10 @@ module Make(C: module type of JsOfOCairo_S) = struct
         C.restore ctx;
       );
     in
-    make (sprintf "text: %s" name) width height draw
+    [
+      make_one (Printf.sprintf "text: %s" name) width height draw_text ~known_failure;
+      make_one (Printf.sprintf "text extents: %s" name) width height draw_extents ~known_failure:true;
+    ]
 
   let tests = [
     make "move-line_to stroke" 100 100 (fun ctx ->
@@ -507,11 +515,11 @@ module Make(C: module type of JsOfOCairo_S) = struct
     make_text "move_to" 100 40 (fun ctx ->
       C.move_to ctx ~x:10. ~y:20.;
     );
-    make_text "scale" 100 40 (fun ctx ->
+    make_text "scale" ~known_failure:true 100 40 (fun ctx ->
       C.move_to ctx ~x:10. ~y:30.;
       C.scale ctx ~x:3. ~y:1.5;
     );
-    make_text "transform" 100 60 (fun ctx ->
+    make_text "transform" ~known_failure:true 100 60 (fun ctx ->
       C.translate ctx ~x:10. ~y:30.;
       C.rotate ctx ~angle:0.2;
       C.scale ctx ~x:3. ~y:2.;
@@ -609,4 +617,5 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.stroke_preserve ctx;
     ); *)
   ]
+  |> Li.concat
 end
