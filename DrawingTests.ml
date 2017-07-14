@@ -24,7 +24,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
   let make ?(known_failure=false) name width height draw =
     [make_one ~known_failure name width height draw]
 
-  let make_current_point name width height draw =
+  let make_current_point ?(known_failure=false) name width height draw =
     let draw ctx =
       draw ctx;
       let (x, y) = C.Path.get_current_point ctx in
@@ -32,16 +32,16 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.arc ctx ~x ~y ~r:10. ~a1:0. ~a2:6.28;
       C.fill ctx
     in
-    make (Printf.sprintf "current point: %s" name) width height draw
+    make ~known_failure (Printf.sprintf "current point: %s" name) width height draw
 
-  let make_save_restore name width height modify draw =
+  let make_save_restore ?(known_failure=false) name width height modify draw =
     let draw ctx =
       C.save ctx;
       modify ctx;
       C.restore ctx;
       draw ctx
     in
-    make (Printf.sprintf "save restore: %s" name) width height draw
+    make ~known_failure (Printf.sprintf "save restore: %s" name) width height draw
 
   let make_text ?(known_failure=false) name width height draw =
     let s = "jMyH" in
@@ -569,6 +569,18 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_font_size ctx 30.;
       C.select_font_face ctx "monospace";
     );
+    make "save select_font_face restore" 100 100 (fun ctx ->
+      C.select_font_face ctx "sans-serif";
+      C.set_font_size ctx 30.;
+      C.save ctx;
+      C.select_font_face ctx "serif";
+      C.move_to ctx ~x:10. ~y:40.;
+      C.show_text ctx "ABAB";
+      C.restore ctx;
+      C.set_font_size ctx 25.;
+      C.move_to ctx ~x:10. ~y:90.;
+      C.show_text ctx "ABAB";
+    );
     make_current_point "paint" 100 40 (fun ctx ->
       C.move_to ctx ~x:50. ~y:20.;
       C.set_source_rgb ctx ~r:0.9 ~g:0.2 ~b:0.9;
@@ -582,13 +594,14 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.paint ctx;
       C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.;
     );
-    (* @todo make "paint with alpha" 100 100 (fun ctx ->
+    make "paint with alpha" ~known_failure:true 100 100 (fun ctx ->
+      (* @todo Fix *)
       C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
       C.fill ctx;
       C.set_source_rgb ctx ~r:0. ~g:1. ~b:1.;
       C.paint ctx ~alpha:0.5;
-    ); *)
-    make_current_point "clip" 100 40 (fun ctx ->
+    );
+    make "clip" 100 40 (fun ctx ->
       C.move_to ctx ~x:10. ~y:10.;
       C.line_to ctx ~x:90. ~y:10.;
       C.line_to ctx ~x:90. ~y:30.;
@@ -606,7 +619,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.Path.close ctx;
       C.stroke_preserve ctx;
     );
-    (* @todo make_current_point "arc on more than 2 pi" 100 100 (fun ctx ->
+    make_current_point "arc on more than 2 pi" ~known_failure:true 100 100 (fun ctx ->
       (* This test gives different results. Canvas seems to ignore the portion after 2 pi.
       How can we emulate Cairo's behavior? Re-drawing the missing part will be seen if source
       has alpha. Moving to the Cairo end position breaks the path. Erf. *)
@@ -615,7 +628,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_line_width ctx 3.;
       C.Path.close ctx;
       C.stroke_preserve ctx;
-    ); *)
+    );
   ]
   |> Li.concat
 end
