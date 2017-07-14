@@ -581,6 +581,16 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.move_to ctx ~x:10. ~y:90.;
       C.show_text ctx "ABAB";
     );
+    make "select_font_face set_font_size performance" 100 50 (fun ctx ->
+      let start = Unix.gettimeofday () in
+      for _ = 1 to 1 do (* 50000: 4750ms in Firefox; 16ms in Cairo *)
+        C.set_font_size ctx 30.;
+        C.select_font_face ctx "sans-serif";
+      done;
+      Printf.printf "Duration of 'select_font_face set_font_size performance': %.2fms\n" ((Unix.gettimeofday () -. start) *. 1000.);
+      C.move_to ctx ~x:10. ~y:40.;
+      C.show_text ctx "ABAB";
+    );
     make_current_point "paint" 100 40 (fun ctx ->
       C.move_to ctx ~x:50. ~y:20.;
       C.set_source_rgb ctx ~r:0.9 ~g:0.2 ~b:0.9;
