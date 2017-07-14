@@ -1,5 +1,29 @@
 (* Copyright 2017 Vincent Jacques <vincent@vincent-jacques.net> *)
 
+(* Operations not supported by HTML5 canvas. We are most probably not going to try to implement these functions.
+Granted, there are browser-specific extensions for some of them, but it's not worth it (yet?).
+
+type antialias = ANTIALIAS_DEFAULT | ANTIALIAS_NONE | ANTIALIAS_GRAY | ANTIALIAS_SUBPIXEL
+val set_antialias: context -> antialias -> unit
+val get_antialias: context -> antialias
+
+type fill_rule = WINDING | EVEN_ODD
+val set_fill_rule: context -> fill_rule -> unit
+val get_fill_rule: context -> fill_rule
+
+val set_dash: context -> ?ofs:float -> float array -> unit
+val get_dash: context -> float array * float
+
+val clip_reset: context -> unit
+
+val set_tolerance: context -> float -> unit
+val get_tolerance: context -> float
+
+*)
+
+(* Other types and functions commented out below have not been analyzed yet. They may or may not be implemented later. *)
+
+
 (* type status = INVALID_RESTORE | INVALID_POP_GROUP | NO_CURRENT_POINT | INVALID_MATRIX | INVALID_STATUS | NULL_POINTER | INVALID_STRING | INVALID_PATH_DATA | READ_ERROR | WRITE_ERROR | SURFACE_FINISHED | SURFACE_TYPE_MISMATCH | PATTERN_TYPE_MISMATCH | INVALID_CONTENT | INVALID_FORMAT | INVALID_VISUAL | FILE_NOT_FOUND | INVALID_DASH | INVALID_DSC_COMMENT | INVALID_INDEX | CLIP_NOT_REPRESENTABLE | TEMP_FILE_ERROR | INVALID_STRIDE | FONT_TYPE_MISMATCH | USER_FONT_IMMUTABLE | USER_FONT_ERROR | NEGATIVE_COUNT | INVALID_CLUSTERS | INVALID_SLANT | INVALID_WEIGHT | INVALID_SIZE | USER_FONT_NOT_IMPLEMENTED | DEVICE_TYPE_MISMATCH | DEVICE_ERROR | INVALID_MESH_CONSTRUCTION | DEVICE_FINISHED | JBIG2_GLOBAL_MISSING *)
 
 (* exception Error of status *)
@@ -26,10 +50,10 @@ module Matrix: sig
   val init_translate: x:float -> y:float -> t
   val init_scale: x:float -> y:float -> t
   val init_rotate: angle:float -> t
-  (* val translate: t -> x:float -> y:float -> unit *)
-  (* val scale: t -> x:float -> y:float -> unit *)
-  (* val rotate: t -> angle:float -> unit *)
-  (* val invert: t -> unit *)
+  (* @todo val translate: t -> x:float -> y:float -> unit *)
+  (* @todo val scale: t -> x:float -> y:float -> unit *)
+  (* @todo val rotate: t -> angle:float -> unit *)
+  (* @todo val invert: t -> unit *)
   val multiply: t -> t -> t
   val transform_distance: t -> dx:float -> dy:float -> float * float
   val transform_point: t -> x:float -> y:float -> float * float
@@ -62,8 +86,6 @@ type text_extents = {
   val show: context -> t array -> unit
   val show_text: context -> string -> t array -> cluster array -> cluster_flags -> unit
 end *)
-
-(* type antialias = ANTIALIAS_DEFAULT | ANTIALIAS_NONE | ANTIALIAS_GRAY | ANTIALIAS_SUBPIXEL *)
 
 (* type subpixel_order = SUBPIXEL_ORDER_DEFAULT | SUBPIXEL_ORDER_RGB | SUBPIXEL_ORDER_BGR | SUBPIXEL_ORDER_VRGB | SUBPIXEL_ORDER_VBGR *)
 
@@ -288,19 +310,10 @@ val restore: context -> unit
 end *)
 
 val set_source_rgb: context -> r:float -> g:float -> b:float -> unit
-(* val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit *)
-(* val set_source: context -> 'a Pattern.t -> unit *)
+(* @todo val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit *)
+(* @todo val set_source: context -> 'a Pattern.t -> unit *)
 (* val set_source_surface: context -> Surface.t -> x:float -> y:float -> unit *)
-(* val get_source: context -> Pattern.any *)
-(* val set_antialias: context -> antialias -> unit *)
-(* val get_antialias: context -> antialias *)
-(* val set_dash: context -> ?ofs:float -> float array -> unit *)
-(* val get_dash: context -> float array * float *)
-
-(* type fill_rule = WINDING | EVEN_ODD *)
-
-(* val set_fill_rule: context -> fill_rule -> unit *)
-(* val get_fill_rule: context -> fill_rule *)
+(* @todo val get_source: context -> Pattern.any *)
 
 type line_cap = BUTT | ROUND | SQUARE
 
@@ -316,16 +329,13 @@ val get_line_width: context -> float
 val set_miter_limit: context -> float -> unit
 val get_miter_limit: context -> float
 
-(* type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE *)
+(* @todo type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE *)
 
-(* val set_operator: context -> operator -> unit *)
-(* val get_operator: context -> operator *)
-(* val set_tolerance: context -> float -> unit *)
-(* val get_tolerance: context -> float *)
+(* @todo val set_operator: context -> operator -> unit *)
+(* @todo val get_operator: context -> operator *)
 val clip: context -> unit
 val clip_preserve: context -> unit
 (* val clip_extents: context -> rectangle *)
-(* val clip_reset: context -> unit *)
 (* val clip_rectangle_list: context -> rectangle list *)
 val fill: context -> unit
 val fill_preserve: context -> unit

@@ -4,7 +4,11 @@ open General.Abbr
 
 module type S = module type of JsOfOCairo_S
 
-(* http://www.w3schools.com/tags/ref_canvas.asp *)
+(*
+Canvas references:
+- http://www.w3schools.com/tags/ref_canvas.asp
+- https://ocsigen.org/js_of_ocaml/2.8.4/api/Dom_html.canvasRenderingContext2D-c
+*)
 
 type matrix = {
   mutable xx: float;
