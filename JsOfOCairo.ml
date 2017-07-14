@@ -91,7 +91,8 @@ let set_line_width context width =
 let get_line_width context =
   context.ctx##.lineWidth
 
-let create ctx =
+let create canvas =
+  let ctx = canvas##getContext Dom_html._2d_ in
   let context = {
     ctx;
     start_point = None;

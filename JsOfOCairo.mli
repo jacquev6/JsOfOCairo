@@ -4,4 +4,4 @@ module type S = module type of JsOfOCairo_S
 
 include S
 
-val create: Dom_html.canvasRenderingContext2D Js.t -> context
+val create: Dom_html.canvasElement Js.t -> context

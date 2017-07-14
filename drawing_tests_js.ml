@@ -11,7 +11,7 @@ let drawing_tests =
       val name = Js.string name
       val width = width
       val height = height
-      method draw context = draw (JsOfOCairo.create context)
+      method draw canvas = draw (JsOfOCairo.create canvas)
       val known_failure_ = Js.bool known_failure
     end
   )

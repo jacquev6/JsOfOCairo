@@ -72,14 +72,14 @@
           cairo_context.drawImage(this, 0, 0);
           var cairo_data = cairo_context.getImageData(0, 0, test.width, test.height);
 
-          var html5_context = div.find("canvas.html5").get(0).getContext("2d");
+          var html5_canvas = div.find("canvas.html5").get(0);
           try {
-            test.draw(html5_context);
+            test.draw(html5_canvas);
           } catch(err) {
             div.append("<p>Exception: {0}</p>".format(err))
             return;
           }
-          var html5_data = html5_context.getImageData(0, 0, test.width, test.height);
+          var html5_data = html5_canvas.getContext("2d").getImageData(0, 0, test.width, test.height);
 
           var diff_context = div.find("canvas.diff").get(0).getContext("2d");
           var diff_data = diff_context.createImageData(test.width, test.height);
