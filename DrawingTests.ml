@@ -186,6 +186,20 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.rectangle ctx ~x:5. ~y:5. ~w:90. ~h:30.;
       C.fill ctx;
     );
+    make "set_source radial gradient" 200 200 (fun ctx ->
+      let (x0, y0, r0, x1, y1, r1) = (50., 40., 30., 110., 140., 50.) in
+      let p = C.Pattern.create_radial ~x0 ~y0 ~r0 ~x1 ~y1 ~r1 in
+      assert (C.Pattern.get_radial_circles p = (x0, y0, r0, x1, y1, r1));
+      C.Pattern.add_color_stop_rgb p ~ofs:0. 1. 0. 0.;
+      C.Pattern.add_color_stop_rgb p ~ofs:1. 0. 0. 1.;
+      C.set_source ctx p;
+      C.paint ctx;
+      C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.;
+      C.arc ctx ~x:x0 ~y:y0 ~r:r0 ~a1:0. ~a2:6.28;
+      C.stroke ctx;
+      C.arc ctx ~x:x1 ~y:y1 ~r:r1 ~a1:0. ~a2:6.28;
+      C.stroke ctx;
+    );
     make "arc stroke_preserve fill" 100 100 (fun ctx ->
       C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:5.;
       C.set_line_width ctx 10.;

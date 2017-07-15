@@ -189,6 +189,7 @@ module Pattern = struct
   type source =
     | Rgba of float * float * float * float
     | LinearGradient of (float * float * float * float) * StopPointList.t
+    | RadialGradient of (float * float * float * float * float * float) * StopPointList.t
 
   type 'a t = source ref constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
 
@@ -203,7 +204,7 @@ module Pattern = struct
   let get_rgba pattern =
     match !pattern with
       | Rgba (r, g, b, a) -> (r, g, b, a)
-      | LinearGradient _ -> raise (Error PATTERN_TYPE_MISMATCH)
+      | LinearGradient _ | RadialGradient _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let create_linear ~x0 ~y0 ~x1 ~y1 =
     ref (LinearGradient ((x0, y0, x1, y1), StopPointList.empty))
@@ -211,12 +212,22 @@ module Pattern = struct
   let get_linear_points pattern =
     match !pattern with
       | LinearGradient (points, _) -> points
-      | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
+      | Rgba _ | RadialGradient _ -> raise (Error PATTERN_TYPE_MISMATCH)
+
+  let create_radial ~x0 ~y0 ~r0 ~x1 ~y1 ~r1 =
+    ref (RadialGradient ((x0, y0, r0, x1, y1, r1), StopPointList.empty))
+
+  let get_radial_circles pattern =
+    match !pattern with
+      | RadialGradient (circles, _) -> circles
+      | LinearGradient _ | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let add_color_stop_rgba pattern ?(ofs=0.) r g b a =
     match !pattern with
       | LinearGradient (points, stops) ->
         pattern := LinearGradient (points, StopPointList.add stops (ofs, r, g, b, a))
+      | RadialGradient (circles, stops) ->
+        pattern := RadialGradient (circles, StopPointList.add stops (ofs, r, g, b, a))
       | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let add_color_stop_rgb pattern ?ofs r g b =
@@ -224,12 +235,12 @@ module Pattern = struct
 
   let get_color_stop_count pattern =
     match !pattern with
-      | LinearGradient (_, stops) -> StopPointList.size stops
+      | LinearGradient (_, stops) | RadialGradient (_, stops) -> StopPointList.size stops
       | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let get_color_stop_rgba pattern ~idx =
     match !pattern with
-      | LinearGradient (_, stops) -> StopPointList.get stops ~i:idx
+      | LinearGradient (_, stops) | RadialGradient (_, stops) -> StopPointList.get stops ~i:idx
       | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 end
 
@@ -329,6 +340,14 @@ let set_source context pattern =
       context.ctx##.strokeStyle := color
     | Pattern.LinearGradient ((x0, y0, x1, y1), stops) ->
       let gradient = context.ctx##createLinearGradient x0 y0 x1 y1 in
+      stops
+      |> Pattern.StopPointList.iter ~f:(fun (ofs, r, g, b, a) ->
+        gradient##addColorStop ofs (convert_rgba r g b a)
+      );
+      context.ctx##.fillStyle_gradient := gradient;
+      context.ctx##.strokeStyle_gradient := gradient
+    | Pattern.RadialGradient ((x0, y0, r0, x1, y1, r1), stops) ->
+      let gradient = context.ctx##createRadialGradient x0 y0 r0 x1 y1 r1 in
       stops
       |> Pattern.StopPointList.iter ~f:(fun (ofs, r, g, b, a) ->
         gradient##addColorStop ofs (convert_rgba r g b a)
