@@ -144,39 +144,54 @@ type font = {
 }
 
 module Pattern = struct
-  type 'a t = {
-    kind: 'a;
-    r: float;
-    g: float;
-    b: float;
-    a: float;
-  } constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
+  type source =
+    | Rgba of float * float * float * float
+    | LinearGradient of (float * float * float * float) * (float option * float * float * float * float) list
+
+  type 'a t = source ref constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
 
   type any = [`Solid | `Surface | `Gradient | `Linear | `Radial] t
 
   let create_rgba ~r ~g ~b ~a =
-    {kind=`Solid; r; g; b; a}
+    ref (Rgba (r, g, b, a))
 
   let create_rgb ~r ~g ~b =
     create_rgba ~r ~g ~b ~a:1.
 
-  let get_rgba {kind; r; g; b; a} =
-    match kind with
-      | `Solid -> (r, g, b, a)
-      | (`Surface|`Gradient|`Linear|`Radial) -> raise (Error PATTERN_TYPE_MISMATCH)
+  let get_rgba pattern =
+    match !pattern with
+      | Rgba (r, g, b, a) -> (r, g, b, a)
+      | LinearGradient _ -> raise (Error PATTERN_TYPE_MISMATCH)
+
+  let create_linear ~x0 ~y0 ~x1 ~y1 =
+    ref (LinearGradient ((x0, y0, x1, y1), []))
+
+  let get_linear_points pattern =
+    match !pattern with
+      | LinearGradient (points, _) -> points
+      | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
+
+  let add_color_stop_rgba pattern ?ofs r g b a =
+    match !pattern with
+      | LinearGradient (points, stops) ->
+        pattern := LinearGradient (points, (ofs, r, g, b, a)::stops)
+      | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
+
+  let add_color_stop_rgb pattern ?ofs r g b =
+    add_color_stop_rgba pattern ?ofs r g b 1.
 end
 
 type state = {
   mutable transformation: Matrix.t;
   mutable font: font;
-  mutable source: Pattern.any;
+  mutable source: Pattern.source;
 }
 
 module SavedState = struct
   type t = {
     transformation: Matrix.t;
     font: font;
-    source: Pattern.any;
+    source: Pattern.source;
   }
 end
 
@@ -250,24 +265,27 @@ let clip context =
   clip_preserve context;
   Path.clear context
 
-let set_source context ({Pattern.kind; r; g; b; a} as pattern) =
+let set_source context pattern =
   let convert x = Int.to_string (Int.of_float (255.0 *. x)) in
-  begin
-    match kind with
-      | `Solid -> begin
-        let color = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
-        context.ctx##.fillStyle := color;
-        context.ctx##.strokeStyle := color
-      end
-      | `Surface -> failwith "Unsupported pattern `Surface"
-      | `Gradient -> failwith "Unsupported pattern `Gradient"
-      | `Linear -> failwith "Unsupported pattern `Linear"
-      | `Radial -> failwith "Unsupported pattern `Radial"
-  end;
-  context.state.source <- pattern
+  let convert_rgba r g b a = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
+  let source = !pattern in
+  context.state.source <- source;
+  match source with
+    | Pattern.Rgba (r, g, b, a) ->
+      let color = convert_rgba r g b a in
+      context.ctx##.fillStyle := color;
+      context.ctx##.strokeStyle := color
+    | Pattern.LinearGradient ((x0, y0, x1, y1), stops) ->
+      let gradient = context.ctx##createLinearGradient x0 y0 x1 y1 in
+      stops
+      |> Li.iter ~f:(fun (ofs, r, g, b, a) ->
+        gradient##addColorStop (Opt.value ofs) (convert_rgba r g b a)
+      );
+      context.ctx##.fillStyle_gradient := gradient;
+      context.ctx##.strokeStyle_gradient := gradient
 
 let get_source context =
-  context.state.source
+  ref context.state.source
 
 let set_source_rgb context ~r ~g ~b =
   set_source context (Pattern.create_rgb ~r ~g ~b)
@@ -430,7 +448,7 @@ let restore context =
       *)
       set_matrix context transformation;
       context.state.font <- font;
-      context.state.source <- source
+      context.state.source <- source;
     end
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
@@ -491,7 +509,7 @@ let create canvas =
         size = 10.;
         family = "sans-serif";
       };
-      source = Pattern.create_rgb ~r:0. ~g:0. ~b:0.;
+      source = !(Pattern.create_rgb ~r:0. ~g:0. ~b:0.);
     };
   } in
   set_line_width context 2.0;

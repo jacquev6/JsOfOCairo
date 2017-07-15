@@ -99,6 +99,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       (* set before, during and after path *)
       C.set_line_width ctx 4.;
       C.set_source_rgb ctx ~r:0.9 ~g:0.1 ~b:0.1;
+      assert (C.Pattern.get_rgba (C.get_source ctx) = (0.9, 0.1, 0.1, 1.));
       C.move_to ctx ~x:10. ~y:10.;
       C.line_to ctx ~x:90. ~y:10.;
       C.stroke ctx;
@@ -147,6 +148,16 @@ module Make(C: module type of JsOfOCairo_S) = struct
 
       C.rectangle ctx ~x:0.5 ~y:0. ~w:0.5 ~h:0.5;
       C.set_source_rgba ctx ~r:0. ~g:0. ~b:1. ~a:0.40;
+      C.fill ctx;
+    );
+    make "set_source linear gradient" 100 40 (fun ctx ->
+      let p = C.Pattern.create_linear ~x0:10. ~y0:20. ~x1:90. ~y1:30. in
+      assert (C.Pattern.get_linear_points p = (10., 20., 90., 30.));
+      C.Pattern.add_color_stop_rgb p ~ofs:0. 1. 0. 0.;
+      C.Pattern.add_color_stop_rgb p ~ofs:0.5 0. 1. 0.;
+      C.Pattern.add_color_stop_rgb p ~ofs:1. 0. 0. 1.;
+      C.set_source ctx p;
+      C.rectangle ctx ~x:5. ~y:5. ~w:90. ~h:30.;
       C.fill ctx;
     );
     make "arc stroke_preserve fill" 100 100 (fun ctx ->
