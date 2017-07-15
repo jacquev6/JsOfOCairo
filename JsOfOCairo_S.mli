@@ -280,7 +280,7 @@ module Pattern: sig
   (* val get_color_stop_rgba: [> `Gradient] t -> idx:int -> float * float * float * float * float *)
   val create_rgb: r:float -> g:float -> b:float -> [`Solid] t
   val create_rgba: r:float -> g:float -> b:float -> a:float -> [`Solid] t
-  (* val get_rgba: [> `Solid] t -> float * float * float * float *)
+  val get_rgba: [> `Solid] t -> float * float * float * float
   (* val create_for_surface: Surface.t -> [`Surface] t *)
   (* val get_surface: [`Surface] t -> Surface.t *)
   (* val create_linear: x0:float -> y0:float -> x1:float -> y1:float -> [`Linear | `Gradient] t *)
@@ -315,9 +315,9 @@ end *)
 
 val set_source_rgb: context -> r:float -> g:float -> b:float -> unit
 val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit
-val set_source: context -> 'a Pattern.t -> unit
+val set_source: context -> Pattern.any -> unit
 (* val set_source_surface: context -> Surface.t -> x:float -> y:float -> unit *)
-(* val get_source: context -> Pattern.any *)
+val get_source: context -> Pattern.any
 
 type line_cap = BUTT | ROUND | SQUARE
 val set_line_cap: context -> line_cap -> unit

@@ -143,6 +143,29 @@ type _font = {
   family: string;
 }
 
+module Pattern = struct
+  type 'a t = {
+    kind: 'a;
+    r: float;
+    g: float;
+    b: float;
+    a: float;
+  } constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
+
+  type any = [`Solid | `Surface | `Gradient | `Linear | `Radial] t
+
+  let create_rgb ~r ~g ~b =
+    {kind=`Solid; r; g; b; a=1.}
+
+  let create_rgba ~r ~g ~b ~a =
+    {kind=`Solid; r; g; b; a}
+
+  let get_rgba {kind; r; g; b; a} =
+    match kind with
+      | `Solid -> (r, g, b, a)
+      | (`Surface|`Gradient|`Linear|`Radial) -> raise (Error PATTERN_TYPE_MISMATCH)
+end
+
 type context = {
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   mutable start_point: (float * float) option;
@@ -150,6 +173,7 @@ type context = {
   mutable transformation: Matrix.t;
   mutable saved_transformations: Matrix.t list;
   mutable font: _font;
+  mutable source: Pattern.any;
 }
 
 let set_line_width context width =
@@ -214,24 +238,9 @@ let clip context =
   clip_preserve context;
   Path.clear context
 
-module Pattern = struct
-  type 'a t = {
-    kind: 'a;
-    r: float;
-    g: float;
-    b: float;
-    a: float;
-  } constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
-  type any = [`Solid | `Surface | `Gradient | `Linear | `Radial] t
-
-  let create_rgb ~r ~g ~b =
-    {kind=`Solid; r; g; b; a=1.}
-
-  let create_rgba ~r ~g ~b ~a =
-    {kind=`Solid; r; g; b; a}
-
-  let set_source context {kind; r; g; b; a} =
-    let convert x = Int.to_string (Int.of_float (255.0 *. x)) in
+let set_source context ({Pattern.kind; r; g; b; a} as pattern) =
+  let convert x = Int.to_string (Int.of_float (255.0 *. x)) in
+  begin
     match kind with
       | `Solid -> begin
         let color = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
@@ -242,9 +251,11 @@ module Pattern = struct
       | `Gradient -> failwith "Unsupported pattern `Gradient"
       | `Linear -> failwith "Unsupported pattern `Linear"
       | `Radial -> failwith "Unsupported pattern `Radial"
-end
+  end;
+  context.source <- pattern
 
-let set_source = Pattern.set_source
+let get_source {source; _} =
+  source
 
 let set_source_rgb context ~r ~g ~b =
   set_source context (Pattern.create_rgb ~r ~g ~b)
@@ -473,6 +484,7 @@ let create canvas =
     transformation = Matrix.init_identity ();
     saved_transformations = [];
     font = _get_font ctx;
+    source = Pattern.create_rgb ~r:0. ~g:0. ~b:0.;
   } in
   set_line_width context 2.0;
   context
