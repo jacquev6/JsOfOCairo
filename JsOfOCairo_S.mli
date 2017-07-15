@@ -24,6 +24,19 @@ val show_page: context -> unit
 
 val mask: context -> 'a Pattern.t -> unit
 val mask_surface: context -> Surface.t -> x:float -> y:float -> unit
+
+module Pattern: sig
+  type extend = NONE | REPEAT | REFLECT | PAD
+  val set_extend: 'a t -> extend -> unit
+  val get_extend: 'a t -> extend
+
+  type filter = FAST | GOOD | BEST | NEAREST | BILINEAR
+  val set_filter: 'a t -> filter -> unit
+  val get_filter: 'a t -> filter
+  val set_matrix: 'a t -> Matrix.t -> unit
+  val get_matrix: 'a t -> Matrix.t
+end
+
 *)
 
 (* Other types and functions commented out below have not been analyzed yet. They may or may not be implemented later. *)
@@ -287,18 +300,6 @@ module Pattern: sig
   val get_linear_points: [> `Linear | `Gradient] t -> float * float * float * float
   val create_radial: x0:float -> y0:float -> r0:float -> x1:float -> y1:float -> r1:float -> [`Radial | `Gradient] t
   val get_radial_circles: [> `Radial | `Gradient] t -> float * float * float * float * float * float
-
-  (* type extend = NONE | REPEAT | REFLECT | PAD *)
-
-  (* val set_extend: 'a t -> extend -> unit *)
-  (* val get_extend: 'a t -> extend *)
-
-  (* type filter = FAST | GOOD | BEST | NEAREST | BILINEAR *)
-
-  (* val set_filter: 'a t -> filter -> unit *)
-  (* val get_filter: 'a t -> filter *)
-  (* val set_matrix: 'a t -> Matrix.t -> unit *)
-  (* val get_matrix: 'a t -> Matrix.t *)
 end
 
 (* val create: Surface.t -> context *)
