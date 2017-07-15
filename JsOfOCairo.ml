@@ -154,11 +154,11 @@ module Pattern = struct
 
   type any = [`Solid | `Surface | `Gradient | `Linear | `Radial] t
 
-  let create_rgb ~r ~g ~b =
-    {kind=`Solid; r; g; b; a=1.}
-
   let create_rgba ~r ~g ~b ~a =
     {kind=`Solid; r; g; b; a}
+
+  let create_rgb ~r ~g ~b =
+    create_rgba ~r ~g ~b ~a:1.
 
   let get_rgba {kind; r; g; b; a} =
     match kind with
