@@ -118,6 +118,13 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_line_width ctx 6.;
       C.stroke ctx;
     );
+    make "set_source_rgba" 100 20 (fun ctx ->
+      C.set_line_width ctx 4.;
+      C.set_source_rgba ctx ~r:0.9 ~g:0.1 ~b:0.1 ~a:0.5;
+      C.move_to ctx ~x:10. ~y:10.;
+      C.line_to ctx ~x:90. ~y:10.;
+      C.stroke ctx;
+    );
     make "arc stroke_preserve fill" 100 100 (fun ctx ->
       C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:5.;
       C.set_line_width ctx 10.;
@@ -657,13 +664,13 @@ module Make(C: module type of JsOfOCairo_S) = struct
     ]
     |> Li.map ~f:(fun (operator, operator_name) ->
       make_one ~known_failure:false (Printf.sprintf "set_operator get_operator %s" operator_name) 100 100 (fun ctx ->
-        C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.8;
+        C.set_source_rgba ctx ~r:0. ~g:0. ~b:0.8 ~a:0.8;
         C.rectangle ctx ~x:10. ~y:10. ~w:50. ~h:50.;
         C.fill ctx;
         assert (C.get_operator ctx = C.OVER);
         C.set_operator ctx operator;
         assert (C.get_operator ctx = operator);
-        C.set_source_rgb ctx ~r:0.8 ~g:0. ~b:0.;
+        C.set_source_rgba ctx ~r:0.8 ~g:0. ~b:0. ~a:0.8;
         C.arc ctx ~x:50. ~y:50. ~r:30. ~a1:0. ~a2:6.28;
         C.fill ctx;
       )

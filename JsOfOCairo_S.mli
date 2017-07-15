@@ -19,6 +19,11 @@ val clip_reset: context -> unit
 val set_tolerance: context -> float -> unit
 val get_tolerance: context -> float
 
+val copy_page: context -> unit
+val show_page: context -> unit
+
+val mask: context -> 'a Pattern.t -> unit
+val mask_surface: context -> Surface.t -> x:float -> y:float -> unit
 *)
 
 (* Other types and functions commented out below have not been analyzed yet. They may or may not be implemented later. *)
@@ -309,7 +314,7 @@ val restore: context -> unit
 end *)
 
 val set_source_rgb: context -> r:float -> g:float -> b:float -> unit
-(* @todo val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit *)
+val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit
 (* @todo val set_source: context -> 'a Pattern.t -> unit *)
 (* val set_source_surface: context -> Surface.t -> x:float -> y:float -> unit *)
 (* @todo val get_source: context -> Pattern.any *)
@@ -340,15 +345,11 @@ val fill: context -> unit
 val fill_preserve: context -> unit
 (* val fill_extents: context -> rectangle *)
 (* val in_fill: context -> x:float -> y:float -> bool *)
-(* val mask: context -> 'a Pattern.t -> unit *)
-(* val mask_surface: context -> Surface.t -> x:float -> y:float -> unit *)
 val paint: ?alpha:float -> context -> unit
 val stroke: context -> unit
 val stroke_preserve: context -> unit
 (* val stroke_extents: context -> rectangle *)
 (* val in_stroke: context -> x:float -> y:float -> bool *)
-(* val copy_page: context -> unit *)
-(* val show_page: context -> unit *)
 
 (* type path_data =
   | MOVE_TO of float * float

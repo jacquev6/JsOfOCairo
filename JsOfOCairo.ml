@@ -220,6 +220,12 @@ let set_source_rgb context ~r ~g ~b =
   context.ctx##.fillStyle := color;
   context.ctx##.strokeStyle := color
 
+let set_source_rgba context ~r ~g ~b ~a =
+  let convert x = Int.to_string (Int.of_float (255.0 *. x)) in
+  let color = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f" (convert r) (convert g) (convert b) a) in
+  context.ctx##.fillStyle := color;
+  context.ctx##.strokeStyle := color
+
 let device_to_user context ~x ~y =
   Matrix.rev_transform_point' context.transformation (x, y)
 
