@@ -667,7 +667,41 @@ module Make(C: module type of JsOfOCairo_S) = struct
         C.arc ctx ~x:50. ~y:50. ~r:30. ~a1:0. ~a2:6.28;
         C.fill ctx;
       )
-    )
+    );
+    make "invalid restore" 100 40 (fun ctx ->
+      try
+        C.restore ctx;
+        C.arc ctx ~x:50. ~y:20. ~r:10. ~a1:0. ~a2:6.28;
+        C.fill ctx;
+        assert false;
+      with
+        | C.Error C.INVALID_RESTORE -> ()
+    );
+    make "no current point: initial" 100 40 (fun ctx ->
+      try
+        assert (C.Path.get_current_point ctx = (0., 0.));
+        C.rel_line_to ctx ~x:50. ~y:20.;
+        C.stroke ctx;
+        assert false;
+      with
+        | C.Error C.NO_CURRENT_POINT -> ()
+    );
+    make "no current point: after Path.clear" 100 40 (fun ctx ->
+      try
+        C.move_to ctx ~x:10. ~y:10.;
+        C.Path.clear ctx;
+        assert (C.Path.get_current_point ctx = (0., 0.));
+        C.rel_line_to ctx ~x:50. ~y:20.;
+        C.stroke ctx;
+        assert false;
+      with
+        | C.Error C.NO_CURRENT_POINT -> ()
+    );
+    make "no current point: translate show_text" 100 40 (fun ctx ->
+      C.translate ctx ~x:10. ~y:30.;
+      assert (C.Path.get_current_point ctx = (0., 0.));
+      C.show_text ctx "BABA";
+    );
   ]
   |> Li.concat
 end

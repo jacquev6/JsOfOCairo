@@ -6,10 +6,60 @@ module Printf = OCamlStandard.Printf
 module type S = module type of JsOfOCairo_S
 
 (*
-Canvas references:
+Canvas:
 - http://www.w3schools.com/tags/ref_canvas.asp
 - https://ocsigen.org/js_of_ocaml/2.8.4/api/Dom_html.canvasRenderingContext2D-c
+
+Cairo:
+- http://cairo.forge.ocamlcore.org/tutorial/Cairo.html
+- https://github.com/Chris00/ocaml-cairo
+- utop -require cairo2
 *)
+
+type status = INVALID_RESTORE | INVALID_POP_GROUP | NO_CURRENT_POINT | INVALID_MATRIX | INVALID_STATUS | NULL_POINTER | INVALID_STRING | INVALID_PATH_DATA | READ_ERROR | WRITE_ERROR | SURFACE_FINISHED | SURFACE_TYPE_MISMATCH | PATTERN_TYPE_MISMATCH | INVALID_CONTENT | INVALID_FORMAT | INVALID_VISUAL | FILE_NOT_FOUND | INVALID_DASH | INVALID_DSC_COMMENT | INVALID_INDEX | CLIP_NOT_REPRESENTABLE | TEMP_FILE_ERROR | INVALID_STRIDE | FONT_TYPE_MISMATCH | USER_FONT_IMMUTABLE | USER_FONT_ERROR | NEGATIVE_COUNT | INVALID_CLUSTERS | INVALID_SLANT | INVALID_WEIGHT | INVALID_SIZE | USER_FONT_NOT_IMPLEMENTED | DEVICE_TYPE_MISMATCH | DEVICE_ERROR | INVALID_MESH_CONSTRUCTION | DEVICE_FINISHED | JBIG2_GLOBAL_MISSING
+
+exception Error of status
+
+let status_to_string = function
+  | INVALID_RESTORE -> "cairo_restore() without matching cairo_save()"
+  | INVALID_POP_GROUP -> "no saved group to pop, i.e. cairo_pop_group() without matching cairo_push_group()"
+  | NO_CURRENT_POINT -> "no current point defined"
+  | INVALID_MATRIX -> "invalid matrix (not invertible)"
+  | INVALID_STATUS -> "invalid value for an input cairo_status_t"
+  | NULL_POINTER -> "NULL pointer"
+  | INVALID_STRING -> "input string not valid UTF-8"
+  | INVALID_PATH_DATA -> "input path data not valid"
+  | READ_ERROR -> "error while reading from input stream"
+  | WRITE_ERROR -> "error while writing to output stream"
+  | SURFACE_FINISHED -> "the target surface has been finished"
+  | SURFACE_TYPE_MISMATCH -> "the surface type is not appropriate for the operation"
+  | PATTERN_TYPE_MISMATCH -> "the pattern type is not appropriate for the operation"
+  | INVALID_CONTENT -> "invalid value for an input cairo_content_t"
+  | INVALID_FORMAT -> "invalid value for an input cairo_format_t"
+  | INVALID_VISUAL -> "invalid value for an input Visual*"
+  | FILE_NOT_FOUND -> "file not found"
+  | INVALID_DASH -> "invalid value for a dash setting"
+  | INVALID_DSC_COMMENT -> "invalid value for a DSC comment"
+  | INVALID_INDEX -> "invalid index passed to getter"
+  | CLIP_NOT_REPRESENTABLE -> "clip region not representable in desired format"
+  | TEMP_FILE_ERROR -> "error creating or writing to a temporary file"
+  | INVALID_STRIDE -> "invalid value for stride"
+  | FONT_TYPE_MISMATCH -> "the font type is not appropriate for the operation"
+  | USER_FONT_IMMUTABLE -> "the user-font is immutable"
+  | USER_FONT_ERROR -> "error occurred in a user-font callback function"
+  | NEGATIVE_COUNT -> "negative number used where it is not allowed"
+  | INVALID_CLUSTERS -> "input clusters do not represent the accompanying text and glyph arrays"
+  | INVALID_SLANT -> "invalid value for an input cairo_font_slant_t"
+  | INVALID_WEIGHT -> "invalid value for an input cairo_font_weight_t"
+  | INVALID_SIZE -> "invalid value (typically too big) for the size of the input (surface, pattern, etc.)"
+  | USER_FONT_NOT_IMPLEMENTED -> "user-font method not implemented"
+  | DEVICE_TYPE_MISMATCH -> "the device type is not appropriate for the operation"
+  | DEVICE_ERROR -> "an operation to the device caused an unspecified error"
+  | INVALID_MESH_CONSTRUCTION -> "invalid operation during mesh pattern construction"
+  | DEVICE_FINISHED -> "the target device has been finished"
+  | JBIG2_GLOBAL_MISSING -> "CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID used but no CAIRO_MIME_TYPE_JBIG2_GLOBAL data provided"
+
+exception Unavailable
 
 type matrix = {
   mutable xx: float;
@@ -96,7 +146,7 @@ type _font = {
 type context = {
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   mutable start_point: (float * float) option;
-  mutable current_point: float * float;
+  mutable current_point: (float * float) option;
   mutable transformation: Matrix.t;
   mutable saved_transformations: Matrix.t list;
   mutable font: _font;
@@ -111,36 +161,37 @@ let get_line_width context =
 module Path = struct
   let get_current_point {current_point; _} =
     current_point
+    |> Opt.value_def ~def:(0., 0.)
 
   let clear context =
     context.ctx##beginPath;
-    context.current_point <- (0., 0.)
+    context.current_point <- None
 
   let close context =
     context.ctx##closePath;
-    context.current_point <- Opt.value context.start_point
+    context.current_point <- context.start_point
 end
 
 let move_to context ~x ~y =
   context.ctx##moveTo x y;
-  context.current_point <- (x, y);
-  context.start_point <- Some (x, y)
+  context.start_point <- Some (x, y);
+  context.current_point <- context.start_point
 
 let line_to context ~x ~y =
   context.ctx##lineTo x y;
-  context.current_point <- (x, y)
+  context.current_point <- Some (x, y)
 
 let arc context ~x ~y ~r ~a1 ~a2 =
   context.ctx##arc x y r a1 a2 Js._false;
   if Opt.is_none context.start_point then
   context.start_point <- Some (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
-  context.current_point <- (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
+  context.current_point <- Some (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
 
 let arc_negative context ~x ~y ~r ~a1 ~a2 =
   context.ctx##arc x y r a1 a2 Js._true;
   if Opt.is_none context.start_point then
   context.start_point <- Some (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
-  context.current_point <- (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
+  context.current_point <- Some (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
 
 let stroke_preserve context =
   context.ctx##stroke
@@ -185,8 +236,8 @@ let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
   context.ctx##setTransform xx yx xy yy x0 y0;
   context.current_point <-
     context.current_point
-    |> Matrix.transform_point' context.transformation
-    |> Matrix.rev_transform_point' m;
+    |> Opt.map ~f:(Matrix.transform_point' context.transformation)
+    |> Opt.map ~f:(Matrix.rev_transform_point' m);
   context.start_point <-
     context.start_point
     |> Opt.map ~f:(Matrix.transform_point' context.transformation)
@@ -254,8 +305,9 @@ let get_miter_limit context =
   context.ctx##.miterLimit
 
 let make_rel context ~x:dx ~y:dy =
-  let (x, y) = context.current_point in
-  (x +. dx, y +. dy)
+  match context.current_point with
+    | None -> raise (Error NO_CURRENT_POINT)
+    | Some (x, y) -> (x +. dx, y +. dy)
 
 let rel_move_to context ~x ~y =
   let (x, y) = make_rel context ~x ~y in
@@ -266,7 +318,7 @@ let rel_line_to context ~x ~y =
   line_to context ~x ~y
 
 let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-  context.current_point <- (x3, y3);
+  context.current_point <- Some (x3, y3);
   context.ctx##bezierCurveTo x1 y1 x2 y2 x3 y3
 
 let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
@@ -276,7 +328,7 @@ let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
 
 let rectangle context ~x ~y ~w ~h =
-  context.current_point <- (x, y);
+  context.current_point <- Some (x, y);
   context.ctx##rect x y w h
 
 type font_extents = {
@@ -328,10 +380,14 @@ let _get_font ctx =
   )
 
 let restore context =
-  context.ctx##restore;
-  set_matrix context (Li.head context.saved_transformations);
-  context.saved_transformations <- Li.tail context.saved_transformations;
-  context.font <- _get_font context.ctx
+  match context.saved_transformations with
+    | [] -> raise (Error INVALID_RESTORE)
+    | matrix::saved_transformations -> begin
+      context.ctx##restore;
+      set_matrix context matrix;
+      context.saved_transformations <- saved_transformations;
+      context.font <- _get_font context.ctx
+    end
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
   _set_font context {context.font with slant; weight; family}
@@ -340,7 +396,7 @@ let set_font_size context size =
   _set_font context {context.font with size}
 
 let show_text context s =
-  let (x, y) = context.current_point in
+  let (x, y) = Path.get_current_point context in
   context.ctx##fillText (Js.string s) x y
 
 let font_extents context =
@@ -381,7 +437,7 @@ let create canvas =
   let context = {
     ctx;
     start_point = None;
-    current_point = (0., 0.);
+    current_point = None;
     transformation = Matrix.init_identity ();
     saved_transformations = [];
     font = _get_font ctx;
