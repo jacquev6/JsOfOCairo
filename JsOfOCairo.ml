@@ -144,9 +144,51 @@ type font = {
 }
 
 module Pattern = struct
+  module StopPointList: sig
+    type t
+    val empty: t
+    val size: t -> int
+    val add: t -> float * float * float * float * float -> t
+    val iter: t -> f:(float * float * float * float * float -> unit) -> unit
+    val get: t -> i:int -> float * float * float * float * float
+  end = struct
+    include SoLi.Make(struct
+      type t =
+        float (* position *)
+        * int (* index added (used to sort stop points added at the same position) *)
+        * float * float * float * float (* r, g, b, a *)
+
+      let cmp (a, ia, _, _, _, _) (b, ib, _, _, _, _) =
+        match Fl.cmp a b with
+          | LT -> LT
+          | EQ -> Int.cmp ia ib
+          | GT -> GT
+
+      let equal _ _ =
+        failwith "Unexpected"
+
+      let to_string _ =
+        failwith "Unexpected"
+    end)
+
+    let add xs (position, r, g, b, a) =
+      add xs (position, size xs, r, g, b, a)
+
+    let iter xs ~f =
+      iter xs ~f:(fun (position, _, r, g, b, a) -> f (position, r, g, b, a))
+
+    let get xs ~i =
+      let (position, _, r, g, b, a) =
+        xs
+        |> to_list
+        |> Li.get ~i
+      in
+      (position, r, g, b, a)
+  end
+
   type source =
     | Rgba of float * float * float * float
-    | LinearGradient of (float * float * float * float) * (float option * float * float * float * float) list
+    | LinearGradient of (float * float * float * float) * StopPointList.t
 
   type 'a t = source ref constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
 
@@ -164,21 +206,31 @@ module Pattern = struct
       | LinearGradient _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let create_linear ~x0 ~y0 ~x1 ~y1 =
-    ref (LinearGradient ((x0, y0, x1, y1), []))
+    ref (LinearGradient ((x0, y0, x1, y1), StopPointList.empty))
 
   let get_linear_points pattern =
     match !pattern with
       | LinearGradient (points, _) -> points
       | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
-  let add_color_stop_rgba pattern ?ofs r g b a =
+  let add_color_stop_rgba pattern ?(ofs=0.) r g b a =
     match !pattern with
       | LinearGradient (points, stops) ->
-        pattern := LinearGradient (points, (ofs, r, g, b, a)::stops)
+        pattern := LinearGradient (points, StopPointList.add stops (ofs, r, g, b, a))
       | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let add_color_stop_rgb pattern ?ofs r g b =
     add_color_stop_rgba pattern ?ofs r g b 1.
+
+  let get_color_stop_count pattern =
+    match !pattern with
+      | LinearGradient (_, stops) -> StopPointList.size stops
+      | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
+
+  let get_color_stop_rgba pattern ~idx =
+    match !pattern with
+      | LinearGradient (_, stops) -> StopPointList.get stops ~i:idx
+      | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 end
 
 type state = {
@@ -278,8 +330,8 @@ let set_source context pattern =
     | Pattern.LinearGradient ((x0, y0, x1, y1), stops) ->
       let gradient = context.ctx##createLinearGradient x0 y0 x1 y1 in
       stops
-      |> Li.iter ~f:(fun (ofs, r, g, b, a) ->
-        gradient##addColorStop (Opt.value ofs) (convert_rgba r g b a)
+      |> Pattern.StopPointList.iter ~f:(fun (ofs, r, g, b, a) ->
+        gradient##addColorStop ofs (convert_rgba r g b a)
       );
       context.ctx##.fillStyle_gradient := gradient;
       context.ctx##.strokeStyle_gradient := gradient

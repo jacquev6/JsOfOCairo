@@ -154,8 +154,34 @@ module Make(C: module type of JsOfOCairo_S) = struct
       let p = C.Pattern.create_linear ~x0:10. ~y0:20. ~x1:90. ~y1:30. in
       assert (C.Pattern.get_linear_points p = (10., 20., 90., 30.));
       C.Pattern.add_color_stop_rgb p ~ofs:0. 1. 0. 0.;
+      C.Pattern.add_color_stop_rgba p ~ofs:1. 0. 0. 1. 0.8;
       C.Pattern.add_color_stop_rgb p ~ofs:0.5 0. 1. 0.;
-      C.Pattern.add_color_stop_rgb p ~ofs:1. 0. 0. 1.;
+      assert (C.Pattern.get_color_stop_count p = 3);
+      assert (C.Pattern.get_color_stop_rgba p ~idx:1 = (0.5, 0., 1., 0., 1.));
+      assert (C.Pattern.get_color_stop_rgba p ~idx:2 = (1., 0., 0., 1., 0.8));
+      C.set_source ctx p;
+      C.rectangle ctx ~x:5. ~y:5. ~w:90. ~h:30.;
+      C.fill ctx;
+    );
+    make "set_source linear gradient 2" 100 40 (fun ctx ->
+      let p = C.Pattern.create_linear ~x0:10. ~y0:20. ~x1:90. ~y1:30. in
+      C.Pattern.add_color_stop_rgb p ~ofs:0.8 0. 1. 0.;
+      C.Pattern.add_color_stop_rgb p ~ofs:0. 0. 0. 0.;
+      C.Pattern.add_color_stop_rgb p ~ofs:0.8 0. 0. 1.;
+      C.Pattern.add_color_stop_rgb p ~ofs:1. 1. 0. 0.;
+      assert (C.Pattern.get_color_stop_count p = 4);
+      assert (C.Pattern.get_color_stop_rgba p ~idx:0 = (0., 0., 0., 0., 1.));
+      assert (C.Pattern.get_color_stop_rgba p ~idx:1 = (0.8, 0., 1., 0., 1.));
+      assert (C.Pattern.get_color_stop_rgba p ~idx:2 = (0.8, 0., 0., 1., 1.));
+      C.set_source ctx p;
+      C.rectangle ctx ~x:5. ~y:5. ~w:90. ~h:30.;
+      C.fill ctx;
+    );
+    make "set_source linear gradient 3" 100 40 (fun ctx ->
+      let p = C.Pattern.create_linear ~x0:10. ~y0:20. ~x1:90. ~y1:30. in
+      C.Pattern.add_color_stop_rgb p 0. 1. 0.;
+      C.Pattern.add_color_stop_rgb p 0. 0. 1.;
+      C.Pattern.add_color_stop_rgb p 1. 0. 0.;
       C.set_source ctx p;
       C.rectangle ctx ~x:5. ~y:5. ~w:90. ~h:30.;
       C.fill ctx;

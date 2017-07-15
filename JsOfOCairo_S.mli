@@ -276,8 +276,8 @@ module Pattern: sig
 
   val add_color_stop_rgb: [> `Gradient] t -> ?ofs:float -> float -> float -> float -> unit
   val add_color_stop_rgba: [> `Gradient] t -> ?ofs:float -> float -> float -> float -> float -> unit
-  (* val get_color_stop_count: [> `Gradient] t -> int *)
-  (* val get_color_stop_rgba: [> `Gradient] t -> idx:int -> float * float * float * float * float *)
+  val get_color_stop_count: [> `Gradient] t -> int
+  val get_color_stop_rgba: [> `Gradient] t -> idx:int -> float * float * float * float * float
   val create_rgb: r:float -> g:float -> b:float -> [`Solid] t
   val create_rgba: r:float -> g:float -> b:float -> a:float -> [`Solid] t
   val get_rgba: [> `Solid] t -> float * float * float * float
