@@ -136,7 +136,7 @@ type slant = Upright | Italic | Oblique
 
 type weight = Normal | Bold
 
-type _font = {
+type font = {
   slant: slant;
   weight: weight;
   size: float;
@@ -166,14 +166,26 @@ module Pattern = struct
       | (`Surface|`Gradient|`Linear|`Radial) -> raise (Error PATTERN_TYPE_MISMATCH)
 end
 
+type state = {
+  mutable transformation: Matrix.t;
+  mutable font: font;
+  mutable source: Pattern.any;
+}
+
+module SavedState = struct
+  type t = {
+    transformation: Matrix.t;
+    font: font;
+    source: Pattern.any;
+  }
+end
+
 type context = {
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   mutable start_point: (float * float) option;
   mutable current_point: (float * float) option;
-  mutable transformation: Matrix.t;
-  mutable saved_transformations: Matrix.t list;
-  mutable font: _font;
-  mutable source: Pattern.any;
+  mutable saved_states: SavedState.t list;
+  state: state;
 }
 
 let set_line_width context width =
@@ -252,10 +264,10 @@ let set_source context ({Pattern.kind; r; g; b; a} as pattern) =
       | `Linear -> failwith "Unsupported pattern `Linear"
       | `Radial -> failwith "Unsupported pattern `Radial"
   end;
-  context.source <- pattern
+  context.state.source <- pattern
 
-let get_source {source; _} =
-  source
+let get_source context =
+  context.state.source
 
 let set_source_rgb context ~r ~g ~b =
   set_source context (Pattern.create_rgb ~r ~g ~b)
@@ -264,34 +276,34 @@ let set_source_rgba context ~r ~g ~b ~a =
   set_source context (Pattern.create_rgba ~r ~g ~b ~a)
 
 let device_to_user context ~x ~y =
-  Matrix.rev_transform_point' context.transformation (x, y)
+  Matrix.rev_transform_point' context.state.transformation (x, y)
 
 let device_to_user_distance context ~x ~y =
-  Matrix.rev_transform_distance' context.transformation (x, y)
+  Matrix.rev_transform_distance' context.state.transformation (x, y)
 
 let user_to_device context ~x ~y =
-  Matrix.transform_point' context.transformation (x, y)
+  Matrix.transform_point' context.state.transformation (x, y)
 
 let user_to_device_distance context ~x ~y =
-  Matrix.transform_distance' context.transformation (x, y)
+  Matrix.transform_distance' context.state.transformation (x, y)
 
 let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
   context.ctx##setTransform xx yx xy yy x0 y0;
   context.current_point <-
     context.current_point
-    |> Opt.map ~f:(Matrix.transform_point' context.transformation)
+    |> Opt.map ~f:(Matrix.transform_point' context.state.transformation)
     |> Opt.map ~f:(Matrix.rev_transform_point' m);
   context.start_point <-
     context.start_point
-    |> Opt.map ~f:(Matrix.transform_point' context.transformation)
+    |> Opt.map ~f:(Matrix.transform_point' context.state.transformation)
     |> Opt.map ~f:(Matrix.rev_transform_point' m);
-  context.transformation <- m
+  context.state.transformation <- m
 
 let get_matrix context =
-  context.transformation
+  context.state.transformation
 
 let transform context m =
-  set_matrix context (Matrix.multiply context.transformation m)
+  set_matrix context (Matrix.multiply context.state.transformation m)
 
 let scale context ~x ~y =
   transform context (Matrix.init_scale ~x ~y)
@@ -307,7 +319,8 @@ let identity_matrix context =
 
 let save context =
   context.ctx##save;
-  context.saved_transformations <- context.transformation::context.saved_transformations
+  let {transformation; font; source} = context.state in
+  context.saved_states <- {SavedState.transformation; font; source}::context.saved_states
 
 type line_cap = BUTT | ROUND | SQUARE
 
@@ -392,7 +405,7 @@ type text_extents = {
 }
 
 let _set_font context ({slant; weight; size; family} as font) =
-  context.font <- font;
+  context.state.font <- font;
   let font_style = match slant with
     | Upright -> "normal"
     | Italic -> "italic"
@@ -404,46 +417,34 @@ let _set_font context ({slant; weight; size; family} as font) =
   let font = Printf.sprintf "%s %s %npx %s" font_style font_weight (Int.of_float size) family in
   context.ctx##.font := Js.string font
 
-let _get_font ctx =
-  (* @todo Test performance. This looks costly in DrawGrammar: we change fonts a lot, for each Token, Terminal, and NonTerminal.
-  We could cache this data in the context, and invalidate the cache on C.restore *)
-  ctx##.font
-  |> Js.to_string
-  |> Str.split ~sep:" "
-  |> Li.fold ~init:{slant=Upright; weight=Normal; size=10.; family="sans-serif"} ~f:(fun font -> function
-    | "normal" -> font
-    | "italic" -> {font with slant=Italic}
-    | "oblique" -> {font with slant=Oblique}
-    | "bold" -> {font with weight=Bold}
-    | part -> begin
-      match Str.try_drop_suffix part ~suf:"px" with
-        | None -> {font with family=part}
-        | Some size -> {font with size=Fl.of_string size}
-    end
-  )
-
 let restore context =
-  match context.saved_transformations with
+  match context.saved_states with
     | [] -> raise (Error INVALID_RESTORE)
-    | matrix::saved_transformations -> begin
+    | {SavedState.transformation; font; source}::saved_states -> begin
       context.ctx##restore;
-      set_matrix context matrix;
-      context.saved_transformations <- saved_transformations;
-      context.font <- _get_font context.ctx
+      context.saved_states <- saved_states;
+      (* @todo Store start and current points in device coordinates,
+        so that they don't need to be changed in set_matrix,
+        and we can simply do:
+        context.state.transformation <- transformation;
+      *)
+      set_matrix context transformation;
+      context.state.font <- font;
+      context.state.source <- source
     end
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
-  _set_font context {context.font with slant; weight; family}
+  _set_font context {context.state.font with slant; weight; family}
 
 let set_font_size context size =
-  _set_font context {context.font with size}
+  _set_font context {context.state.font with size}
 
 let show_text context s =
   let (x, y) = Path.get_current_point context in
   context.ctx##fillText (Js.string s) x y
 
 let font_extents context =
-  let {size; _} = context.font in
+  let {size; _} = context.state.font in
   {
     ascent = size;
     descent = size /. 4.;
@@ -453,7 +454,7 @@ let font_extents context =
   }
 
 let text_extents context s =
-  let {size; _} = context.font
+  let {size; _} = context.state.font
   and w = (context.ctx##measureText (Js.string s))##.width in
   {
     x_bearing = 0.;
@@ -481,10 +482,17 @@ let create canvas =
     ctx;
     start_point = None;
     current_point = None;
-    transformation = Matrix.init_identity ();
-    saved_transformations = [];
-    font = _get_font ctx;
-    source = Pattern.create_rgb ~r:0. ~g:0. ~b:0.;
+    saved_states = [];
+    state = {
+      transformation = Matrix.init_identity ();
+      font = {
+        slant = Upright;
+        weight = Normal;
+        size = 10.;
+        family = "sans-serif";
+      };
+      source = Pattern.create_rgb ~r:0. ~g:0. ~b:0.;
+    };
   } in
   set_line_width context 2.0;
   context
