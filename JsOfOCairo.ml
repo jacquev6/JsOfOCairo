@@ -214,17 +214,43 @@ let clip context =
   clip_preserve context;
   Path.clear context
 
+module Pattern = struct
+  type 'a t = {
+    kind: 'a;
+    r: float;
+    g: float;
+    b: float;
+    a: float;
+  } constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
+  type any = [`Solid | `Surface | `Gradient | `Linear | `Radial] t
+
+  let create_rgb ~r ~g ~b =
+    {kind=`Solid; r; g; b; a=1.}
+
+  let create_rgba ~r ~g ~b ~a =
+    {kind=`Solid; r; g; b; a}
+
+  let set_source context {kind; r; g; b; a} =
+    let convert x = Int.to_string (Int.of_float (255.0 *. x)) in
+    match kind with
+      | `Solid -> begin
+        let color = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
+        context.ctx##.fillStyle := color;
+        context.ctx##.strokeStyle := color
+      end
+      | `Surface -> failwith "Unsupported pattern `Surface"
+      | `Gradient -> failwith "Unsupported pattern `Gradient"
+      | `Linear -> failwith "Unsupported pattern `Linear"
+      | `Radial -> failwith "Unsupported pattern `Radial"
+end
+
+let set_source = Pattern.set_source
+
 let set_source_rgb context ~r ~g ~b =
-  let convert x = Printf.sprintf "%02x" (Int.of_float (255.0 *. x)) in
-  let color = Js.string (Printf.sprintf "#%s%s%s" (convert r) (convert g) (convert b)) in
-  context.ctx##.fillStyle := color;
-  context.ctx##.strokeStyle := color
+  set_source context (Pattern.create_rgb ~r ~g ~b)
 
 let set_source_rgba context ~r ~g ~b ~a =
-  let convert x = Int.to_string (Int.of_float (255.0 *. x)) in
-  let color = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f" (convert r) (convert g) (convert b) a) in
-  context.ctx##.fillStyle := color;
-  context.ctx##.strokeStyle := color
+  set_source context (Pattern.create_rgba ~r ~g ~b ~a)
 
 let device_to_user context ~x ~y =
   Matrix.rev_transform_point' context.transformation (x, y)

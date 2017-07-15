@@ -270,36 +270,36 @@ end *)
   val ink_extents: Surface.t -> rectangle
 end *)
 
-(* module Pattern: sig
+module Pattern: sig
   type 'a t constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
   type any = [`Solid | `Surface | `Gradient | `Linear | `Radial] t
 
-  val add_color_stop_rgb: [> `Gradient] t -> ?ofs:float -> float -> float -> float -> unit
-  val add_color_stop_rgba: [> `Gradient] t -> ?ofs:float -> float -> float -> float -> float -> unit
-  val get_color_stop_count: [> `Gradient] t -> int
-  val get_color_stop_rgba: [> `Gradient] t -> idx:int -> float * float * float * float * float
+  (* val add_color_stop_rgb: [> `Gradient] t -> ?ofs:float -> float -> float -> float -> unit *)
+  (* val add_color_stop_rgba: [> `Gradient] t -> ?ofs:float -> float -> float -> float -> float -> unit *)
+  (* val get_color_stop_count: [> `Gradient] t -> int *)
+  (* val get_color_stop_rgba: [> `Gradient] t -> idx:int -> float * float * float * float * float *)
   val create_rgb: r:float -> g:float -> b:float -> [`Solid] t
   val create_rgba: r:float -> g:float -> b:float -> a:float -> [`Solid] t
-  val get_rgba: [> `Solid] t -> float * float * float * float
-  val create_for_surface: Surface.t -> [`Surface] t
-  val get_surface: [`Surface] t -> Surface.t
-  val create_linear: x0:float -> y0:float -> x1:float -> y1:float -> [`Linear | `Gradient] t
-  val get_linear_points: [> `Linear|`Gradient] t -> float * float * float * float
-  val create_radial: x0:float -> y0:float -> r0:float -> x1:float -> y1:float -> r1:float -> [`Radial | `Gradient] t
-  val get_radial_circles: [> `Radial|`Gradient] t -> float * float * float * float * float * float
+  (* val get_rgba: [> `Solid] t -> float * float * float * float *)
+  (* val create_for_surface: Surface.t -> [`Surface] t *)
+  (* val get_surface: [`Surface] t -> Surface.t *)
+  (* val create_linear: x0:float -> y0:float -> x1:float -> y1:float -> [`Linear | `Gradient] t *)
+  (* val get_linear_points: [> `Linear|`Gradient] t -> float * float * float * float *)
+  (* val create_radial: x0:float -> y0:float -> r0:float -> x1:float -> y1:float -> r1:float -> [`Radial | `Gradient] t *)
+  (* val get_radial_circles: [> `Radial|`Gradient] t -> float * float * float * float * float * float *)
 
-  type extend = NONE | REPEAT | REFLECT | PAD
+  (* type extend = NONE | REPEAT | REFLECT | PAD *)
 
-  val set_extend: 'a t -> extend -> unit
-  val get_extend: 'a t -> extend
+  (* val set_extend: 'a t -> extend -> unit *)
+  (* val get_extend: 'a t -> extend *)
 
-  type filter = FAST | GOOD | BEST | NEAREST | BILINEAR
+  (* type filter = FAST | GOOD | BEST | NEAREST | BILINEAR *)
 
-  val set_filter: 'a t -> filter -> unit
-  val get_filter: 'a t -> filter
-  val set_matrix: 'a t -> Matrix.t -> unit
-  val get_matrix: 'a t -> Matrix.t
-end *)
+  (* val set_filter: 'a t -> filter -> unit *)
+  (* val get_filter: 'a t -> filter *)
+  (* val set_matrix: 'a t -> Matrix.t -> unit *)
+  (* val get_matrix: 'a t -> Matrix.t *)
+end
 
 (* val create: Surface.t -> context *)
 val save: context -> unit
@@ -315,9 +315,9 @@ end *)
 
 val set_source_rgb: context -> r:float -> g:float -> b:float -> unit
 val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit
-(* @todo val set_source: context -> 'a Pattern.t -> unit *)
+val set_source: context -> 'a Pattern.t -> unit
 (* val set_source_surface: context -> Surface.t -> x:float -> y:float -> unit *)
-(* @todo val get_source: context -> Pattern.any *)
+(* val get_source: context -> Pattern.any *)
 
 type line_cap = BUTT | ROUND | SQUARE
 val set_line_cap: context -> line_cap -> unit
