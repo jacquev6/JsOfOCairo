@@ -1,7 +1,7 @@
 (* Copyright 2017 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-(* Operations not supported by HTML5 canvas. We are most probably not going to try to implement these functions.
-Granted, there are browser-specific extensions for some of them, but it's not worth it (yet?).
+(* Operations not supported by HTML5 canvas.
+We will probably not try to implement these functions.
 
 type antialias = ANTIALIAS_DEFAULT | ANTIALIAS_NONE | ANTIALIAS_GRAY | ANTIALIAS_SUBPIXEL
 val set_antialias: context -> antialias -> unit
@@ -35,11 +35,22 @@ module Pattern: sig
   val get_filter: 'a t -> filter
   val set_matrix: 'a t -> Matrix.t -> unit
   val get_matrix: 'a t -> Matrix.t
+
+  I tried implementing surface patterns using createPattern with a new canvas element, but:
+  - the repeat options don't match type extend
+  - there is no support for transformations (only an experimental setTransform in Firefox)
+  so I couldn't implement set_matrix and the x and y parameters of set_source_surface.
+
+  val create_for_surface: Surface.t -> [`Surface] t
+  val get_surface: [`Surface] t -> Surface.t
 end
+
+val set_source_surface: context -> Surface.t -> x:float -> y:float -> unit
 
 *)
 
-(* Other types and functions commented out below have not been analyzed yet. They may or may not be implemented later. *)
+(* Other types and functions commented out below have not been analyzed yet.
+They may or may not be implemented later. *)
 
 type status = INVALID_RESTORE | INVALID_POP_GROUP | NO_CURRENT_POINT | INVALID_MATRIX | INVALID_STATUS | NULL_POINTER | INVALID_STRING | INVALID_PATH_DATA | READ_ERROR | WRITE_ERROR | SURFACE_FINISHED | SURFACE_TYPE_MISMATCH | PATTERN_TYPE_MISMATCH | INVALID_CONTENT | INVALID_FORMAT | INVALID_VISUAL | FILE_NOT_FOUND | INVALID_DASH | INVALID_DSC_COMMENT | INVALID_INDEX | CLIP_NOT_REPRESENTABLE | TEMP_FILE_ERROR | INVALID_STRIDE | FONT_TYPE_MISMATCH | USER_FONT_IMMUTABLE | USER_FONT_ERROR | NEGATIVE_COUNT | INVALID_CLUSTERS | INVALID_SLANT | INVALID_WEIGHT | INVALID_SIZE | USER_FONT_NOT_IMPLEMENTED | DEVICE_TYPE_MISMATCH | DEVICE_ERROR | INVALID_MESH_CONSTRUCTION | DEVICE_FINISHED | JBIG2_GLOBAL_MISSING
 
@@ -294,8 +305,6 @@ module Pattern: sig
   val create_rgb: r:float -> g:float -> b:float -> [`Solid] t
   val create_rgba: r:float -> g:float -> b:float -> a:float -> [`Solid] t
   val get_rgba: [> `Solid] t -> float * float * float * float
-  (* val create_for_surface: Surface.t -> [`Surface] t *)
-  (* val get_surface: [`Surface] t -> Surface.t *)
   val create_linear: x0:float -> y0:float -> x1:float -> y1:float -> [`Linear | `Gradient] t
   val get_linear_points: [> `Linear | `Gradient] t -> float * float * float * float
   val create_radial: x0:float -> y0:float -> r0:float -> x1:float -> y1:float -> r1:float -> [`Radial | `Gradient] t
@@ -317,7 +326,6 @@ end *)
 val set_source_rgb: context -> r:float -> g:float -> b:float -> unit
 val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit
 val set_source: context -> 'a Pattern.t -> unit
-(* val set_source_surface: context -> Surface.t -> x:float -> y:float -> unit *)
 val get_source: context -> Pattern.any
 
 type line_cap = BUTT | ROUND | SQUARE
