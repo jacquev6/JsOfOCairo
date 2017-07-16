@@ -688,11 +688,34 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.paint ctx;
       C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.;
     );
-    make "paint with alpha" ~known_failure:true 100 100 (fun ctx ->
-      (* @todo Fix *)
+    make "paint with alpha 1" 100 100 (fun ctx ->
       C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
       C.fill ctx;
       C.set_source_rgb ctx ~r:0. ~g:1. ~b:1.;
+      C.paint ctx ~alpha:0.5;
+    );
+    make "paint with alpha 2" 100 100 (fun ctx ->
+      C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
+      C.fill ctx;
+      C.set_source_rgba ctx ~r:0. ~g:1. ~b:1. ~a:0.5;
+      C.paint ctx ~alpha:0.5;
+    );
+    make "paint with alpha 3" 100 100 (fun ctx ->
+      C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
+      C.fill ctx;
+      let p = C.Pattern.create_linear ~x0:0. ~y0:0. ~x1:100. ~y1:100. in
+      C.Pattern.add_color_stop_rgb p ~ofs:0. 0. 1. 0.;
+      C.Pattern.add_color_stop_rgb p ~ofs:1. 0. 0. 1.;
+      C.set_source ctx p;
+      C.paint ctx ~alpha:0.5;
+    );
+    make "paint with alpha 4" 100 100 (fun ctx ->
+      C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
+      C.fill ctx;
+      let p = C.Pattern.create_linear ~x0:0. ~y0:0. ~x1:100. ~y1:100. in
+      C.Pattern.add_color_stop_rgba p ~ofs:0. 0. 1. 0. 0.5;
+      C.Pattern.add_color_stop_rgba p ~ofs:1. 0. 0. 1. 0.5;
+      C.set_source ctx p;
       C.paint ctx ~alpha:0.5;
     );
     make "clip" 100 40 (fun ctx ->

@@ -554,14 +554,12 @@ let text_extents context s =
     y_advance = 0.;
   }
 
-let paint ?alpha:_ context =
+let paint ?(alpha=1.) context =
   save context;
+  context.ctx##.globalAlpha := alpha;
   identity_matrix context;
   let width = (float_of_int context.ctx##.canvas##.width)
   and height = (float_of_int context.ctx##.canvas##.height) in
-  (* @todo Implement alpha with something like:
-  context.ctx##.fillStyle := Js.string "rgba(0, 255, 255, 0.5)";
-  But this needs to be more general: we should handle all kinds of sources. *)
   context.ctx##fillRect 0. 0. width height;
   restore context
 
