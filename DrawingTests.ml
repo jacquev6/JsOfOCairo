@@ -815,6 +815,56 @@ module Make(C: module type of JsOfOCairo_S) = struct
       assert (C.Path.get_current_point ctx = (0., 0.));
       C.show_text ctx "BABA";
     );
+    make "set_matrix get_matrix" 100 40 (fun ctx ->
+      let translated = C.Matrix.init_identity () in
+      C.Matrix.translate translated ~x:2. ~y:3.;
+      assert (translated = C.Matrix.init_translate ~x:2. ~y:3.);
+      C.save ctx;
+      C.translate ctx ~x:2. ~y:3.;
+      assert (C.get_matrix ctx = translated);
+      C.restore ctx;
+
+      let rotated = C.Matrix.init_identity () in
+      C.Matrix.rotate rotated ~angle:1.;
+      assert (rotated = C.Matrix.init_rotate ~angle:1.);
+      C.save ctx;
+      C.rotate ctx ~angle:1.;
+      assert (C.get_matrix ctx = rotated);
+      C.restore ctx;
+
+      let scaled = C.Matrix.init_identity () in
+      C.Matrix.scale scaled ~x:2. ~y:3.;
+      assert (scaled = C.Matrix.init_scale ~x:2. ~y:3.);
+      C.save ctx;
+      C.scale ctx ~x:2. ~y:3.;
+      assert (C.get_matrix ctx = scaled);
+      C.restore ctx;
+
+      let m = {C.xx=2.; xy=3.; yx=4.; yy=5.; x0=6.; y0=7.}
+      and inverted = {C.xx=2.; xy=3.; yx=4.; yy=5.; x0=6.; y0=7.} in
+      C.Matrix.invert inverted;
+      let {C.xx; xy; yx; yy; x0; y0} = inverted in
+      assert (xx = -2.5);
+      assert (xy = 1.5);
+      assert (yx = 2.);
+      assert (yy = -1.);
+      assert (x0 = 4.5);
+      assert (y0 = -5.);
+      let {C.xx; xy; yx; yy; x0; y0} = C.Matrix.multiply m inverted in
+      assert (xx = 1.);
+      assert (xy = 0.);
+      assert (yx = 0.);
+      assert (yy = 1.);
+      assert (x0 = 0.);
+      assert (y0 = 0.);
+      let {C.xx; xy; yx; yy; x0; y0} = C.Matrix.multiply inverted m in
+      assert (xx = 1.);
+      assert (xy = 0.);
+      assert (yx = 0.);
+      assert (yy = 1.);
+      assert (x0 = 0.);
+      assert (y0 = 0.);
+    );
   ]
   |> Li.concat
 end

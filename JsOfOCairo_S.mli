@@ -87,10 +87,10 @@ module Matrix: sig
   val init_translate: x:float -> y:float -> t
   val init_scale: x:float -> y:float -> t
   val init_rotate: angle:float -> t
-  (* @todo val translate: t -> x:float -> y:float -> unit *)
-  (* @todo val scale: t -> x:float -> y:float -> unit *)
-  (* @todo val rotate: t -> angle:float -> unit *)
-  (* @todo val invert: t -> unit *)
+  val translate: t -> x:float -> y:float -> unit
+  val scale: t -> x:float -> y:float -> unit
+  val rotate: t -> angle:float -> unit
+  val invert: t -> unit
   val multiply: t -> t -> t
   val transform_distance: t -> dx:float -> dy:float -> float * float
   val transform_point: t -> x:float -> y:float -> float * float

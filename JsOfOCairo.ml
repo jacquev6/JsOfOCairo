@@ -73,28 +73,12 @@ type matrix = {
 module Matrix = struct
   type t = matrix
 
-
-  let transform_distance' {xx; xy; yx; yy; _} (x, y) =
-    let x = xx *. x +. xy *. y
-    and y = yx *. x +. yy *. y
-    in (x, y)
-
-  let transform_point' ({x0; y0; _} as m) (x, y) =
-    let (x, y) = transform_distance' m (x, y) in
-    (x +. x0, y +. y0)
-
-  let rev_transform_distance' {xx; xy; yx; yy; _} (x, y) =
-    let d = xx *. yy -. xy *. yx in
-    let xx = yy /. d
-    and xy = -. xy /. d
-    and yx = -. yx /. d
-    and yy = xx /. d in
-    transform_distance' {xx; xy; yx; yy; x0=0.; y0=0.} (x, y)
-
-  let rev_transform_point' ({x0; y0; _} as m) (x, y) =
-    let (x, y) = (x -. x0, y -. y0) in
-    rev_transform_distance' m (x, y)
-
+  (*
+    2 by 2 matrix with (x0, y0) offset is equivalent to the following 3 by 3 matrix:
+    / xx xy x0 \   / x \   / xx*x + xy*y + x0 \
+    | yx yy y0 | * | y | = | yx*x + yy*y + y0 |
+    \  0  0  1 /   \ 1 /   \                1 /
+  *)
 
   let init_identity () =
     {xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.}
@@ -115,21 +99,53 @@ module Matrix = struct
       y0 = 0.;
     }
 
-  let transform_distance m ~dx ~dy =
-    transform_distance' m (dx, dy)
+  let init_inverse {xx; xy; yx; yy; x0; y0} =
+    let d = xx *. yy -. xy *. yx in
+    let xx = yy /. d
+    and xy = -. xy /. d
+    and yx = -. yx /. d
+    and yy = xx /. d
+    and x0 = (xy *. y0 -. yy *. x0) /. d
+    and y0 = (yx *. x0 -. xx *. y0) /. d in
+    {xx; xy; yx; yy; x0; y0}
 
-  let transform_point m ~x ~y =
-    transform_point' m (x, y)
-
-  let multiply ({xx; xy; yx; yy; x0; y0} as m) {xx=xx'; xy=xy'; yx=yx'; yy=yy'; x0=x0'; y0=y0'} =
-    let (x0', y0') = transform_distance' m (x0', y0') in
+  let multiply {xx; xy; yx; yy; x0; y0} {xx=xx'; xy=xy'; yx=yx'; yy=yy'; x0=x0'; y0=y0'} =
     let xx = xx *. xx' +. xy *. yx'
     and xy = xx *. xy' +. xy *. yy'
     and yx = yx *. xx' +. yy *. yx'
     and yy = yx *. xy' +. yy *. yy'
-    and x0 = x0 +. x0'
-    and y0 = y0 +. y0'
-    in {xx; xy; yx; yy; x0; y0}
+    and x0 = xx *. x0' +. xy *. y0' +. x0
+    and y0 = yx *. x0' +. yy *. y0' +. y0 in
+    {xx; xy; yx; yy; x0; y0}
+
+  let apply {xx; xy; yx; yy; x0; y0} (x, y) =
+    (xx *. x +. xy *. y +. x0, yx *. x +. yy *. y +. y0)
+
+  let transform_point m ~x ~y =
+    apply m (x, y)
+
+  let transform_distance {xx; xy; yx; yy; x0=_; y0=_} ~dx ~dy =
+    (xx *. dx +. xy *. dy, yx *. dx +. yy *. dy)
+
+  let set m {xx; xy; yx; yy; x0; y0} =
+    m.xx <- xx;
+    m.xy <- xy;
+    m.yx <- yx;
+    m.yy <- yy;
+    m.x0 <- x0;
+    m.y0 <- y0
+
+  let scale m ~x ~y =
+    set m (multiply m (init_scale ~x ~y))
+
+  let translate m ~x ~y =
+    set m (multiply m (init_translate ~x ~y))
+
+  let rotate m ~angle =
+    set m (multiply m (init_rotate ~angle))
+
+  let invert m =
+    set m (init_inverse m)
 end
 
 type slant = Upright | Italic | Oblique
@@ -365,27 +381,28 @@ let set_source_rgba context ~r ~g ~b ~a =
   set_source context (Pattern.create_rgba ~r ~g ~b ~a)
 
 let device_to_user context ~x ~y =
-  Matrix.rev_transform_point' context.state.transformation (x, y)
+  Matrix.transform_point (Matrix.init_inverse context.state.transformation) ~x ~y
 
 let device_to_user_distance context ~x ~y =
-  Matrix.rev_transform_distance' context.state.transformation (x, y)
+  Matrix.transform_distance (Matrix.init_inverse context.state.transformation) ~dx:x ~dy:y
 
 let user_to_device context ~x ~y =
-  Matrix.transform_point' context.state.transformation (x, y)
+  Matrix.transform_point context.state.transformation ~x ~y
 
 let user_to_device_distance context ~x ~y =
-  Matrix.transform_distance' context.state.transformation (x, y)
+  Matrix.transform_distance context.state.transformation ~dx:x ~dy:y
 
 let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
+  let m' = Matrix.init_inverse m in
   context.ctx##setTransform xx yx xy yy x0 y0;
   context.current_point <-
     context.current_point
-    |> Opt.map ~f:(Matrix.transform_point' context.state.transformation)
-    |> Opt.map ~f:(Matrix.rev_transform_point' m);
+    |> Opt.map ~f:(Matrix.apply context.state.transformation)
+    |> Opt.map ~f:(Matrix.apply m');
   context.start_point <-
     context.start_point
-    |> Opt.map ~f:(Matrix.transform_point' context.state.transformation)
-    |> Opt.map ~f:(Matrix.rev_transform_point' m);
+    |> Opt.map ~f:(Matrix.apply context.state.transformation)
+    |> Opt.map ~f:(Matrix.apply m');
   context.state.transformation <- m
 
 let get_matrix context =
