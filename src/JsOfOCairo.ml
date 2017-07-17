@@ -1,7 +1,21 @@
 (* Copyright 2017 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-open General.Abbr
-module Printf = OCamlStandard.Printf
+open StdLabels
+
+module Opt = struct
+  let value_def x ~def =
+    match x with
+      | Some x -> x
+      | None -> def
+
+  let map x ~f =
+    match x with
+      | None -> None
+      | Some x -> Some (f x)
+
+  let is_none x =
+    x = None
+end
 
 module type S = module type of JsOfOCairo_S
 
@@ -91,10 +105,10 @@ module Matrix = struct
 
   let init_rotate ~angle =
     {
-      xx = Math.cos angle;
-      xy = -. Math.sin angle;
-      yx = Math.sin angle;
-      yy = Math.cos angle;
+      xx = cos angle;
+      xy = -.sin angle;
+      yx = sin angle;
+      yy = cos angle;
       x0 = 0.;
       y0 = 0.;
     }
@@ -168,37 +182,38 @@ module Pattern = struct
     val iter: t -> f:(float * float * float * float * float -> unit) -> unit
     val get: t -> i:int -> float * float * float * float * float
   end = struct
-    include SoLi.Make(struct
+    module Element = struct
       type t =
         float (* position *)
         * int (* index added (used to sort stop points added at the same position) *)
         * float * float * float * float (* r, g, b, a *)
 
-      let cmp (a, ia, _, _, _, _) (b, ib, _, _, _, _) =
-        match Fl.cmp a b with
-          | LT -> LT
-          | EQ -> Int.cmp ia ib
-          | GT -> GT
+      let compare (a_pos, a_idx, _, _, _, _) (b_pos, b_idx, _, _, _, _) =
+        match compare a_pos b_pos with
+          | 0 -> compare a_idx b_idx
+          | n -> n
+    end
 
-      let equal _ _ =
-        failwith "Unexpected"
+    type t = Element.t list
 
-      let to_string _ =
-        failwith "Unexpected"
-    end)
+    let empty = []
+
+    let size = List.length
 
     let add xs (position, r, g, b, a) =
-      add xs (position, size xs, r, g, b, a)
+      let element = (position, List.length xs, r, g, b, a) in
+      let rec aux = function
+        | [] -> [element]
+        | x::xs as xxs -> match Element.compare element x with
+          | -1 | 0 -> element::xxs
+          | _ -> x::(aux xs)
+      in aux xs
 
     let iter xs ~f =
-      iter xs ~f:(fun (position, _, r, g, b, a) -> f (position, r, g, b, a))
+      List.iter xs ~f:(fun (position, _, r, g, b, a) -> f (position, r, g, b, a))
 
     let get xs ~i =
-      let (position, _, r, g, b, a) =
-        xs
-        |> to_list
-        |> Li.get ~i
-      in
+      let (position, _, r, g, b, a) = List.nth xs i in
       (position, r, g, b, a)
   end
 
@@ -317,14 +332,14 @@ let line_to context ~x ~y =
 let arc context ~x ~y ~r ~a1 ~a2 =
   context.ctx##arc x y r a1 a2 Js._false;
   if Opt.is_none context.start_point then
-  context.start_point <- Some (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
-  context.current_point <- Some (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
+  context.start_point <- Some (x +. r *. (cos a1), y +. r *. (sin a1));
+  context.current_point <- Some (x +. r *. (cos a2), y +. r *. (sin a2))
 
 let arc_negative context ~x ~y ~r ~a1 ~a2 =
   context.ctx##arc x y r a1 a2 Js._true;
   if Opt.is_none context.start_point then
-  context.start_point <- Some (x +. r *. (Math.cos a1), y +. r *. (Math.sin a1));
-  context.current_point <- Some (x +. r *. (Math.cos a2), y +. r *. (Math.sin a2))
+  context.start_point <- Some (x +. r *. (cos a1), y +. r *. (sin a1));
+  context.current_point <- Some (x +. r *. (cos a2), y +. r *. (sin a2))
 
 let stroke_preserve context =
   context.ctx##stroke
@@ -348,7 +363,7 @@ let clip context =
   Path.clear context
 
 let set_source context pattern =
-  let convert x = Int.to_string (Int.of_float (255.0 *. x)) in
+  let convert x = string_of_int (int_of_float (255.0 *. x)) in
   let convert_rgba r g b a = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
   let source = !pattern in
   context.state.source <- source;
@@ -525,7 +540,7 @@ let _set_font context ({slant; weight; size; family} as font) =
     | Normal -> "normal"
     | Bold -> "bold"
   in
-  let font = Printf.sprintf "%s %s %npx %s" font_style font_weight (Int.of_float size) family in
+  let font = Printf.sprintf "%s %s %npx %s" font_style font_weight (int_of_float size) family in
   context.ctx##.font := Js.string font
 
 let restore context =
@@ -629,6 +644,8 @@ let set_operator context operator =
 
 let get_operator context =
   match Js.to_string context.ctx##.globalCompositeOperation with
+    | "over" -> OVER (* Special case for node-canvas which seems to have a wrong default value *)
+    | "add" -> ADD (* Special case for node-canvas *)
     | "source-over" -> OVER
     | "source-atop" -> ATOP
     | "source-in" -> IN

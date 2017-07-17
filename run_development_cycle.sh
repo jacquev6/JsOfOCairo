@@ -5,25 +5,30 @@
 set -o errexit
 
 function build {
-
-ocamlbuild \
-    -use-ocamlfind -no-links \
-    -plugin-tag "package(js_of_ocaml.ocamlbuild)" \
-    -pkgs js_of_ocaml,js_of_ocaml.ppx,cairo2,General \
-    -cflags -w,@a-33-44,-strict-sequence \
-    $@
+  cd src
+  ocamlbuild -use-ocamlfind -no-links -plugin-tag "package(js_of_ocaml.ocamlbuild)" -tag debug $@
+  cd ..
 }
 
-build drawing_tests.byte
+build drawing_tests_in_command_line.byte
+rm -f drawing_tests/*/*.png
+src/_build/drawing_tests_in_command_line.byte
 
-rm -f drawing_tests/*.png
-_build/drawing_tests.byte
+if ! [ -d node_modules ]
+then
+    npm install canvas pixelmatch browserify
+fi
+# https://github.com/mapbox/pixelmatch#install
+node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > src/_build/pixelmatch.js
 
-build drawing_tests_js.js
+build drawing_tests_in_javascript.js
+node drawing_tests_in_node.js
 
 echo
-echo "Have a look at $(pwd)/drawing_tests.html"
+echo "Have a look at $(pwd)/drawing_tests_in_browser.html"
 echo
+
+build JsOfOCairo.cma
 
 # OPAM package
 # ============

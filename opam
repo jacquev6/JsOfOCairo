@@ -4,18 +4,24 @@ version: "0.1.0"
 maintainer: "Vincent Jacques <vincent@vincent-jacques.net>"
 authors: "Vincent Jacques <vincent@vincent-jacques.net>"
 dev-repo: "https://github.com/jacquev6/JsOfOCairo.git"
+licence: "MIT"
+homepage: "https://github.com/jacquev6/JsOfOCairo"
+doc: "https://github.com/jacquev6/JsOfOCairo"
 bug-reports: "http://github.com/jacquev6/JsOfOCairo/issues/"
-available: [ ocaml-version = "4.02.3" ]
+# @todo Test on Travis and support more ocaml versions
+available: [ocaml-version = "4.02.3"]
 build: [
-  ["ocamlbuild" "-use-ocamlfind" "-plugin-tag" "package(js_of_ocaml.ocamlbuild)" "-pkgs" "js_of_ocaml,js_of_ocaml.ppx,General" "JsOfOCairo.cma"]
+  ["sh" "-c" "cd src; ocamlbuild -use-ocamlfind -plugin-tag \"package(js_of_ocaml.ocamlbuild)\" JsOfOCairo.cma"]
 ]
 install: [
   ["mkdir" "-p" "%{prefix}%/lib/JsOfOCairo"]
-  ["cp" "META" "_build/JsOfOCairo.cmi" "_build/JsOfOCairo.cma" "%{prefix}%/lib/JsOfOCairo"]
+  ["cp" "META" "src/_build/JsOfOCairo.cmi" "src/_build/JsOfOCairo.cma" "%{prefix}%/lib/JsOfOCairo"]
 ]
 remove: [
   ["ocamlfind" "remove" "JsOfOCairo"]
 ]
 depends: [
   "ocamlfind" {build}
+  # @todo Test on Travis and support more js_of_ocaml versions
+  "js_of_ocaml" {= "2.8.4"}
 ]

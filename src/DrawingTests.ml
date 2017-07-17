@@ -1,19 +1,20 @@
 (* Copyright 2017 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-open General.Abbr
-module Printf = OCamlStandard.Printf
+open StdLabels
+
+let pi = atan2 0. (-1.)
 
 module Make(C: module type of JsOfOCairo_S) = struct
   type test = {name: string; width: int; height: int; draw: C.context -> unit; known_failure: bool}
 
   let check_transform transform ctx (x, y) (x', y') =
     let (x'', y'') = transform ctx ~x ~y in
-    if Fl.abs ((x'' -. x') /. x') > 0.01 || Fl.abs ((y'' -. y') /. y') > 0.01 then
+    if abs_float ((x'' -. x') /. x') > 0.01 || abs_float ((y'' -. y') /. y') > 0.01 then
       let transform =
-        if phys_eq transform C.device_to_user_distance then "device_to_user_distance"
-        else if phys_eq transform C.device_to_user then "device_to_user"
-        else if phys_eq transform C.user_to_device_distance then "user_to_device_distance"
-        else if phys_eq transform C.user_to_device then "user_to_device"
+        if transform == C.device_to_user_distance then "device_to_user_distance"
+        else if transform == C.device_to_user then "device_to_user"
+        else if transform == C.user_to_device_distance then "user_to_device_distance"
+        else if transform == C.user_to_device then "user_to_device"
         else "unknown"
       in
       failwith (Printf.sprintf "Expected %s (%.2f, %.2f) = (%.2f, %.2f), got (%.2f, %.2f)" transform x y x' y' x'' y'')
@@ -58,7 +59,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       ignore (x_bearing, y_bearing);
       C.set_source_rgb ctx ~r:0.3 ~g:0.3 ~b:1.;
       [(width, -.height); (x_advance, y_advance)]
-      |> Li.iter ~f:(fun (x', y') ->
+      |> List.iter ~f:(fun (x', y') ->
         C.save ctx;
         C.move_to ctx ~x ~y;
         C.rel_line_to ctx ~x:x' ~y:y';
@@ -72,7 +73,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       ignore (baseline);
       C.set_source_rgb ctx ~r:0.3 ~g:1. ~b:0.3;
       [(0., -.ascent); (0., descent); (max_x_advance, max_y_advance)]
-      |> Li.iter ~f:(fun (x', y') ->
+      |> List.iter ~f:(fun (x', y') ->
         C.save ctx;
         C.move_to ctx ~x ~y;
         C.rel_line_to ctx ~x:x' ~y:y';
@@ -491,11 +492,11 @@ module Make(C: module type of JsOfOCairo_S) = struct
           C.save ctx;
           C.scale ctx ~x:(1. /. 3.) ~y:(1. /. 3.);
           aux (n - 1);
-          C.rotate ctx ~angle:(-.Math.pi /. 3.);
+          C.rotate ctx ~angle:(-.pi /. 3.);
           aux (n - 1);
-          C.rotate ctx ~angle:(2. *. Math.pi /. 3.);
+          C.rotate ctx ~angle:(2. *. pi /. 3.);
           aux (n - 1);
-          C.rotate ctx ~angle:(-.Math.pi /. 3.);
+          C.rotate ctx ~angle:(-.pi /. 3.);
           aux (n - 1);
           C.restore ctx;
           C.translate ctx ~x:1. ~y:0.;
@@ -618,17 +619,17 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_font_size ctx 30.;
       C.select_font_face ctx "serif" ~slant:C.Upright ~weight:C.Normal;
     );
-    make_text "set_font_face serif upright bold" 100 60 (fun ctx ->
+    make_text "set_font_face serif upright bold" ~known_failure:true 100 60 (fun ctx ->
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
       C.select_font_face ctx "serif" ~slant:C.Upright ~weight:C.Bold;
     );
-    make_text "set_font_face serif italic normal" 100 60 (fun ctx ->
+    make_text "set_font_face serif italic normal" ~known_failure:true 100 60 (fun ctx ->
       C.move_to ctx ~x:10. ~y:40.;
       C.select_font_face ctx "serif" ~slant:C.Italic ~weight:C.Normal;
       C.set_font_size ctx 30.;
     );
-    make_text "set_font_face serif oblique normal" 100 60 (fun ctx ->
+    make_text "set_font_face serif oblique normal" ~known_failure:true 100 60 (fun ctx ->
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
       C.select_font_face ctx "serif" ~slant:C.Oblique ~weight:C.Normal;
@@ -665,16 +666,6 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.move_to ctx ~x:10. ~y:90.;
       C.show_text ctx "ABAB";
     );
-    make "select_font_face set_font_size performance" 100 50 (fun ctx ->
-      let start = Unix.gettimeofday () in
-      for _ = 1 to 1 do (* 50000: 3900ms in Firefox; 16ms in Cairo *)
-        C.set_font_size ctx 30.;
-        C.select_font_face ctx "sans-serif";
-      done;
-      Printf.printf "Duration of 'select_font_face set_font_size performance': %.2fms\n" ((Unix.gettimeofday () -. start) *. 1000.);
-      C.move_to ctx ~x:10. ~y:40.;
-      C.show_text ctx "ABAB";
-    );
     make_current_point "paint" 100 40 (fun ctx ->
       C.move_to ctx ~x:50. ~y:20.;
       C.set_source_rgb ctx ~r:0.9 ~g:0.2 ~b:0.9;
@@ -706,7 +697,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_source_rgba ctx ~r:0. ~g:1. ~b:1. ~a:0.5;
       C.paint ctx ~alpha:0.5;
     );
-    make "paint with alpha 3" 100 100 (fun ctx ->
+    make "paint with alpha 3" ~known_failure:true 100 100 (fun ctx ->
       C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
       C.fill ctx;
       let p = C.Pattern.create_linear ~x0:0. ~y0:0. ~x1:100. ~y1:100. in
@@ -715,7 +706,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_source ctx p;
       C.paint ctx ~alpha:0.5;
     );
-    make "paint with alpha 4" 100 100 (fun ctx ->
+    make "paint with alpha 4" ~known_failure:true 100 100 (fun ctx ->
       C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
       C.fill ctx;
       let p = C.Pattern.create_linear ~x0:0. ~y0:0. ~x1:100. ~y1:100. in
@@ -768,7 +759,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       (ADD, "ADD");
       (* (SATURATE, "SATURATE"); *)
     ]
-    |> Li.map ~f:(fun (operator, operator_name) ->
+    |> List.map ~f:(fun (operator, operator_name) ->
       make_one ~known_failure:false (Printf.sprintf "set_operator get_operator %s" operator_name) 100 100 (fun ctx ->
         C.set_source_rgba ctx ~r:0. ~g:0. ~b:0.8 ~a:0.8;
         C.rectangle ctx ~x:10. ~y:10. ~w:50. ~h:50.;
@@ -899,5 +890,5 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.stroke_preserve ctx;
     );
   ]
-  |> Li.concat
+  |> List.concat
 end

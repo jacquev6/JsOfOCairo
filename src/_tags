@@ -1,0 +1,6 @@
+true: strict_sequence
+true: safe_string
+true: warn(@A)
+true: package(js_of_ocaml)
+true: package(js_of_ocaml.ppx)
+<drawing_tests_in_command_line.*>: package(cairo2)
