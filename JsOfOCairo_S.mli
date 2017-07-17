@@ -25,6 +25,15 @@ val show_page: context -> unit
 val mask: context -> 'a Pattern.t -> unit
 val mask_surface: context -> Surface.t -> x:float -> y:float -> unit
 
+val clip_extents: context -> rectangle
+val clip_rectangle_list: context -> rectangle list
+
+val fill_extents: context -> rectangle
+val in_fill: context -> x:float -> y:float -> bool
+
+val stroke_extents: context -> rectangle
+val in_stroke: context -> x:float -> y:float -> bool
+
 module Pattern: sig
   type extend = NONE | REPEAT | REFLECT | PAD
   val set_extend: 'a t -> extend -> unit
@@ -348,17 +357,11 @@ val get_operator: context -> operator
 
 val clip: context -> unit
 val clip_preserve: context -> unit
-(* val clip_extents: context -> rectangle *)
-(* val clip_rectangle_list: context -> rectangle list *)
 val fill: context -> unit
 val fill_preserve: context -> unit
-(* val fill_extents: context -> rectangle *)
-(* val in_fill: context -> x:float -> y:float -> bool *)
 val paint: ?alpha:float -> context -> unit
 val stroke: context -> unit
 val stroke_preserve: context -> unit
-(* val stroke_extents: context -> rectangle *)
-(* val in_stroke: context -> x:float -> y:float -> bool *)
 
 (* type path_data =
   | MOVE_TO of float * float
