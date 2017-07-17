@@ -363,6 +363,7 @@ val paint: ?alpha:float -> context -> unit
 val stroke: context -> unit
 val stroke_preserve: context -> unit
 
+(* Arcs are translated to one or more CURVE_TO. Not supported by HTML5 and difficult to re-implement exactly. *)
 (* type path_data =
   | MOVE_TO of float * float
   | LINE_TO of float * float
