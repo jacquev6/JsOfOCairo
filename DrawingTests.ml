@@ -688,6 +688,12 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.paint ctx;
       C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.;
     );
+    make "clip paint" 100 40 (fun ctx ->
+      C.rectangle ctx ~x:10. ~y:10. ~w:80. ~h:20.;
+      C.clip ctx;
+      C.set_source_rgb ctx ~r:0.9 ~g:0.2 ~b:0.9;
+      C.paint ctx;
+    );
     make "paint with alpha 1" 100 100 (fun ctx ->
       C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:6.28;
       C.fill ctx;
