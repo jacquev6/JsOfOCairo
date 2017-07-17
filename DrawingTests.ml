@@ -865,6 +865,39 @@ module Make(C: module type of JsOfOCairo_S) = struct
       assert (x0 = 0.);
       assert (y0 = 0.);
     );
+    make_current_point "arc arc close" 100 40 (fun ctx ->
+      C.arc ctx ~x:20. ~y:20. ~r:10. ~a1:1. ~a2:4.;
+      C.arc ctx ~x:80. ~y:20. ~r:10. ~a1:4. ~a2:1.;
+      C.Path.close ctx;
+      C.stroke_preserve ctx;
+    );
+    make_current_point "arc clear arc close" 100 40 (fun ctx ->
+      C.arc ctx ~x:20. ~y:20. ~r:10. ~a1:1. ~a2:4.;
+      C.Path.clear ctx;
+      C.arc ctx ~x:80. ~y:20. ~r:10. ~a1:4. ~a2:1.;
+      C.Path.close ctx;
+      C.set_line_width ctx 3.;
+      C.stroke_preserve ctx;
+    );
+    make_current_point "line_to line_to close" 100 40 (fun ctx ->
+      C.line_to ctx ~x:10. ~y:30.;
+      C.line_to ctx ~x:50. ~y:10.;
+      C.line_to ctx ~x:90. ~y:30.;
+      C.Path.close ctx;
+      C.stroke_preserve ctx;
+    );
+    make_current_point "move_to curve_to close" 100 40 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:30.;
+      C.curve_to ctx ~x1:10. ~y1:10. ~x2:90. ~y2:10. ~x3:90. ~y3:30.;
+      C.Path.close ctx;
+      C.stroke_preserve ctx;
+    );
+    make_current_point "curve_to close" 100 40 (fun ctx ->
+      C.curve_to ctx ~x1:10. ~y1:10. ~x2:90. ~y2:0. ~x3:90. ~y3:30.;
+      C.Path.close ctx;
+      C.set_line_width ctx 3.;
+      C.stroke_preserve ctx;
+    );
   ]
   |> Li.concat
 end

@@ -295,6 +295,7 @@ module Path = struct
 
   let clear context =
     context.ctx##beginPath;
+    context.start_point <- None;
     context.current_point <- None
 
   let close context =
@@ -309,6 +310,8 @@ let move_to context ~x ~y =
 
 let line_to context ~x ~y =
   context.ctx##lineTo x y;
+  if Opt.is_none context.start_point then
+  context.start_point <- Some (x, y);
   context.current_point <- Some (x, y)
 
 let arc context ~x ~y ~r ~a1 ~a2 =
@@ -480,8 +483,10 @@ let rel_line_to context ~x ~y =
   line_to context ~x ~y
 
 let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-  context.current_point <- Some (x3, y3);
-  context.ctx##bezierCurveTo x1 y1 x2 y2 x3 y3
+  context.ctx##bezierCurveTo x1 y1 x2 y2 x3 y3;
+  if Opt.is_none context.start_point then
+  context.start_point <- Some (x1, y1);
+  context.current_point <- Some (x3, y3)
 
 let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   let (x1, y1) = make_rel context ~x:x1 ~y:y1
