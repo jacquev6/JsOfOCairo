@@ -1,2 +1,4 @@
 /src/_build/
 /node_modules/
+/demo/_build/
+/demo/draw_on_command_line.png

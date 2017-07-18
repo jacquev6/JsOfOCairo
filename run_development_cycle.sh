@@ -35,3 +35,6 @@ build JsOfOCairo.cma
 
 opam pin --yes --no-action add .
 opam reinstall --yes JsOfOCairo
+
+cd demo
+./demo.sh
