@@ -3,7 +3,7 @@ It's an adapter, implementing (a reasonable subset of) the interface of `Cairo O
 targeting HTML5 canvas elements as exposed to OCaml by `js_of_ocaml <https://ocsigen.org/js_of_ocaml/>`_.
 
 It's licensed under the `MIT license <http://choosealicense.com/licenses/mit/>`_.
-It **will soon** be available on the `OPAM <https://opam.ocaml.org/packages/JsOfOCairo/>`_.
+It's available on the `OPAM <https://opam.ocaml.org/packages/JsOfOCairo/>`_.
 Its `source code <https://github.com/jacquev6/JsOfOCairo>`_ is on GitHub.
 
 There is no real documentation besides this README.rst file.
