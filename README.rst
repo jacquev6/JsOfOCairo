@@ -82,7 +82,7 @@ File ``draw_in_browser.html``::
       <img src="draw_on_command_line.png" />
       <h1>HTML5 canvas</h1>
       <canvas id="drawings" width="100" height="100"></canvas>
-      <script src="_build/drawings_js.js"></script>
+      <script src="_build/draw_in_browser.js"></script>
       <script>
         draw(document.getElementById("drawings"));
       </script>
