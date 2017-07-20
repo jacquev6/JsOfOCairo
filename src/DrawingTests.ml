@@ -597,7 +597,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.rectangle ctx ~x:30. ~y:20. ~w:50. ~h:60.;
       C.stroke_preserve ctx;
     );
-    make_text "move_to" 100 40 (fun ctx ->
+    make_text "move_to" ~known_failure:true 100 40 (fun ctx ->
       C.move_to ctx ~x:10. ~y:20.;
     );
     make_text "scale" ~known_failure:true 100 40 (fun ctx ->
@@ -610,11 +610,11 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.scale ctx ~x:3. ~y:2.;
       C.move_to ctx ~x:0. ~y:0.;
     );
-    make_text "set_font_size" 100 60 (fun ctx ->
+    make_text "set_font_size" ~known_failure:true 100 60 (fun ctx ->
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
     );
-    make_text "set_font_face serif upright normal" 100 60 (fun ctx ->
+    make_text "set_font_face serif upright normal" ~known_failure:true 100 60 (fun ctx ->
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
       C.select_font_face ctx "serif" ~slant:C.Upright ~weight:C.Normal;
@@ -634,17 +634,17 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_font_size ctx 30.;
       C.select_font_face ctx "serif" ~slant:C.Oblique ~weight:C.Normal;
     );
-    make_text "set_font_face sans-serif" 100 60 (fun ctx ->
+    make_text "set_font_face sans-serif" ~known_failure:true 100 60 (fun ctx ->
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
       C.select_font_face ctx "sans-serif";
     );
-    make_text "set_font_face cursive" 100 60 (fun ctx ->
+    make_text "set_font_face cursive" ~known_failure:true 100 60 (fun ctx ->
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
       C.select_font_face ctx "cursive";
     );
-    make_text "set_font_face fantasy" 100 60 (fun ctx ->
+    make_text "set_font_face fantasy" ~known_failure:true 100 60 (fun ctx ->
       C.move_to ctx ~x:10. ~y:40.;
       C.set_font_size ctx 30.;
       C.select_font_face ctx "fantasy";
@@ -654,7 +654,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       C.set_font_size ctx 30.;
       C.select_font_face ctx "monospace";
     );
-    make "save select_font_face restore" 100 100 (fun ctx ->
+    make "save select_font_face restore" ~known_failure:true 100 100 (fun ctx ->
       C.select_font_face ctx "sans-serif";
       C.set_font_size ctx 30.;
       C.save ctx;
@@ -801,7 +801,7 @@ module Make(C: module type of JsOfOCairo_S) = struct
       with
         | C.Error C.NO_CURRENT_POINT -> ()
     );
-    make "no current point: translate show_text" 100 40 (fun ctx ->
+    make "no current point: translate show_text" ~known_failure:true 100 40 (fun ctx ->
       C.translate ctx ~x:10. ~y:30.;
       assert (C.Path.get_current_point ctx = (0., 0.));
       C.show_text ctx "BABA";
