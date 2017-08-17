@@ -19,6 +19,7 @@ install:
   - opam switch
   - opam pin --yes --no-action add js_of_ocaml $JS_OF_OCAML_VERSION
   - opam install --yes js_of_ocaml cairo2 ocamlfind
+  - "if [ $JS_OF_OCAML_VERSION = 3.0 ]; then opam install --yes js_of_ocaml-ppx; fi"
   - opam upgrade --yes  # @todo Why does this recompile js_of_ocaml? (And thus we re-upload the cache at the end)
   - opam list
 
@@ -26,9 +27,10 @@ install:
   - npm list
 script:
   - cd src
-  - ocamlbuild -use-ocamlfind -plugin-tag "package(js_of_ocaml.ocamlbuild)" drawing_tests_in_command_line.byte drawing_tests_in_javascript.js JsOfOCairo.cma
+  - ocamlbuild -use-ocamlfind -no-plugin -no-links drawing_tests_in_command_line.byte drawing_tests_in_javascript.byte JsOfOCairo.cma
   - cd ..
   - src/_build/drawing_tests_in_command_line.byte
+  - js_of_ocaml src/_build/drawing_tests_in_javascript.byte
   - node drawing_tests_in_node.js
 env:
   # Oldest versions for js_of_ocaml 2.x
