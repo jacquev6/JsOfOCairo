@@ -9,10 +9,9 @@ homepage: "https://github.com/jacquev6/JsOfOCairo"
 doc: "https://github.com/jacquev6/JsOfOCairo"
 bug-reports: "http://github.com/jacquev6/JsOfOCairo/issues/"
 # js_of_ocaml.ppx doesn't exist with ocaml-version < "4.02.2"
-# js_of_ocaml isn't available for ocaml-version >= "4.05.0"
-available: [ocaml-version >= "4.02.2" & ocaml-version < "4.05.0"]
+available: [ocaml-version >= "4.02.2" & ocaml-version < "4.06.0"]
 build: [
-  ["sh" "-c" "cd src; ocamlbuild -use-ocamlfind -plugin-tag \"package(js_of_ocaml.ocamlbuild)\" JsOfOCairo.cma"]
+  ["sh" "-c" "cd src; ocamlbuild -use-ocamlfind -no-plugin JsOfOCairo.cma"]
 ]
 install: [
   ["mkdir" "-p" "%{prefix}%/lib/JsOfOCairo"]
@@ -24,6 +23,5 @@ remove: [
 depends: [
   "ocamlfind" {build}
   # js_of_ocaml < "2.8" lacks Js.export
-  # js_of_ocaml >= "3.0" has not been tested yet
-  "js_of_ocaml" {>= "2.8" & < "3.0"}
+  ("js_of_ocaml" {>= "2.8" & < "3.0"}) | ("js_of_ocaml" {>= "3.0" & < "4.0"} & "js_of_ocaml-ppx" {>= "3.0" & < "4.0"})
 ]

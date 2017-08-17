@@ -31,8 +31,14 @@ script:
   - src/_build/drawing_tests_in_command_line.byte
   - node drawing_tests_in_node.js
 env:
+  # Oldest versions for js_of_ocaml 2.x
   - OCAML_VERSION=4.02.2 JS_OF_OCAML_VERSION=2.8
+  # Newest versions for js_of_ocaml 2.x
   - OCAML_VERSION=4.04.0 JS_OF_OCAML_VERSION=2.8.4
+  # Oldest versions for js_of_ocaml 3.x
+  - OCAML_VERSION=4.02.3 JS_OF_OCAML_VERSION=3.0
+  # Newest versions for js_of_ocaml 3.x
+  - OCAML_VERSION=4.05.0 JS_OF_OCAML_VERSION=3.0
 cache:
   directories:
   - $HOME/.opam
