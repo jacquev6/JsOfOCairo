@@ -1,6 +1,6 @@
-*JsOfOCairo* is an OCaml (4.02.2+) library to reuse Cairo-based drawing code in web browsers.
+*JsOfOCairo* is an OCaml (4.02.3+) library to reuse Cairo-based drawing code in web browsers.
 It's an adapter, implementing (a reasonable subset of) the interface of `Cairo OCaml <https://github.com/Chris00/ocaml-cairo/>`_
-targeting HTML5 canvas elements as exposed to OCaml by `js_of_ocaml <https://ocsigen.org/js_of_ocaml/>`_ (2.8+).
+targeting HTML5 canvas elements as exposed to OCaml by `js_of_ocaml <https://ocsigen.org/js_of_ocaml/>`_ (3.0.0+).
 
 It's licensed under the `MIT license <http://choosealicense.com/licenses/mit/>`_.
 It's available on `OPAM <https://opam.ocaml.org/packages/JsOfOCairo/>`_.
