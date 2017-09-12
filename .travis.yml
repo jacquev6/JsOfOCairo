@@ -30,13 +30,14 @@ script:
   - jbuilder runtest
 env:
   # Oldest versions for js_of_ocaml 2.x
-  - OCAML_VERSION=4.02.2 JS_OF_OCAML_VERSION=2.8
+  - OCAML_VERSION=4.02.3 JS_OF_OCAML_VERSION=2.8
   # Newest versions for js_of_ocaml 2.x
   - OCAML_VERSION=4.04.0 JS_OF_OCAML_VERSION=2.8.4
   # Oldest versions for js_of_ocaml 3.x
   - OCAML_VERSION=4.02.3 JS_OF_OCAML_VERSION=3.0
   # Newest versions for js_of_ocaml 3.x
   - OCAML_VERSION=4.05.0 JS_OF_OCAML_VERSION=3.0
+  - OCAML_VERSION=4.05.0+flambda JS_OF_OCAML_VERSION=3.0
 cache:
   directories:
   - $HOME/.opam
