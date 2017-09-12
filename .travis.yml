@@ -18,9 +18,7 @@ install:
   - opam switch --yes $OCAML_VERSION
   - eval `opam config env`
   - opam switch
-  - opam pin --yes --no-action add js_of_ocaml $JS_OF_OCAML_VERSION
-  - opam install --yes js_of_ocaml cairo2 jbuilder
-  - "if [ $JS_OF_OCAML_VERSION = 3.0 ]; then opam install --yes js_of_ocaml-ppx; fi"
+  - opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 jbuilder
   - opam upgrade --yes
   - opam list
 
@@ -29,15 +27,9 @@ install:
 script:
   - jbuilder runtest
 env:
-  # Oldest versions for js_of_ocaml 2.x
-  - OCAML_VERSION=4.02.3 JS_OF_OCAML_VERSION=2.8
-  # Newest versions for js_of_ocaml 2.x
-  - OCAML_VERSION=4.04.0 JS_OF_OCAML_VERSION=2.8.4
-  # Oldest versions for js_of_ocaml 3.x
-  - OCAML_VERSION=4.02.3 JS_OF_OCAML_VERSION=3.0
-  # Newest versions for js_of_ocaml 3.x
-  - OCAML_VERSION=4.05.0 JS_OF_OCAML_VERSION=3.0
-  - OCAML_VERSION=4.05.0+flambda JS_OF_OCAML_VERSION=3.0
+  - OCAML_VERSION=4.02.3
+  - OCAML_VERSION=4.05.0
+  - OCAML_VERSION=4.05.0+flambda
 cache:
   directories:
   - $HOME/.opam
