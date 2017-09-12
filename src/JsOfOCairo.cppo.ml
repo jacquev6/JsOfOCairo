@@ -18,7 +18,7 @@ module Opt = struct
 end
 
 module type S = sig
-  #include "S.ml"
+  #include "JsOfOCairo.signatures.ml"
 end
 
 (*

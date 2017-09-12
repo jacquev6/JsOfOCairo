@@ -2,13 +2,13 @@
 
 (rule (
   (targets (JsOfOCairo.mli))
-  (deps (JsOfOCairo.cppo.mli S.ml))
+  (deps (JsOfOCairo.cppo.mli JsOfOCairo.signatures.ml))
   (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
 ))
 
 (rule (
   (targets (JsOfOCairo.ml))
-  (deps (JsOfOCairo.cppo.ml S.ml))
+  (deps (JsOfOCairo.cppo.ml JsOfOCairo.signatures.ml))
   (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
 ))
 
