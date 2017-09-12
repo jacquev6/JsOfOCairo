@@ -4,31 +4,23 @@
 
 set -o errexit
 
-function build {
-  cd src
-  ocamlbuild -use-ocamlfind -no-links -plugin-tag "package(js_of_ocaml.ocamlbuild)" -tag debug $@
-  cd ..
-}
-
-build drawing_tests_in_command_line.byte
-rm -f drawing_tests/*/*.png
-src/_build/drawing_tests_in_command_line.byte
+eval `opam config env`
+opam install --yes js_of_ocaml-ppx cairo2 jbuilder
 
 if ! [ -d node_modules ]
 then
     npm install canvas pixelmatch browserify
 fi
+
+clear
+
+jbuilder runtest --dev
+
 # https://github.com/mapbox/pixelmatch#install
-node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > src/_build/pixelmatch.js
-
-build drawing_tests_in_javascript.js
-node drawing_tests_in_node.js
-
+node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > _build/default/pixelmatch.js
 echo
 echo "Have a look at $(pwd)/drawing_tests_in_browser.html"
 echo
-
-build JsOfOCairo.cma
 
 # OPAM package
 # ============

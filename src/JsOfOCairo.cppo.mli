@@ -1,6 +1,8 @@
 (* Copyright 2017 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-module type S = module type of JsOfOCairo_S
+module type S = sig
+  #include "S.ml"
+end
 
 include S
 

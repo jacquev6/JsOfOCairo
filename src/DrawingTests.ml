@@ -4,7 +4,7 @@ open StdLabels
 
 let pi = atan2 0. (-1.)
 
-module Make(C: module type of JsOfOCairo_S) = struct
+module Make(C: JsOfOCairo.S) = struct
   type test = {name: string; width: int; height: int; draw: C.context -> unit; known_failure: bool}
 
   let check_transform transform ctx (x, y) (x', y') =

@@ -34,8 +34,8 @@
   </div>
 
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
-  <script src="src/_build/pixelmatch.js"></script>
-  <script src="src/_build/drawing_tests_in_javascript.js"></script>
+  <script src="_build/default/pixelmatch.js"></script>
+  <script src="_build/default/src/drawing_tests_in_javascript.bc.js"></script>
   <script>
     // https://stackoverflow.com/a/5077091/905845
     String.prototype.format = function () {
@@ -62,7 +62,7 @@
         $("#drawing_tests").append(html_template.format(test.name, test.width, test.height))
 
         var image = $(new Image());
-        image.attr("src", "drawing_tests/in_command_line/{0}.png".format(test.name));
+        image.attr("src", "_build/default/drawing_tests/in_command_line/{0}.png".format(test.name));
         image.data("test", test);
         image.on("load", function() {
           var test = $(this).data("test");

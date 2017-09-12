@@ -2,7 +2,7 @@ var Canvas = require('canvas');
 var Image = Canvas.Image;
 var fs = require('fs');
 var pixelmatch = require('pixelmatch');
-var drawing_tests = require('./src/_build/drawing_tests_in_javascript').drawing_tests;
+var drawing_tests = require('./src/drawing_tests_in_javascript.bc').drawing_tests;
 
 function writeTo(canvas, fileName) {
   var out = fs.createWriteStream(fileName);
@@ -57,7 +57,3 @@ for (var i = 1; i < drawing_tests.length; i++) {
     });
   })(drawing_tests[i]);
 };
-
-if(process.exitCode == 0) {
-  console.log("Tests OK in node.js");
-}

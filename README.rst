@@ -10,7 +10,7 @@ Here is `DrawGrammar <https://jacquev6.github.io/DrawGrammar/>`_, a real-life ap
 
 There is no real documentation besides this README.rst file.
 If a function is present in JsOfOCairo, it should behave as described in the `Cairo OCaml Tutorial <http://cairo.forge.ocamlcore.org/tutorial/index.html>`__.
-Have a look at the `interface file <https://github.com/jacquev6/JsOfOCairo/blob/master/src/JsOfOCairo_S.mli>`_ to know which functions *are* implemented.
+Have a look at the `interface file <https://github.com/jacquev6/JsOfOCairo/blob/master/src/S.ml>`_ to know which functions *are* implemented.
 You can also have a look at the `test file <https://github.com/jacquev6/JsOfOCairo/blob/master/src/DrawingTests.ml>`_ to see if what you're looking for is implemented and tested.
 
 Questions? Remarks? Bugs? Want to contribute? `Open an issue <https://github.com/jacquev6/JsOfOCairo/issues>`__!
@@ -36,8 +36,8 @@ Install from OPAM::
 
 The files described below are available as a `demo directory <https://github.com/jacquev6/JsOfOCairo/tree/master/demo>`_.
 Have a look at this directory for the details about compiling.
-In particular see the `_tags file <https://github.com/jacquev6/JsOfOCairo/blob/master/demo/_tags>`_
-and the `call to ocamlbuild <https://github.com/jacquev6/JsOfOCairo/blob/master/demo/demo.sh>`_.
+In particular see the `jbuild file <https://github.com/jacquev6/JsOfOCairo/blob/master/demo/jbuild>`_
+and the `call to jbuilder <https://github.com/jacquev6/JsOfOCairo/blob/master/demo/demo.sh>`_.
 
 Create a functor implementing your drawing code against the ``JsOfOCairo.S`` signature.
 File ``drawings.ml``::

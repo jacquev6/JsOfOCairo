@@ -1,6 +1,5 @@
 opam-version: "1.2"
-name: "JsOfOCairo"
-version: "1.0.0"
+version: "1.0.1"
 maintainer: "Vincent Jacques <vincent@vincent-jacques.net>"
 authors: "Vincent Jacques <vincent@vincent-jacques.net>"
 dev-repo: "https://github.com/jacquev6/JsOfOCairo.git"
@@ -8,20 +7,15 @@ licence: "MIT"
 homepage: "https://github.com/jacquev6/JsOfOCairo"
 doc: "https://github.com/jacquev6/JsOfOCairo"
 bug-reports: "http://github.com/jacquev6/JsOfOCairo/issues/"
-# js_of_ocaml.ppx doesn't exist with ocaml-version < "4.02.2"
-available: [ocaml-version >= "4.02.2" & ocaml-version < "4.06.0"]
+available: [ocaml-version >= "4.02.3" & ocaml-version < "4.06.0"]
 build: [
-  ["sh" "-c" "cd src; ocamlbuild -use-ocamlfind -no-plugin JsOfOCairo.cma"]
+  ["jbuilder" "build" "-p" name "-j" jobs]
 ]
-install: [
-  ["mkdir" "-p" "%{prefix}%/lib/JsOfOCairo"]
-  ["cp" "META" "src/_build/JsOfOCairo.cmi" "src/_build/JsOfOCairo.cma" "%{prefix}%/lib/JsOfOCairo"]
-]
-remove: [
-  ["ocamlfind" "remove" "JsOfOCairo"]
+build-test: [
+  ["jbuilder" "runtest" "-p" name]
 ]
 depends: [
-  "ocamlfind" {build}
+  "jbuilder" {build}
   # js_of_ocaml < "2.8" lacks Js.export
   ("js_of_ocaml" {>= "2.8" & < "3.0"}) | ("js_of_ocaml" {>= "3.0" & < "4.0"} & "js_of_ocaml-ppx" {>= "3.0" & < "4.0"})
 ]

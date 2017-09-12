@@ -1,6 +1,0 @@
-true: strict_sequence
-true: safe_string
-true: warn(@A)
-true: package(JsOfOCairo)
-true: package(js_of_ocaml.ppx)
-<draw_on_command_line.*>: package(cairo2)

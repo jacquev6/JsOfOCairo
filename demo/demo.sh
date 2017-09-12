@@ -3,11 +3,9 @@
 
 set -o errexit
 
-ocamlbuild \
-  -use-ocamlfind -no-links -plugin-tag "package(js_of_ocaml.ocamlbuild)" \
-  draw_in_browser.js draw_on_command_line.byte
+jbuilder build draw_on_command_line.bc draw_in_browser.bc.js
 
-_build/draw_on_command_line.byte
+_build/default/draw_on_command_line.bc
 
 echo
 echo "Have a look at $(pwd)/draw_in_browser.html"

@@ -17,7 +17,9 @@ module Opt = struct
     x = None
 end
 
-module type S = module type of JsOfOCairo_S
+module type S = sig
+  #include "S.ml"
+end
 
 (*
 Canvas:
