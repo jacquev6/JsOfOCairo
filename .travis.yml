@@ -22,7 +22,7 @@ install:
   - opam upgrade --yes
   - opam list
 
-  - npm install canvas browserify pixelmatch
+  - npm install canvas@1.6.7 browserify pixelmatch
   - npm list
 script:
   - jbuilder runtest
