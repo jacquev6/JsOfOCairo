@@ -11,9 +11,6 @@ type fill_rule = WINDING | EVEN_ODD
 val set_fill_rule: context -> fill_rule -> unit
 val get_fill_rule: context -> fill_rule
 
-val set_dash: context -> ?ofs:float -> float array -> unit
-val get_dash: context -> float array * float
-
 val clip_reset: context -> unit
 
 val set_tolerance: context -> float -> unit
@@ -350,6 +347,9 @@ val get_line_width: context -> float
 
 val set_miter_limit: context -> float -> unit
 val get_miter_limit: context -> float
+
+val set_dash: context -> ?ofs:float -> float array -> unit
+val get_dash: context -> float array * float
 
 type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE
 val set_operator: context -> operator -> unit

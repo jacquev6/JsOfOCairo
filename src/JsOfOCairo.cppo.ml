@@ -305,6 +305,15 @@ let set_line_width context width =
 let get_line_width context =
   context.ctx##.lineWidth
 
+let set_dash context ?(ofs=0.) dashes =
+  let ctx = Js.Unsafe.coerce context.ctx in
+  ctx##.lineDashOffset := ofs;
+  ctx##setLineDash (Js.array dashes)
+
+let get_dash context =
+  let ctx = Js.Unsafe.coerce context.ctx in
+  (Js.to_array (ctx##getLineDash), ctx##.lineDashOffset)
+
 module Path = struct
   let get_current_point {current_point; _} =
     current_point

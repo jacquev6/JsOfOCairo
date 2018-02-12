@@ -151,6 +151,19 @@ module Make(C: JsOfOCairo.S) = struct
       C.set_source_rgba ctx ~r:0. ~g:0. ~b:1. ~a:0.40;
       C.fill ctx;
     );
+    make "set_dash" 100 40 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:15.;
+      C.line_to ctx ~x:90. ~y:15.;
+      assert (C.get_dash ctx = ([||], 0.));
+      C.set_dash ctx [|5.; 7.; 9.; 11.|];
+      C.stroke ctx;
+      assert (C.get_dash ctx = ([|5.; 7.; 9.; 11.|], 0.));
+      C.move_to ctx ~x:10. ~y:25.;
+      C.line_to ctx ~x:90. ~y:25.;
+      C.set_dash ctx ~ofs:3. [|10.; 2.|];
+      assert (C.get_dash ctx = ([|10.; 2.|], 3.));
+      C.stroke ctx;
+    );
     make "set_source linear gradient" 100 40 (fun ctx ->
       let p = C.Pattern.create_linear ~x0:10. ~y0:20. ~x1:90. ~y1:30. in
       assert (C.Pattern.get_linear_points p = (10., 20., 90., 30.));
