@@ -7,10 +7,6 @@ type antialias = ANTIALIAS_DEFAULT | ANTIALIAS_NONE | ANTIALIAS_GRAY | ANTIALIAS
 val set_antialias: context -> antialias -> unit
 val get_antialias: context -> antialias
 
-type fill_rule = WINDING | EVEN_ODD
-val set_fill_rule: context -> fill_rule -> unit
-val get_fill_rule: context -> fill_rule
-
 val clip_reset: context -> unit
 
 val set_tolerance: context -> float -> unit
@@ -354,6 +350,10 @@ val get_dash: context -> float array * float
 type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE
 val set_operator: context -> operator -> unit
 val get_operator: context -> operator
+
+type fill_rule = WINDING | EVEN_ODD
+val set_fill_rule: context -> fill_rule -> unit
+val get_fill_rule: context -> fill_rule
 
 val clip: context -> unit
 val clip_preserve: context -> unit

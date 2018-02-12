@@ -277,10 +277,13 @@ module Pattern = struct
       | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 end
 
+type fill_rule = WINDING | EVEN_ODD
+
 type state = {
   mutable transformation: Matrix.t;
   mutable font: font;
   mutable source: Pattern.source;
+  mutable fill_rule: fill_rule;
 }
 
 module SavedState = struct
@@ -288,6 +291,7 @@ module SavedState = struct
     transformation: Matrix.t;
     font: font;
     source: Pattern.source;
+    fill_rule: fill_rule;
   }
 end
 
@@ -359,8 +363,16 @@ let stroke context =
   stroke_preserve context;
   Path.clear context
 
+let set_fill_rule context fill_rule =
+  context.state.fill_rule <- fill_rule
+
+let get_fill_rule context =
+  context.state.fill_rule
+
 let fill_preserve context =
-  context.ctx##fill
+  match context.state.fill_rule with
+    | WINDING -> context.ctx##fill
+    | EVEN_ODD -> (Js.Unsafe.coerce context.ctx)##fill (Js.string "evenodd")
 
 let fill context =
   fill_preserve context;
@@ -454,8 +466,8 @@ let identity_matrix context =
 
 let save context =
   context.ctx##save;
-  let {transformation; font; source} = context.state in
-  context.saved_states <- {SavedState.transformation; font; source}::context.saved_states
+  let {transformation; font; source; fill_rule} = context.state in
+  context.saved_states <- {SavedState.transformation; font; source; fill_rule}::context.saved_states
 
 type line_cap = BUTT | ROUND | SQUARE
 
@@ -557,7 +569,7 @@ let _set_font context ({slant; weight; size; family} as font) =
 let restore context =
   match context.saved_states with
     | [] -> raise (Error INVALID_RESTORE)
-    | {SavedState.transformation; font; source}::saved_states -> begin
+    | {SavedState.transformation; font; source; fill_rule}::saved_states -> begin
       context.ctx##restore;
       context.saved_states <- saved_states;
       (* @todo Store start and current points in device coordinates,
@@ -568,6 +580,7 @@ let restore context =
       set_matrix context transformation;
       context.state.font <- font;
       context.state.source <- source;
+      context.state.fill_rule <- fill_rule;
     end
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
@@ -627,6 +640,7 @@ let create canvas =
         family = "sans-serif";
       };
       source = !(Pattern.create_rgb ~r:0. ~g:0. ~b:0.);
+      fill_rule = WINDING;
     };
   } in
   set_line_width context 2.0;
