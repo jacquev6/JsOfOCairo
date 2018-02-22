@@ -2,21 +2,6 @@
 
 open StdLabels
 
-module Opt = struct
-  let value_def x ~def =
-    match x with
-      | Some x -> x
-      | None -> def
-
-  let map x ~f =
-    match x with
-      | None -> None
-      | Some x -> Some (f x)
-
-  let is_none x =
-    x = None
-end
-
 module type S = sig
   #include "JsOfOCairo.signatures.ml"
 end
@@ -307,6 +292,28 @@ let set_state ?transformation ?font ?source ?fill_rule context =
   let state = match fill_rule with None -> state | Some fill_rule -> {state with fill_rule} in
   context.state <- state
 
+let set_current_point context (x, y) =
+  context.current_point <- Some (Matrix.transform_point (get_state context).transformation ~x ~y)
+
+let set_start_point_as_current_point context =
+  context.current_point <- context.start_point
+
+let reset_current_point context =
+  context.current_point <- None
+
+let set_start_point context (x, y) =
+  context.start_point <- Some (Matrix.transform_point (get_state context).transformation ~x ~y)
+
+let set_start_point_if_none context p =
+  match context.start_point with
+    | None ->
+      set_start_point context p
+    | Some _ ->
+      ()
+
+let reset_start_point context =
+  context.start_point <- None
+
 let set_line_width context width =
   context.ctx##.lineWidth := width
 
@@ -322,72 +329,25 @@ let get_dash context =
   let ctx = Js.Unsafe.coerce context.ctx in
   (Js.to_array (ctx##getLineDash), ctx##.lineDashOffset)
 
-module Path = struct
-  let get_current_point {current_point; _} =
-    current_point
-    |> Opt.value_def ~def:(0., 0.)
-
-  let clear context =
-    context.ctx##beginPath;
-    context.start_point <- None;
-    context.current_point <- None
-
-  let close context =
-    context.ctx##closePath;
-    context.current_point <- context.start_point
-end
-
 let move_to context ~x ~y =
   context.ctx##moveTo x y;
-  context.start_point <- Some (x, y);
-  context.current_point <- context.start_point
+  set_start_point context (x, y);
+  set_start_point_as_current_point context
 
 let line_to context ~x ~y =
   context.ctx##lineTo x y;
-  if Opt.is_none context.start_point then
-  context.start_point <- Some (x, y);
-  context.current_point <- Some (x, y)
+  set_start_point_if_none context (x, y);
+  set_current_point context (x, y)
 
 let arc context ~x ~y ~r ~a1 ~a2 =
   context.ctx##arc x y r a1 a2 Js._false;
-  if Opt.is_none context.start_point then
-  context.start_point <- Some (x +. r *. (cos a1), y +. r *. (sin a1));
-  context.current_point <- Some (x +. r *. (cos a2), y +. r *. (sin a2))
+  set_start_point_if_none context (x +. r *. (cos a1), y +. r *. (sin a1));
+  set_current_point context (x +. r *. (cos a2), y +. r *. (sin a2))
 
 let arc_negative context ~x ~y ~r ~a1 ~a2 =
   context.ctx##arc x y r a1 a2 Js._true;
-  if Opt.is_none context.start_point then
-  context.start_point <- Some (x +. r *. (cos a1), y +. r *. (sin a1));
-  context.current_point <- Some (x +. r *. (cos a2), y +. r *. (sin a2))
-
-let stroke_preserve context =
-  context.ctx##stroke
-
-let stroke context =
-  stroke_preserve context;
-  Path.clear context
-
-let set_fill_rule context fill_rule =
-  set_state context ~fill_rule
-
-let get_fill_rule context =
-  (get_state context).fill_rule
-
-let fill_preserve context =
-  match (get_state context).fill_rule with
-    | WINDING -> context.ctx##fill
-    | EVEN_ODD -> (Js.Unsafe.coerce context.ctx)##fill (Js.string "evenodd")
-
-let fill context =
-  fill_preserve context;
-  Path.clear context
-
-let clip_preserve context =
-  context.ctx##clip
-
-let clip context =
-  clip_preserve context;
-  Path.clear context
+  set_start_point_if_none context (x +. r *. (cos a1), y +. r *. (sin a1));
+  set_current_point context (x +. r *. (cos a2), y +. r *. (sin a2))
 
 let set_source context pattern =
   let convert x = string_of_int (int_of_float (255.0 *. x)) in
@@ -437,17 +397,64 @@ let user_to_device context ~x ~y =
 let user_to_device_distance context ~x ~y =
   Matrix.transform_distance (get_state context).transformation ~dx:x ~dy:y
 
+module Path = struct
+  let get_current_point ({current_point; _} as context) =
+    match current_point with
+      | None ->
+        (0., 0.)
+      | Some (x, y) ->
+        device_to_user context ~x ~y
+
+  let clear context =
+    context.ctx##beginPath;
+    reset_start_point context;
+    reset_current_point context
+
+  let close context =
+    context.ctx##closePath;
+    set_start_point_as_current_point context
+end
+
+let stroke_preserve context =
+  context.ctx##stroke
+
+let stroke context =
+  stroke_preserve context;
+  Path.clear context
+
+let set_fill_rule context fill_rule =
+  set_state context ~fill_rule
+
+let get_fill_rule context =
+  (get_state context).fill_rule
+
+let fill_preserve context =
+  match (get_state context).fill_rule with
+    | WINDING -> context.ctx##fill
+    | EVEN_ODD -> (Js.Unsafe.coerce context.ctx)##fill (Js.string "evenodd")
+
+let fill context =
+  fill_preserve context;
+  Path.clear context
+
+let clip_preserve context =
+  context.ctx##clip
+
+let clip context =
+  clip_preserve context;
+  Path.clear context
+
 let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
-  let m' = Matrix.init_inverse m in
+  (* let m' = Matrix.init_inverse m in *)
   context.ctx##setTransform xx yx xy yy x0 y0;
-  context.current_point <-
+  (* context.current_point <-
     context.current_point
     |> Opt.map ~f:(Matrix.apply (get_state context).transformation)
     |> Opt.map ~f:(Matrix.apply m');
   context.start_point <-
     context.start_point
     |> Opt.map ~f:(Matrix.apply (get_state context).transformation)
-    |> Opt.map ~f:(Matrix.apply m');
+    |> Opt.map ~f:(Matrix.apply m'); *)
   set_state context ~transformation:m
 
 let get_matrix context =
@@ -525,9 +532,8 @@ let rel_line_to context ~x ~y =
 
 let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   context.ctx##bezierCurveTo x1 y1 x2 y2 x3 y3;
-  if Opt.is_none context.start_point then
-  context.start_point <- Some (x1, y1);
-  context.current_point <- Some (x3, y3)
+  set_start_point_if_none context (x1, y1);
+  set_current_point context (x3, y3)
 
 let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   let (x1, y1) = make_rel context ~x:x1 ~y:y1
@@ -536,7 +542,7 @@ let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
 
 let rectangle context ~x ~y ~w ~h =
-  context.current_point <- Some (x, y);
+  set_current_point context (x, y);
   context.ctx##rect x y w h
 
 type font_extents = {
@@ -575,10 +581,6 @@ let restore context =
     | state::saved_states -> begin
       context.ctx##restore;
       context.saved_states <- saved_states;
-      (* @todo Store start and current points in device coordinates,
-      so that they don't need to be changed in set_matrix,
-      and we can remove the following call to set_matrix *)
-      set_matrix context state.transformation;
       context.state <- state
     end
 
