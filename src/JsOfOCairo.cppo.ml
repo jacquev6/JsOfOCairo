@@ -277,12 +277,11 @@ type context = {
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   mutable start_point: (float * float) option;
   mutable current_point: (float * float) option;
-  mutable saved_states: State.t list;
-  mutable state: State.t;
+  mutable states: State.t list;
 }
 
 let get_state context =
-  context.state
+  List.hd context.states
 
 let set_state ?transformation ?font ?source ?fill_rule context =
   let state = get_state context in
@@ -290,7 +289,7 @@ let set_state ?transformation ?font ?source ?fill_rule context =
   let state = match font with None -> state | Some font -> {state with font} in
   let state = match source with None -> state | Some source -> {state with source} in
   let state = match fill_rule with None -> state | Some fill_rule -> {state with fill_rule} in
-  context.state <- state
+  context.states <- state::(List.tl context.states)
 
 let set_current_point context (x, y) =
   context.current_point <- Some (Matrix.transform_point (get_state context).transformation ~x ~y)
@@ -477,7 +476,7 @@ let identity_matrix context =
 
 let save context =
   context.ctx##save;
-  context.saved_states <- (get_state context)::context.saved_states
+  context.states <- (get_state context)::context.states
 
 type line_cap = BUTT | ROUND | SQUARE
 
@@ -576,13 +575,13 @@ let _set_font context ({slant; weight; size; family} as font) =
   context.ctx##.font := Js.string font
 
 let restore context =
-  match context.saved_states with
-    | [] -> raise (Error INVALID_RESTORE)
-    | state::saved_states -> begin
-      context.ctx##restore;
-      context.saved_states <- saved_states;
-      context.state <- state
-    end
+  context.ctx##restore;
+  let states =
+    match context.states with
+      | [] | [_] -> raise (Error INVALID_RESTORE)
+      | _::states -> states
+  in
+  context.states <- states
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
   _set_font context {(get_state context).font with slant; weight; family}
@@ -631,18 +630,19 @@ let create canvas =
     ctx;
     start_point = None;
     current_point = None;
-    saved_states = [];
-    state = {
-      transformation = Matrix.init_identity ();
-      font = {
-        slant = Upright;
-        weight = Normal;
-        size = 10.;
-        family = "sans-serif";
+    states = [
+      {
+        transformation = Matrix.init_identity ();
+        font = {
+          slant = Upright;
+          weight = Normal;
+          size = 10.;
+          family = "sans-serif";
+        };
+        source = !(Pattern.create_rgb ~r:0. ~g:0. ~b:0.);
+        fill_rule = WINDING;
       };
-      source = !(Pattern.create_rgb ~r:0. ~g:0. ~b:0.);
-      fill_rule = WINDING;
-    };
+    ];
   } in
   set_line_width context 2.0;
   context
