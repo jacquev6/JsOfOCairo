@@ -7,7 +7,7 @@ licence: "MIT"
 homepage: "https://github.com/jacquev6/JsOfOCairo"
 doc: "https://github.com/jacquev6/JsOfOCairo"
 bug-reports: "http://github.com/jacquev6/JsOfOCairo/issues/"
-available: [ocaml-version >= "4.02.3" & ocaml-version < "4.07.0"]
+available: [ocaml-version >= "4.02.3"]
 build: [
   ["jbuilder" "build" "-p" name "-j" jobs]
 ]
