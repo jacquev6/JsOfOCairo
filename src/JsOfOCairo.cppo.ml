@@ -296,6 +296,17 @@ type context = {
   mutable state: State.t;
 }
 
+let get_state context =
+  context.state
+
+let set_state ?transformation ?font ?source ?fill_rule context =
+  let state = get_state context in
+  let state = match transformation with None -> state | Some transformation -> {state with transformation} in
+  let state = match font with None -> state | Some font -> {state with font} in
+  let state = match source with None -> state | Some source -> {state with source} in
+  let state = match fill_rule with None -> state | Some fill_rule -> {state with fill_rule} in
+  context.state <- state
+
 let set_line_width context width =
   context.ctx##.lineWidth := width
 
@@ -357,13 +368,13 @@ let stroke context =
   Path.clear context
 
 let set_fill_rule context fill_rule =
-  context.state <- {context.state with fill_rule}
+  set_state context ~fill_rule
 
 let get_fill_rule context =
-  context.state.fill_rule
+  (get_state context).fill_rule
 
 let fill_preserve context =
-  match context.state.fill_rule with
+  match (get_state context).fill_rule with
     | WINDING -> context.ctx##fill
     | EVEN_ODD -> (Js.Unsafe.coerce context.ctx)##fill (Js.string "evenodd")
 
@@ -382,7 +393,7 @@ let set_source context pattern =
   let convert x = string_of_int (int_of_float (255.0 *. x)) in
   let convert_rgba r g b a = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
   let source = !pattern in
-  context.state <- {context.state with source};
+  set_state context ~source;
   match source with
     | Pattern.Rgba (r, g, b, a) ->
       let color = convert_rgba r g b a in
@@ -406,7 +417,7 @@ let set_source context pattern =
       context.ctx##.strokeStyle_gradient := gradient
 
 let get_source context =
-  ref context.state.source
+  ref (get_state context).source
 
 let set_source_rgb context ~r ~g ~b =
   set_source context (Pattern.create_rgb ~r ~g ~b)
@@ -415,35 +426,35 @@ let set_source_rgba context ~r ~g ~b ~a =
   set_source context (Pattern.create_rgba ~r ~g ~b ~a)
 
 let device_to_user context ~x ~y =
-  Matrix.transform_point (Matrix.init_inverse context.state.transformation) ~x ~y
+  Matrix.transform_point (Matrix.init_inverse (get_state context).transformation) ~x ~y
 
 let device_to_user_distance context ~x ~y =
-  Matrix.transform_distance (Matrix.init_inverse context.state.transformation) ~dx:x ~dy:y
+  Matrix.transform_distance (Matrix.init_inverse (get_state context).transformation) ~dx:x ~dy:y
 
 let user_to_device context ~x ~y =
-  Matrix.transform_point context.state.transformation ~x ~y
+  Matrix.transform_point (get_state context).transformation ~x ~y
 
 let user_to_device_distance context ~x ~y =
-  Matrix.transform_distance context.state.transformation ~dx:x ~dy:y
+  Matrix.transform_distance (get_state context).transformation ~dx:x ~dy:y
 
 let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
   let m' = Matrix.init_inverse m in
   context.ctx##setTransform xx yx xy yy x0 y0;
   context.current_point <-
     context.current_point
-    |> Opt.map ~f:(Matrix.apply context.state.transformation)
+    |> Opt.map ~f:(Matrix.apply (get_state context).transformation)
     |> Opt.map ~f:(Matrix.apply m');
   context.start_point <-
     context.start_point
-    |> Opt.map ~f:(Matrix.apply context.state.transformation)
+    |> Opt.map ~f:(Matrix.apply (get_state context).transformation)
     |> Opt.map ~f:(Matrix.apply m');
-  context.state <- {context.state with transformation=m}
+  set_state context ~transformation:m
 
 let get_matrix context =
-  context.state.transformation
+  (get_state context).transformation
 
 let transform context m =
-  set_matrix context (Matrix.multiply context.state.transformation m)
+  set_matrix context (Matrix.multiply (get_state context).transformation m)
 
 let scale context ~x ~y =
   transform context (Matrix.init_scale ~x ~y)
@@ -459,7 +470,7 @@ let identity_matrix context =
 
 let save context =
   context.ctx##save;
-  context.saved_states <- (context.state)::context.saved_states
+  context.saved_states <- (get_state context)::context.saved_states
 
 type line_cap = BUTT | ROUND | SQUARE
 
@@ -546,7 +557,7 @@ type text_extents = {
 }
 
 let _set_font context ({slant; weight; size; family} as font) =
-  context.state <- {context.state with font};
+  set_state context ~font;
   let font_style = match slant with
     | Upright -> "normal"
     | Italic -> "italic"
@@ -572,17 +583,17 @@ let restore context =
     end
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
-  _set_font context {context.state.font with slant; weight; family}
+  _set_font context {(get_state context).font with slant; weight; family}
 
 let set_font_size context size =
-  _set_font context {context.state.font with size}
+  _set_font context {(get_state context).font with size}
 
 let show_text context s =
   let (x, y) = Path.get_current_point context in
   context.ctx##fillText (Js.string s) x y
 
 let font_extents context =
-  let {size; _} = context.state.font in
+  let {size; _} = (get_state context).font in
   {
     ascent = size;
     descent = size /. 4.;
@@ -592,7 +603,7 @@ let font_extents context =
   }
 
 let text_extents context s =
-  let {size; _} = context.state.font
+  let {size; _} = (get_state context).font
   and w = (context.ctx##measureText (Js.string s))##.width in
   {
     x_bearing = 0.;
