@@ -264,6 +264,10 @@ end
 
 type fill_rule = WINDING | EVEN_ODD
 
+module Html = struct
+  type t = Dom_html.canvasRenderingContext2D Js.t
+end
+
 module State = struct
   type t = {
     transformation: Matrix.t;
@@ -274,7 +278,7 @@ module State = struct
 end
 
 type context = {
-  ctx: Dom_html.canvasRenderingContext2D Js.t;
+  html: Html.t;
   mutable start_point: (float * float) option;
   mutable current_point: (float * float) option;
   mutable states: State.t list;
@@ -314,37 +318,37 @@ let reset_start_point context =
   context.start_point <- None
 
 let set_line_width context width =
-  context.ctx##.lineWidth := width
+  context.html##.lineWidth := width
 
 let get_line_width context =
-  context.ctx##.lineWidth
+  context.html##.lineWidth
 
 let set_dash context ?(ofs=0.) dashes =
-  let ctx = Js.Unsafe.coerce context.ctx in
-  ctx##.lineDashOffset := ofs;
-  ctx##setLineDash (Js.array dashes)
+  let html = Js.Unsafe.coerce context.html in
+  html##.lineDashOffset := ofs;
+  html##setLineDash (Js.array dashes)
 
 let get_dash context =
-  let ctx = Js.Unsafe.coerce context.ctx in
-  (Js.to_array (ctx##getLineDash), ctx##.lineDashOffset)
+  let html = Js.Unsafe.coerce context.html in
+  (Js.to_array (html##getLineDash), html##.lineDashOffset)
 
 let move_to context ~x ~y =
-  context.ctx##moveTo x y;
+  context.html##moveTo x y;
   set_start_point context (x, y);
   set_start_point_as_current_point context
 
 let line_to context ~x ~y =
-  context.ctx##lineTo x y;
+  context.html##lineTo x y;
   set_start_point_if_none context (x, y);
   set_current_point context (x, y)
 
 let arc context ~x ~y ~r ~a1 ~a2 =
-  context.ctx##arc x y r a1 a2 Js._false;
+  context.html##arc x y r a1 a2 Js._false;
   set_start_point_if_none context (x +. r *. (cos a1), y +. r *. (sin a1));
   set_current_point context (x +. r *. (cos a2), y +. r *. (sin a2))
 
 let arc_negative context ~x ~y ~r ~a1 ~a2 =
-  context.ctx##arc x y r a1 a2 Js._true;
+  context.html##arc x y r a1 a2 Js._true;
   set_start_point_if_none context (x +. r *. (cos a1), y +. r *. (sin a1));
   set_current_point context (x +. r *. (cos a2), y +. r *. (sin a2))
 
@@ -356,24 +360,24 @@ let set_source context pattern =
   match source with
     | Pattern.Rgba (r, g, b, a) ->
       let color = convert_rgba r g b a in
-      context.ctx##.fillStyle := color;
-      context.ctx##.strokeStyle := color
+      context.html##.fillStyle := color;
+      context.html##.strokeStyle := color
     | Pattern.LinearGradient ((x0, y0, x1, y1), stops) ->
-      let gradient = context.ctx##createLinearGradient x0 y0 x1 y1 in
+      let gradient = context.html##createLinearGradient x0 y0 x1 y1 in
       stops
       |> Pattern.StopPointList.iter ~f:(fun (ofs, r, g, b, a) ->
         gradient##addColorStop ofs (convert_rgba r g b a)
       );
-      context.ctx##.fillStyle_gradient := gradient;
-      context.ctx##.strokeStyle_gradient := gradient
+      context.html##.fillStyle_gradient := gradient;
+      context.html##.strokeStyle_gradient := gradient
     | Pattern.RadialGradient ((x0, y0, r0, x1, y1, r1), stops) ->
-      let gradient = context.ctx##createRadialGradient x0 y0 r0 x1 y1 r1 in
+      let gradient = context.html##createRadialGradient x0 y0 r0 x1 y1 r1 in
       stops
       |> Pattern.StopPointList.iter ~f:(fun (ofs, r, g, b, a) ->
         gradient##addColorStop ofs (convert_rgba r g b a)
       );
-      context.ctx##.fillStyle_gradient := gradient;
-      context.ctx##.strokeStyle_gradient := gradient
+      context.html##.fillStyle_gradient := gradient;
+      context.html##.strokeStyle_gradient := gradient
 
 let get_source context =
   ref (get_state context).source
@@ -405,17 +409,17 @@ module Path = struct
         device_to_user context ~x ~y
 
   let clear context =
-    context.ctx##beginPath;
+    context.html##beginPath;
     reset_start_point context;
     reset_current_point context
 
   let close context =
-    context.ctx##closePath;
+    context.html##closePath;
     set_start_point_as_current_point context
 end
 
 let stroke_preserve context =
-  context.ctx##stroke
+  context.html##stroke
 
 let stroke context =
   stroke_preserve context;
@@ -429,22 +433,22 @@ let get_fill_rule context =
 
 let fill_preserve context =
   match (get_state context).fill_rule with
-    | WINDING -> context.ctx##fill
-    | EVEN_ODD -> (Js.Unsafe.coerce context.ctx)##fill (Js.string "evenodd")
+    | WINDING -> context.html##fill
+    | EVEN_ODD -> (Js.Unsafe.coerce context.html)##fill (Js.string "evenodd")
 
 let fill context =
   fill_preserve context;
   Path.clear context
 
 let clip_preserve context =
-  context.ctx##clip
+  context.html##clip
 
 let clip context =
   clip_preserve context;
   Path.clear context
 
 let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
-  context.ctx##setTransform xx yx xy yy x0 y0;
+  context.html##setTransform xx yx xy yy x0 y0;
   set_state context ~transformation:m
 
 let get_matrix context =
@@ -466,7 +470,7 @@ let identity_matrix context =
   set_matrix context (Matrix.init_identity ())
 
 let save context =
-  context.ctx##save;
+  context.html##save;
   context.states <- (get_state context)::context.states
 
 type line_cap = BUTT | ROUND | SQUARE
@@ -477,10 +481,10 @@ let set_line_cap context cap =
     | ROUND -> "round"
     | SQUARE -> "square"
   in
-  context.ctx##.lineCap := Js.string cap
+  context.html##.lineCap := Js.string cap
 
 let get_line_cap context =
-  match Js.to_string context.ctx##.lineCap with
+  match Js.to_string context.html##.lineCap with
     | "round" -> ROUND
     | "square" -> SQUARE
     | _ -> BUTT
@@ -493,19 +497,19 @@ let set_line_join context join =
     | JOIN_ROUND -> "round"
     | JOIN_BEVEL -> "bevel"
   in
-  context.ctx##.lineJoin := Js.string join
+  context.html##.lineJoin := Js.string join
 
 let get_line_join context =
-  match Js.to_string context.ctx##.lineJoin with
+  match Js.to_string context.html##.lineJoin with
     | "round" -> JOIN_ROUND
     | "bevel" -> JOIN_BEVEL
     | _ -> JOIN_MITER
 
 let set_miter_limit context l =
-  context.ctx##.miterLimit := l
+  context.html##.miterLimit := l
 
 let get_miter_limit context =
-  context.ctx##.miterLimit
+  context.html##.miterLimit
 
 let make_rel context ~x:dx ~y:dy =
   match context.current_point with
@@ -521,7 +525,7 @@ let rel_line_to context ~x ~y =
   line_to context ~x ~y
 
 let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-  context.ctx##bezierCurveTo x1 y1 x2 y2 x3 y3;
+  context.html##bezierCurveTo x1 y1 x2 y2 x3 y3;
   set_start_point_if_none context (x1, y1);
   set_current_point context (x3, y3)
 
@@ -533,7 +537,7 @@ let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
 
 let rectangle context ~x ~y ~w ~h =
   set_current_point context (x, y);
-  context.ctx##rect x y w h
+  context.html##rect x y w h
 
 type font_extents = {
   ascent: float;
@@ -563,10 +567,10 @@ let _set_font context ({slant; weight; size; family} as font) =
     | Bold -> "bold"
   in
   let font = Printf.sprintf "%s %s %npx %s" font_style font_weight (int_of_float size) family in
-  context.ctx##.font := Js.string font
+  context.html##.font := Js.string font
 
 let restore context =
-  context.ctx##restore;
+  context.html##restore;
   let states =
     match context.states with
       | [] | [_] -> raise (Error INVALID_RESTORE)
@@ -582,7 +586,7 @@ let set_font_size context size =
 
 let show_text context s =
   let (x, y) = Path.get_current_point context in
-  context.ctx##fillText (Js.string s) x y
+  context.html##fillText (Js.string s) x y
 
 let font_extents context =
   let {size; _} = (get_state context).font in
@@ -596,7 +600,7 @@ let font_extents context =
 
 let text_extents context s =
   let {size; _} = (get_state context).font
-  and w = (context.ctx##measureText (Js.string s))##.width in
+  and w = (context.html##measureText (Js.string s))##.width in
   {
     x_bearing = 0.;
     y_bearing = 0.;
@@ -608,17 +612,17 @@ let text_extents context s =
 
 let paint ?(alpha=1.) context =
   save context;
-  context.ctx##.globalAlpha := alpha;
+  context.html##.globalAlpha := alpha;
   identity_matrix context;
-  let width = (float_of_int context.ctx##.canvas##.width)
-  and height = (float_of_int context.ctx##.canvas##.height) in
-  context.ctx##fillRect 0. 0. width height;
+  let width = (float_of_int context.html##.canvas##.width)
+  and height = (float_of_int context.html##.canvas##.height) in
+  context.html##fillRect 0. 0. width height;
   restore context
 
 let create canvas =
-  let ctx = canvas##getContext Dom_html._2d_ in
+  let html = canvas##getContext Dom_html._2d_ in
   let context = {
-    ctx;
+    html;
     start_point = None;
     current_point = None;
     states = [
@@ -657,10 +661,10 @@ let set_operator context operator =
     | DEST -> failwith "Unsupported operator DEST"
     | SATURATE -> failwith "Unsupported operator SATURATE"
   in
-  context.ctx##.globalCompositeOperation := Js.string operator
+  context.html##.globalCompositeOperation := Js.string operator
 
 let get_operator context =
-  match Js.to_string context.ctx##.globalCompositeOperation with
+  match Js.to_string context.html##.globalCompositeOperation with
     | "over" -> OVER (* Special case for node-canvas which seems to have a wrong default value *)
     | "add" -> ADD (* Special case for node-canvas *)
     | "source-over" -> OVER
