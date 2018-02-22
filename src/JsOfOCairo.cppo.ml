@@ -444,16 +444,7 @@ let clip context =
   Path.clear context
 
 let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
-  (* let m' = Matrix.init_inverse m in *)
   context.ctx##setTransform xx yx xy yy x0 y0;
-  (* context.current_point <-
-    context.current_point
-    |> Opt.map ~f:(Matrix.apply (get_state context).transformation)
-    |> Opt.map ~f:(Matrix.apply m');
-  context.start_point <-
-    context.start_point
-    |> Opt.map ~f:(Matrix.apply (get_state context).transformation)
-    |> Opt.map ~f:(Matrix.apply m'); *)
   set_state context ~transformation:m
 
 let get_matrix context =
