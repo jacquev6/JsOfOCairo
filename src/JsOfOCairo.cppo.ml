@@ -268,54 +268,139 @@ module Html = struct
   type t = Dom_html.canvasRenderingContext2D Js.t
 end
 
-module State = struct
+module Local: sig
+  type t
+
+  val create: unit -> t
+
+  val save: t -> unit
+  val restore: t -> unit
+
+  val transformation: t -> Matrix.t
+  val set_transformation: t -> transformation:Matrix.t -> unit
+
+  val font: t -> font
+  val set_font: t -> font:font -> unit
+
+  val source: t -> Pattern.source
+  val set_source: t -> source:Pattern.source -> unit
+
+  val fill_rule: t -> fill_rule
+  val set_fill_rule: t -> fill_rule:fill_rule -> unit
+
+  val set_start_point: t -> float * float -> unit
+  val set_start_point_if_none: t -> float * float -> unit
+  val reset_start_point: t -> unit
+  val set_start_point_as_current_point: t -> unit
+
+  val current_point: t -> (float * float) option
+  val set_current_point: t -> float * float -> unit
+  val reset_current_point: t -> unit
+end = struct
+  module State = struct
+    type t = {
+      transformation: Matrix.t;
+      font: font;
+      source: Pattern.source;
+      fill_rule: fill_rule;
+    }
+  end
+
   type t = {
-    transformation: Matrix.t;
-    font: font;
-    source: Pattern.source;
-    fill_rule: fill_rule;
+    mutable start_point: (float * float) option;
+    mutable current_point: (float * float) option;
+    mutable states: State.t list;
   }
+
+  let create () = {
+    start_point = None;
+    current_point = None;
+    states = [
+      {
+        transformation = Matrix.init_identity ();
+        font = {
+          slant = Upright;
+          weight = Normal;
+          size = 10.;
+          family = "sans-serif";
+        };
+        source = !(Pattern.create_rgb ~r:0. ~g:0. ~b:0.);
+        fill_rule = WINDING;
+      };
+    ];
+  }
+
+  let state context =
+    List.hd context.states
+
+  let set_state context state =
+    context.states <- state::(List.tl context.states)
+
+  let save context =
+    context.states <- (state context)::context.states
+
+  let restore context =
+    let states =
+      match context.states with
+        | [] | [_] -> raise (Error INVALID_RESTORE)
+        | _::states -> states
+    in
+    context.states <- states
+
+  let transformation context =
+    (state context).transformation
+
+  let set_transformation context ~transformation =
+    set_state context ({(state context) with transformation})
+
+  let font context =
+    (state context).font
+
+  let set_font context ~font =
+    set_state context ({(state context) with font})
+
+  let source context =
+    (state context).source
+
+  let set_source context ~source =
+    set_state context ({(state context) with source})
+
+  let fill_rule context =
+    (state context).fill_rule
+
+  let set_fill_rule context ~fill_rule =
+    set_state context ({(state context) with fill_rule})
+
+  let set_start_point context (x, y) =
+    context.start_point <- Some (Matrix.transform_point (transformation context) ~x ~y)
+
+  let reset_start_point context =
+    context.start_point <- None
+
+  let set_start_point_if_none context p =
+    match context.start_point with
+      | None ->
+        set_start_point context p
+      | Some _ ->
+        ()
+
+  let set_start_point_as_current_point context =
+    context.current_point <- context.start_point
+
+  let current_point context =
+    context.current_point
+
+  let set_current_point context (x, y) =
+    context.current_point <- Some (Matrix.transform_point (transformation context) ~x ~y)
+
+  let reset_current_point context =
+    context.current_point <- None
 end
 
 type context = {
   html: Html.t;
-  mutable start_point: (float * float) option;
-  mutable current_point: (float * float) option;
-  mutable states: State.t list;
+  local: Local.t;
 }
-
-let get_state context =
-  List.hd context.states
-
-let set_state ?transformation ?font ?source ?fill_rule context =
-  let state = get_state context in
-  let state = match transformation with None -> state | Some transformation -> {state with transformation} in
-  let state = match font with None -> state | Some font -> {state with font} in
-  let state = match source with None -> state | Some source -> {state with source} in
-  let state = match fill_rule with None -> state | Some fill_rule -> {state with fill_rule} in
-  context.states <- state::(List.tl context.states)
-
-let set_current_point context (x, y) =
-  context.current_point <- Some (Matrix.transform_point (get_state context).transformation ~x ~y)
-
-let set_start_point_as_current_point context =
-  context.current_point <- context.start_point
-
-let reset_current_point context =
-  context.current_point <- None
-
-let set_start_point context (x, y) =
-  context.start_point <- Some (Matrix.transform_point (get_state context).transformation ~x ~y)
-
-let set_start_point_if_none context p =
-  match context.start_point with
-    | None ->
-      set_start_point context p
-    | Some _ ->
-      ()
-
-let reset_start_point context =
-  context.start_point <- None
 
 let set_line_width context width =
   context.html##.lineWidth := width
@@ -334,29 +419,29 @@ let get_dash context =
 
 let move_to context ~x ~y =
   context.html##moveTo x y;
-  set_start_point context (x, y);
-  set_start_point_as_current_point context
+  Local.set_start_point context.local (x, y);
+  Local.set_start_point_as_current_point context.local
 
 let line_to context ~x ~y =
   context.html##lineTo x y;
-  set_start_point_if_none context (x, y);
-  set_current_point context (x, y)
+  Local.set_start_point_if_none context.local (x, y);
+  Local.set_current_point context.local (x, y)
 
 let arc context ~x ~y ~r ~a1 ~a2 =
   context.html##arc x y r a1 a2 Js._false;
-  set_start_point_if_none context (x +. r *. (cos a1), y +. r *. (sin a1));
-  set_current_point context (x +. r *. (cos a2), y +. r *. (sin a2))
+  Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
+  Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
 
 let arc_negative context ~x ~y ~r ~a1 ~a2 =
   context.html##arc x y r a1 a2 Js._true;
-  set_start_point_if_none context (x +. r *. (cos a1), y +. r *. (sin a1));
-  set_current_point context (x +. r *. (cos a2), y +. r *. (sin a2))
+  Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
+  Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
 
 let set_source context pattern =
   let convert x = string_of_int (int_of_float (255.0 *. x)) in
   let convert_rgba r g b a = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
   let source = !pattern in
-  set_state context ~source;
+  Local.set_source context.local ~source;
   match source with
     | Pattern.Rgba (r, g, b, a) ->
       let color = convert_rgba r g b a in
@@ -380,7 +465,7 @@ let set_source context pattern =
       context.html##.strokeStyle_gradient := gradient
 
 let get_source context =
-  ref (get_state context).source
+  ref (Local.source context.local)
 
 let set_source_rgb context ~r ~g ~b =
   set_source context (Pattern.create_rgb ~r ~g ~b)
@@ -389,20 +474,20 @@ let set_source_rgba context ~r ~g ~b ~a =
   set_source context (Pattern.create_rgba ~r ~g ~b ~a)
 
 let device_to_user context ~x ~y =
-  Matrix.transform_point (Matrix.init_inverse (get_state context).transformation) ~x ~y
+  Matrix.transform_point (Matrix.init_inverse (Local.transformation context.local)) ~x ~y
 
 let device_to_user_distance context ~x ~y =
-  Matrix.transform_distance (Matrix.init_inverse (get_state context).transformation) ~dx:x ~dy:y
+  Matrix.transform_distance (Matrix.init_inverse (Local.transformation context.local)) ~dx:x ~dy:y
 
 let user_to_device context ~x ~y =
-  Matrix.transform_point (get_state context).transformation ~x ~y
+  Matrix.transform_point (Local.transformation context.local) ~x ~y
 
 let user_to_device_distance context ~x ~y =
-  Matrix.transform_distance (get_state context).transformation ~dx:x ~dy:y
+  Matrix.transform_distance (Local.transformation context.local) ~dx:x ~dy:y
 
 module Path = struct
-  let get_current_point ({current_point; _} as context) =
-    match current_point with
+  let get_current_point context =
+    match Local.current_point context.local with
       | None ->
         (0., 0.)
       | Some (x, y) ->
@@ -410,12 +495,12 @@ module Path = struct
 
   let clear context =
     context.html##beginPath;
-    reset_start_point context;
-    reset_current_point context
+    Local.reset_start_point context.local;
+    Local.reset_current_point context.local
 
   let close context =
     context.html##closePath;
-    set_start_point_as_current_point context
+    Local.set_start_point_as_current_point context.local
 end
 
 let stroke_preserve context =
@@ -426,13 +511,13 @@ let stroke context =
   Path.clear context
 
 let set_fill_rule context fill_rule =
-  set_state context ~fill_rule
+  Local.set_fill_rule context.local ~fill_rule
 
 let get_fill_rule context =
-  (get_state context).fill_rule
+  Local.fill_rule context.local
 
 let fill_preserve context =
-  match (get_state context).fill_rule with
+  match Local.fill_rule context.local with
     | WINDING -> context.html##fill
     | EVEN_ODD -> (Js.Unsafe.coerce context.html)##fill (Js.string "evenodd")
 
@@ -447,15 +532,15 @@ let clip context =
   clip_preserve context;
   Path.clear context
 
-let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
+let set_matrix context ({xx; xy; yx; yy; x0; y0} as transformation) =
   context.html##setTransform xx yx xy yy x0 y0;
-  set_state context ~transformation:m
+  Local.set_transformation context.local ~transformation
 
 let get_matrix context =
-  (get_state context).transformation
+  Local.transformation context.local
 
 let transform context m =
-  set_matrix context (Matrix.multiply (get_state context).transformation m)
+  set_matrix context (Matrix.multiply (Local.transformation context.local) m)
 
 let scale context ~x ~y =
   transform context (Matrix.init_scale ~x ~y)
@@ -471,7 +556,7 @@ let identity_matrix context =
 
 let save context =
   context.html##save;
-  context.states <- (get_state context)::context.states
+  Local.save context.local
 
 type line_cap = BUTT | ROUND | SQUARE
 
@@ -512,7 +597,7 @@ let get_miter_limit context =
   context.html##.miterLimit
 
 let make_rel context ~x:dx ~y:dy =
-  match context.current_point with
+  match Local.current_point context.local with
     | None -> raise (Error NO_CURRENT_POINT)
     | Some (x, y) -> (x +. dx, y +. dy)
 
@@ -526,8 +611,8 @@ let rel_line_to context ~x ~y =
 
 let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   context.html##bezierCurveTo x1 y1 x2 y2 x3 y3;
-  set_start_point_if_none context (x1, y1);
-  set_current_point context (x3, y3)
+  Local.set_start_point_if_none context.local (x1, y1);
+  Local.set_current_point context.local (x3, y3)
 
 let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   let (x1, y1) = make_rel context ~x:x1 ~y:y1
@@ -536,7 +621,7 @@ let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
 
 let rectangle context ~x ~y ~w ~h =
-  set_current_point context (x, y);
+  Local.set_current_point context.local (x, y);
   context.html##rect x y w h
 
 type font_extents = {
@@ -557,7 +642,7 @@ type text_extents = {
 }
 
 let _set_font context ({slant; weight; size; family} as font) =
-  set_state context ~font;
+  Local.set_font context.local ~font;
   let font_style = match slant with
     | Upright -> "normal"
     | Italic -> "italic"
@@ -571,25 +656,20 @@ let _set_font context ({slant; weight; size; family} as font) =
 
 let restore context =
   context.html##restore;
-  let states =
-    match context.states with
-      | [] | [_] -> raise (Error INVALID_RESTORE)
-      | _::states -> states
-  in
-  context.states <- states
+  Local.restore context.local
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
-  _set_font context {(get_state context).font with slant; weight; family}
+  _set_font context {(Local.font context.local) with slant; weight; family}
 
 let set_font_size context size =
-  _set_font context {(get_state context).font with size}
+  _set_font context {(Local.font context.local) with size}
 
 let show_text context s =
   let (x, y) = Path.get_current_point context in
   context.html##fillText (Js.string s) x y
 
 let font_extents context =
-  let {size; _} = (get_state context).font in
+  let {size; _} = (Local.font context.local) in
   {
     ascent = size;
     descent = size /. 4.;
@@ -599,7 +679,7 @@ let font_extents context =
   }
 
 let text_extents context s =
-  let {size; _} = (get_state context).font
+  let {size; _} = (Local.font context.local)
   and w = (context.html##measureText (Js.string s))##.width in
   {
     x_bearing = 0.;
@@ -620,24 +700,11 @@ let paint ?(alpha=1.) context =
   restore context
 
 let create canvas =
-  let html = canvas##getContext Dom_html._2d_ in
+  let html = canvas##getContext Dom_html._2d_
+  and local = Local.create () in
   let context = {
     html;
-    start_point = None;
-    current_point = None;
-    states = [
-      {
-        transformation = Matrix.init_identity ();
-        font = {
-          slant = Upright;
-          weight = Normal;
-          size = 10.;
-          family = "sans-serif";
-        };
-        source = !(Pattern.create_rgb ~r:0. ~g:0. ~b:0.);
-        fill_rule = WINDING;
-      };
-    ];
+    local;
   } in
   set_line_width context 2.0;
   context
