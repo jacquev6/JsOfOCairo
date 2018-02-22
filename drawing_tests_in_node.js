@@ -1,3 +1,5 @@
+// Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net>
+
 var Canvas = require('canvas');
 var Image = Canvas.Image;
 var fs = require('fs');
