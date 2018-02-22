@@ -279,14 +279,7 @@ end
 
 type fill_rule = WINDING | EVEN_ODD
 
-type state = {
-  mutable transformation: Matrix.t;
-  mutable font: font;
-  mutable source: Pattern.source;
-  mutable fill_rule: fill_rule;
-}
-
-module SavedState = struct
+module State = struct
   type t = {
     transformation: Matrix.t;
     font: font;
@@ -299,8 +292,8 @@ type context = {
   ctx: Dom_html.canvasRenderingContext2D Js.t;
   mutable start_point: (float * float) option;
   mutable current_point: (float * float) option;
-  mutable saved_states: SavedState.t list;
-  state: state;
+  mutable saved_states: State.t list;
+  mutable state: State.t;
 }
 
 let set_line_width context width =
@@ -364,7 +357,7 @@ let stroke context =
   Path.clear context
 
 let set_fill_rule context fill_rule =
-  context.state.fill_rule <- fill_rule
+  context.state <- {context.state with fill_rule}
 
 let get_fill_rule context =
   context.state.fill_rule
@@ -389,7 +382,7 @@ let set_source context pattern =
   let convert x = string_of_int (int_of_float (255.0 *. x)) in
   let convert_rgba r g b a = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
   let source = !pattern in
-  context.state.source <- source;
+  context.state <- {context.state with source};
   match source with
     | Pattern.Rgba (r, g, b, a) ->
       let color = convert_rgba r g b a in
@@ -444,7 +437,7 @@ let set_matrix context ({xx; xy; yx; yy; x0; y0} as m) =
     context.start_point
     |> Opt.map ~f:(Matrix.apply context.state.transformation)
     |> Opt.map ~f:(Matrix.apply m');
-  context.state.transformation <- m
+  context.state <- {context.state with transformation=m}
 
 let get_matrix context =
   context.state.transformation
@@ -466,8 +459,7 @@ let identity_matrix context =
 
 let save context =
   context.ctx##save;
-  let {transformation; font; source; fill_rule} = context.state in
-  context.saved_states <- {SavedState.transformation; font; source; fill_rule}::context.saved_states
+  context.saved_states <- (context.state)::context.saved_states
 
 type line_cap = BUTT | ROUND | SQUARE
 
@@ -554,7 +546,7 @@ type text_extents = {
 }
 
 let _set_font context ({slant; weight; size; family} as font) =
-  context.state.font <- font;
+  context.state <- {context.state with font};
   let font_style = match slant with
     | Upright -> "normal"
     | Italic -> "italic"
@@ -569,18 +561,14 @@ let _set_font context ({slant; weight; size; family} as font) =
 let restore context =
   match context.saved_states with
     | [] -> raise (Error INVALID_RESTORE)
-    | {SavedState.transformation; font; source; fill_rule}::saved_states -> begin
+    | state::saved_states -> begin
       context.ctx##restore;
       context.saved_states <- saved_states;
       (* @todo Store start and current points in device coordinates,
-        so that they don't need to be changed in set_matrix,
-        and we can simply do:
-        context.state.transformation <- transformation;
-      *)
-      set_matrix context transformation;
-      context.state.font <- font;
-      context.state.source <- source;
-      context.state.fill_rule <- fill_rule;
+      so that they don't need to be changed in set_matrix,
+      and we can remove the following call to set_matrix *)
+      set_matrix context state.transformation;
+      context.state <- state
     end
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
