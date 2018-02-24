@@ -62,14 +62,12 @@ end = struct
   end
 
   type t = {
-    mutable start_point: (float * float) option;
-    mutable current_point: (float * float) option;
+    points: Points.t;
     mutable states: State.t list;
   }
 
   let create () = {
-    start_point = None;
-    current_point = None;
+    points = Points.create ();
     states = [
       {
         transformation = Matrix.init_identity ();
@@ -127,31 +125,29 @@ end = struct
     set_state context ({(state context) with fill_rule})
 
   let set_start_point context (x, y) =
-    context.start_point <- Some (Matrix.transform_point (transformation context) ~x ~y)
+    let transformation = transformation context in
+    Points.set_start context.points ~transformation ~x ~y
 
   let reset_start_point context =
-    context.start_point <- None
+    Points.reset_start context.points
 
-  let set_start_point_if_none context p =
-    match context.start_point with
-      | None ->
-        set_start_point context p
-      | Some _ ->
-        ()
+  let set_start_point_if_none context (x, y) =
+    let transformation = transformation context in
+    Points.set_start_if_none context.points ~transformation ~x ~y
 
   let set_start_point_as_current_point context =
-    context.current_point <- context.start_point
+    Points.set_current_from_start context.points
 
   let current_point context =
-    match context.current_point with
-      | None -> None
-      | Some (x, y) -> Some (Matrix.transform_point (Matrix.init_inverse (transformation context)) ~x ~y)
+    let transformation = transformation context in
+    Points.current context.points ~transformation
 
   let set_current_point context (x, y) =
-    context.current_point <- Some (Matrix.transform_point (transformation context) ~x ~y)
+    let transformation = transformation context in
+    Points.set_current context.points ~transformation ~x ~y
 
   let reset_current_point context =
-    context.current_point <- None
+    Points.reset_current context.points
 end
 
 type context = {

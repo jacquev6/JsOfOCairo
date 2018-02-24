@@ -269,3 +269,52 @@ type text_extents = {
 }
 
 type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE
+
+module Points: sig
+  type t
+
+  val create: unit -> t
+
+  val set_start: t -> transformation:Matrix.t -> x:float -> y:float -> unit
+  val set_start_if_none: t -> transformation:Matrix.t -> x:float -> y:float -> unit
+  val reset_start: t -> unit
+
+  val set_current: t -> transformation:Matrix.t -> x:float -> y:float -> unit
+  val set_current_from_start: t -> unit
+  val reset_current: t -> unit
+  val current: t -> transformation:Matrix.t -> (float * float) option
+end = struct
+  type t = {
+    mutable start: (float * float) option;
+    mutable current: (float * float) option;
+  }
+
+  let create () = {
+    start = None;
+    current = None;
+  }
+
+  let set_start points ~transformation ~x ~y =
+    points.start <- Some (Matrix.transform_point transformation ~x ~y)
+
+  let set_start_if_none points ~transformation ~x ~y =
+    if points.start = None then
+    points.start <- Some (Matrix.transform_point transformation ~x ~y)
+
+  let reset_start points =
+    points.start <- None
+
+  let set_current points ~transformation ~x ~y =
+    points.current <- Some (Matrix.transform_point transformation ~x ~y)
+
+  let set_current_from_start points =
+    points.current <- points.start
+
+  let reset_current points =
+    points.current <- None
+
+  let current points ~transformation =
+    match points.current with
+      | None -> None
+      | Some (x, y) -> Some (Matrix.transform_point (Matrix.init_inverse transformation) ~x ~y)
+end
