@@ -313,8 +313,6 @@ let save context =
   context.html##save;
   Local.save context.local
 
-type line_cap = BUTT | ROUND | SQUARE
-
 let set_line_cap context cap =
   let cap = match cap with
     | BUTT -> "butt"
@@ -328,8 +326,6 @@ let get_line_cap context =
     | "round" -> ROUND
     | "square" -> SQUARE
     | _ -> BUTT
-
-type line_join = JOIN_MITER | JOIN_ROUND | JOIN_BEVEL
 
 let set_line_join context join =
   let join = match join with
@@ -378,23 +374,6 @@ let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
 let rectangle context ~x ~y ~w ~h =
   Local.set_current_point context.local (x, y);
   context.html##rect x y w h
-
-type font_extents = {
-  ascent: float;
-  descent: float;
-  baseline: float;
-  max_x_advance: float;
-  max_y_advance: float;
-}
-
-type text_extents = {
-  x_bearing: float;
-  y_bearing: float;
-  width: float;
-  height: float;
-  x_advance: float;
-  y_advance: float;
-}
 
 let _set_font context ({slant; weight; size; family} as font) =
   Local.set_font context.local ~font;
@@ -463,8 +442,6 @@ let create canvas =
   } in
   set_line_width context 2.0;
   context
-
-type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE
 
 let set_operator context operator =
   let operator = match operator with

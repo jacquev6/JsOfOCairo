@@ -13,4 +13,5 @@ let test f expected =
 
 let run () = begin
   test (fun c -> move_to c ~x:4.05 ~y:2.957) ["move_to ~x:4.05 ~y:2.96"];
+  test (fun c -> line_to c ~x:4.05 ~y:2.957) ["line_to ~x:4.05 ~y:2.96"];
 end

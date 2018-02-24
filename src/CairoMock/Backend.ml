@@ -246,3 +246,26 @@ module Pattern = struct
 end
 
 type fill_rule = WINDING | EVEN_ODD
+
+type line_cap = BUTT | ROUND | SQUARE
+
+type line_join = JOIN_MITER | JOIN_ROUND | JOIN_BEVEL
+
+type font_extents = {
+  ascent: float;
+  descent: float;
+  baseline: float;
+  max_x_advance: float;
+  max_y_advance: float;
+}
+
+type text_extents = {
+  x_bearing: float;
+  y_bearing: float;
+  width: float;
+  height: float;
+  x_advance: float;
+  y_advance: float;
+}
+
+type operator = CLEAR | SOURCE | OVER | IN | OUT | ATOP | DEST | DEST_OVER | DEST_IN | DEST_OUT | DEST_ATOP | XOR | ADD | SATURATE

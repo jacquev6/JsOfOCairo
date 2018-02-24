@@ -1,3 +1,5 @@
+(* open StdLabels *)
+
 module Backend = Backend
 
 include Backend
@@ -21,3 +23,6 @@ let calls {calls} =
 
 let move_to context ~x ~y =
   call context "move_to ~x:%.2f ~y:%.2f" x y
+
+let line_to context ~x ~y =
+  call context "line_to ~x:%.2f ~y:%.2f" x y
