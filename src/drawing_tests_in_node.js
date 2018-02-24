@@ -4,7 +4,7 @@ var Canvas = require('canvas');
 var Image = Canvas.Image;
 var fs = require('fs');
 var pixelmatch = require('pixelmatch');
-var drawing_tests = require('./src/drawing_tests_in_javascript.bc.js').drawing_tests;
+var drawing_tests = require('./drawing_tests_in_javascript.bc.js').drawing_tests;
 
 function writeTo(canvas, fileName) {
   var out = fs.createWriteStream(fileName);
