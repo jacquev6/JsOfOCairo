@@ -726,6 +726,12 @@ module Make(C: JsOfOCairo.S) = struct
       C.paint ctx;
       C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.;
     );
+    make_current_point "scale rel_line_to" 100 40 (fun ctx ->
+      C.scale ctx ~x:3. ~y:1.5;
+      C.move_to ctx ~x:10. ~y:5.;
+      C.rel_line_to ctx ~x:20. ~y:15.;
+      C.stroke_preserve ctx;
+    );
     make "clip paint" 100 40 (fun ctx ->
       C.rectangle ctx ~x:10. ~y:10. ~w:80. ~h:20.;
       C.clip ctx;

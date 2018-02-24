@@ -388,7 +388,9 @@ end = struct
     context.current_point <- context.start_point
 
   let current_point context =
-    context.current_point
+    match context.current_point with
+      | None -> None
+      | Some (x, y) -> Some (Matrix.transform_point (Matrix.init_inverse (transformation context)) ~x ~y)
 
   let set_current_point context (x, y) =
     context.current_point <- Some (Matrix.transform_point (transformation context) ~x ~y)
@@ -488,10 +490,8 @@ let user_to_device_distance context ~x ~y =
 module Path = struct
   let get_current_point context =
     match Local.current_point context.local with
-      | None ->
-        (0., 0.)
-      | Some (x, y) ->
-        device_to_user context ~x ~y
+      | None -> (0., 0.)
+      | Some (x, y) -> (x, y)
 
   let clear context =
     context.html##beginPath;
