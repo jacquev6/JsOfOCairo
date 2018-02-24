@@ -2,13 +2,12 @@
 
 open StdLabels
 
-module Tests = DrawingTests.Make(JsOfOCairo)
-
-let () = CairoMock.run_tests ()
+let () = Tests.MockTests.run ()
 
 (* @todo Run DrawingTests on CairoMock *)
 
 let drawing_tests =
+  let module Tests = Tests.DrawingTests.Make(JsOfOCairo) in
   Tests.tests
   |> List.map ~f:(fun {Tests.name; width; height; draw; known_failure} ->
     object%js (_)

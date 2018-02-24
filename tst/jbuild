@@ -1,22 +1,22 @@
 (jbuild_version 1)
 
 (library (
-  (name DrawingTests)
-  (modules (DrawingTests))
-  (libraries (JsOfOCairo))
+  (name Tests)
+  (modules (DrawingTests MockTests))
+  (libraries (JsOfOCairo CairoMock))
 ))
 
 (executable (
   (name drawing_tests_in_command_line)
   (modules (drawing_tests_in_command_line))
-  (libraries (DrawingTests cairo2 CairoMock))
+  (libraries (Tests cairo2))
 ))
 
 (executable (
   (name drawing_tests_in_javascript)
   (modules (drawing_tests_in_javascript))
   (preprocess (pps (js_of_ocaml-ppx)))
-  (libraries (DrawingTests js_of_ocaml CairoMock))
+  (libraries (Tests js_of_ocaml))
 ))
 
 (alias (
