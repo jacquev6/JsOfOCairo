@@ -1,0 +1,6 @@
+(jbuild_version 1)
+
+(library (
+  (name CairoMock)
+  (public_name CairoMock)
+))

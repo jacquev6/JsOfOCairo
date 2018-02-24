@@ -1,0 +1,19 @@
+opam-version: "1.2"
+version: "1.0.1"
+maintainer: "Vincent Jacques <vincent@vincent-jacques.net>"
+authors: "Vincent Jacques <vincent@vincent-jacques.net>"
+dev-repo: "https://github.com/jacquev6/JsOfOCairo.git"
+licence: "MIT"
+homepage: "https://github.com/jacquev6/JsOfOCairo"
+doc: "https://github.com/jacquev6/JsOfOCairo"
+bug-reports: "http://github.com/jacquev6/JsOfOCairo/issues/"
+available: [ocaml-version >= "4.02.3"]
+build: [
+  ["jbuilder" "build" "-p" name "-j" jobs]
+]
+build-test: [
+  ["jbuilder" "runtest" "-p" name]
+]
+depends: [
+  "jbuilder" {build}
+]

@@ -25,8 +25,9 @@ echo
 # OPAM package
 # ============
 
-opam pin --yes --no-action add .
-opam reinstall --yes JsOfOCairo
+opam pin --yes --no-action add JsOfOCairo .
+opam pin --yes --no-action add CairoMock .
+opam reinstall --yes JsOfOCairo CairoMock
 
 cd demo
 ./demo.sh
