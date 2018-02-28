@@ -4,7 +4,16 @@ open StdLabels
 
 let () = Tests.MockTests.run ()
 
-(* @todo Run DrawingTests on CairoMock *)
+let () =
+  let module Tests = Tests.DrawingTests.Make(CairoMock) in
+  Tests.tests
+  |> List.iter ~f:(fun {Tests.name; draw; _} ->
+    try (* @todo Remove when CairoMock is fully implemented *)
+      draw (CairoMock.create ())
+    with
+      Failure s ->
+        Printf.printf "%s: %s\n" name s
+  )
 
 let () =
   let module Tests = Tests.DrawingTests.Make(Cairo) in

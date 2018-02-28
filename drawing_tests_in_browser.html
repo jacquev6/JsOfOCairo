@@ -48,18 +48,23 @@
     };
 
     $(document).ready(function() {
-      for (var i = 1; i < drawing_tests.length; i++) {
+      for(var i = 0; i < drawing_tests.length; i++) {
         var test = drawing_tests[i];
         var html_template =
             '<div id="{0}" class="failure">'
-          + '<p>{0}</p>'
+          + '<h3>{0}</h3>'
+          + '<div>{3}</div>'
           + '<div class="row">'
           + '<div class="col-4"><canvas class="img-fluid cairo" width="{1}" height="{2}" /></div>'
           + '<div class="col-4"><canvas class="img-fluid html5" width="{1}" height="{2}" /></div>'
           + '<div class="col-4"><canvas class="img-fluid diff" width="{1}" height="{2}" /></div>'
           + '</div>'
           + '</div>';
-        $("#drawing_tests").append(html_template.format(test.name, test.width, test.height))
+        var script = "";
+        for(var j = 0; j < test.script.length; ++j) {
+          script += '<p>{0}</p>'.format(test.script[j]);
+        };
+        $("#drawing_tests").append(html_template.format(test.name, test.width, test.height, script))
 
         var image = $(new Image());
         image.attr("src", "_build/default/tst/drawing_tests/in_command_line/{0}.png".format(test.name));
