@@ -605,7 +605,7 @@ module Make(C: JsOfOCairo.S) = struct
       C.line_to ctx ~x:60. ~y:90.;
       C.stroke ctx;
     );
-    make "miter limit" 100 90 (fun ctx ->
+    make "miter limit" 120 90 (fun ctx ->
       C.set_line_width ctx 5.;
       C.set_line_join ctx C.JOIN_MITER;
       assert (C.get_miter_limit ctx = 10.);
@@ -834,10 +834,19 @@ module Make(C: JsOfOCairo.S) = struct
       with
         | C.Error C.INVALID_RESTORE -> ()
     );
-    make "no current point: initial" 100 40 (fun ctx ->
+    make "no current point: initial rel_line_to" 100 40 (fun ctx ->
       try
         assert (C.Path.get_current_point ctx = (0., 0.));
         C.rel_line_to ctx ~x:50. ~y:20.;
+        C.stroke ctx;
+        assert false;
+      with
+        | C.Error C.NO_CURRENT_POINT -> ()
+    );
+    make "no current point: initial rel_move_to" 100 40 (fun ctx ->
+      try
+        assert (C.Path.get_current_point ctx = (0., 0.));
+        C.rel_move_to ctx ~x:50. ~y:20.;
         C.stroke ctx;
         assert false;
       with
