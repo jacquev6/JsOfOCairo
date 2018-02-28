@@ -9,13 +9,9 @@ let drawing_tests =
   let module CairoMockTests = Tests.DrawingTests.Make(CairoMock) in
   List.map2 JsOfOCairoTests.tests CairoMockTests.tests ~f:(fun {JsOfOCairoTests.name; width; height; draw; known_failure} {CairoMockTests.draw=draw_mock; _} ->
     let script =
-      try (* @todo Remove when CairoMock is fully implemented *)
-        let ctx = CairoMock.create () in
-        draw_mock ctx;
-        CairoMock.calls ctx
-      with
-        | Failure s ->
-          [s]
+      let ctx = CairoMock.create () in
+      draw_mock ctx;
+      CairoMock.calls ctx
     in
     object%js (_)
       val name = Js.string name
