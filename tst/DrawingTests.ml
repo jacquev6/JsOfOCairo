@@ -10,6 +10,7 @@ module Make(C: JsOfOCairo.S) = struct
   let check_transform transform ctx (x, y) (x', y') =
     let (x'', y'') = transform ctx ~x ~y in
     if abs_float ((x'' -. x') /. x') > 0.01 || abs_float ((y'' -. y') /. y') > 0.01 then
+      (*BISECT-IGNORE-BEGIN*) (* Test code *)
       let transform =
         if transform == C.device_to_user_distance then "device_to_user_distance"
         else if transform == C.device_to_user then "device_to_user"
@@ -18,6 +19,7 @@ module Make(C: JsOfOCairo.S) = struct
         else "unknown"
       in
       failwith (Printf.sprintf "Expected %s (%.2f, %.2f) = (%.2f, %.2f), got (%.2f, %.2f)" transform x y x' y' x'' y'')
+      (*BISECT-IGNORE-END*)
 
   let make_one ~known_failure name width height draw =
     {name; width; height; draw; known_failure}
@@ -206,6 +208,8 @@ module Make(C: JsOfOCairo.S) = struct
       assert (C.Pattern.get_radial_circles p = (x0, y0, r0, x1, y1, r1));
       C.Pattern.add_color_stop_rgb p ~ofs:0. 1. 0. 0.;
       C.Pattern.add_color_stop_rgb p ~ofs:1. 0. 0. 1.;
+      assert (C.Pattern.get_color_stop_count p = 2);
+      assert (C.Pattern.get_color_stop_rgba p ~idx:0 = (0., 1., 0., 0., 1.));
       C.set_source ctx p;
       C.paint ctx;
       C.set_source_rgb ctx ~r:0. ~g:0. ~b:0.;
@@ -828,9 +832,7 @@ module Make(C: JsOfOCairo.S) = struct
     make "invalid restore" 100 40 (fun ctx ->
       try
         C.restore ctx;
-        C.arc ctx ~x:50. ~y:20. ~r:10. ~a1:0. ~a2:6.28;
-        C.fill ctx;
-        assert false;
+        assert false; (*BISECT-IGNORE*) (* Test code *)
       with
         | C.Error C.INVALID_RESTORE -> ()
     );
@@ -838,8 +840,7 @@ module Make(C: JsOfOCairo.S) = struct
       try
         assert (C.Path.get_current_point ctx = (0., 0.));
         C.rel_line_to ctx ~x:50. ~y:20.;
-        C.stroke ctx;
-        assert false;
+        assert false; (*BISECT-IGNORE*) (* Test code *)
       with
         | C.Error C.NO_CURRENT_POINT -> ()
     );
@@ -847,8 +848,7 @@ module Make(C: JsOfOCairo.S) = struct
       try
         assert (C.Path.get_current_point ctx = (0., 0.));
         C.rel_move_to ctx ~x:50. ~y:20.;
-        C.stroke ctx;
-        assert false;
+        assert false; (*BISECT-IGNORE*) (* Test code *)
       with
         | C.Error C.NO_CURRENT_POINT -> ()
     );
@@ -858,8 +858,7 @@ module Make(C: JsOfOCairo.S) = struct
         C.Path.clear ctx;
         assert (C.Path.get_current_point ctx = (0., 0.));
         C.rel_line_to ctx ~x:50. ~y:20.;
-        C.stroke ctx;
-        assert false;
+        assert false; (*BISECT-IGNORE*) (* Test code *)
       with
         | C.Error C.NO_CURRENT_POINT -> ()
     );

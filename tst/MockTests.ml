@@ -6,10 +6,12 @@ let test_n f expected =
   let c = create () in
   ignore (f c);
   let actual = calls c in
+  (*BISECT-IGNORE-BEGIN*)
   if actual <> expected then begin
     Printf.printf "Got:\n  %s\ninstead of:\n  %s\n" (String.concat ~sep:"\n  " actual) (String.concat ~sep:"\n  " expected);
     exit 1;
   end
+  (*BISECT-IGNORE-END*)
 
 let test f expected =
   test_n f [expected]
@@ -64,6 +66,9 @@ let run () = begin
   test (fun c -> set_miter_limit c 3.) "set_miter_limit 3.00";
   test (fun c -> get_miter_limit c) "get_miter_limit -> 10.00";
   test (fun c -> set_operator c DEST) "set_operator DEST";
+  test (fun c -> set_operator c CLEAR) "set_operator CLEAR";
+  test (fun c -> set_operator c SOURCE) "set_operator SOURCE";
+  test (fun c -> set_operator c SATURATE) "set_operator SATURATE";
   test (fun c -> get_operator c) "get_operator -> OVER";
 
   test (fun c -> set_source_rgb c ~r:0.5 ~g:0.6 ~b:0.7) "set_source_rgb ~r:0.50 ~g:0.60 ~b:0.70";
