@@ -38,8 +38,8 @@ let run () = begin
   test (fun c -> get_miter_limit c) "get_miter_limit -> 10.00";
   test (fun c -> set_source_rgb c ~r:0.5 ~g:0.6 ~b:0.7) "set_source_rgb ~r:0.50 ~g:0.60 ~b:0.70";
   test (fun c -> set_source_rgba c ~r:0.5 ~g:0.6 ~b:0.7 ~a:0.8) "set_source_rgba ~r:0.50 ~g:0.60 ~b:0.70 ~a:0.80";
-  test (fun c -> set_source c (Pattern.create_rgb ~r:0.5 ~g:0.6 ~b:0.7)) "set_source @todo";
-  test (fun c -> get_source c) "get_source -> @todo";
+  test (fun c -> set_source c (Pattern.create_rgb ~r:0.5 ~g:0.6 ~b:0.7)) "set_source (Rgba {r=0.50; g=0.60; b=0.70; a=1.00})";
+  test (fun c -> get_source c) "get_source -> (Rgba {r=0.00; g=0.00; b=0.00; a=1.00})";
   test (fun c -> set_dash c [|2.; 3.|]) "set_dash ~ofs:0.00 [|2.00; 3.00|]";
   test (fun c -> get_dash c) "get_dash -> ([||], 0.00)";
   test (fun c -> set_fill_rule c EVEN_ODD) "set_fill_rule EVEN_ODD";

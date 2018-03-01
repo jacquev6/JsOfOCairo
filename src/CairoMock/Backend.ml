@@ -150,6 +150,7 @@ module Pattern = struct
     val size: t -> int
     val add: t -> float * float * float * float * float -> t
     val iter: t -> f:(float * float * float * float * float -> unit) -> unit
+    val to_list: t -> (float * float * float * float * float) list
     val get: t -> i:int -> float * float * float * float * float
   end = struct
     module Element = struct
@@ -181,6 +182,9 @@ module Pattern = struct
 
     let iter xs ~f =
       List.iter xs ~f:(fun (position, _, r, g, b, a) -> f (position, r, g, b, a))
+
+    let to_list xs =
+      List.map xs ~f:(fun (position, _, r, g, b, a) -> (position, r, g, b, a))
 
     let get xs ~i =
       let (position, _, r, g, b, a) = List.nth xs i in
