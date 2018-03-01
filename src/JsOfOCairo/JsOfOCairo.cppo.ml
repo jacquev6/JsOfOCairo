@@ -203,16 +203,18 @@ let set_source context pattern =
     | Pattern.LinearGradient ((x0, y0, x1, y1), stops) ->
       let gradient = context.html##createLinearGradient x0 y0 x1 y1 in
       stops
-      |> Pattern.StopPointList.iter ~f:(fun (ofs, r, g, b, a) ->
-        gradient##addColorStop ofs (convert_rgba r g b a)
+      |> Pattern.StopPointList.to_list
+      |> List.iter ~f:(fun (position, r, g, b, a) ->
+        gradient##addColorStop position (convert_rgba r g b a)
       );
       context.html##.fillStyle_gradient := gradient;
       context.html##.strokeStyle_gradient := gradient
     | Pattern.RadialGradient ((x0, y0, r0, x1, y1, r1), stops) ->
       let gradient = context.html##createRadialGradient x0 y0 r0 x1 y1 r1 in
       stops
-      |> Pattern.StopPointList.iter ~f:(fun (ofs, r, g, b, a) ->
-        gradient##addColorStop ofs (convert_rgba r g b a)
+      |> Pattern.StopPointList.to_list
+      |> List.iter ~f:(fun (position, r, g, b, a) ->
+        gradient##addColorStop position (convert_rgba r g b a)
       );
       context.html##.fillStyle_gradient := gradient;
       context.html##.strokeStyle_gradient := gradient

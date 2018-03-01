@@ -186,24 +186,28 @@ type font = {
 }
 
 module Pattern = struct
+  (* We store tuples (instead of more explicit record types) because the public interface uses tuples
+  (get_color_stop_rgba, get_rgba, get_linear_points, get_radial_circles) *)
+
+  type stop_point = float * float * float * float * float (* (position, r, g, b, a) *)
+
   module StopPointList: sig
     type t
     val empty: t
+    val add: t -> stop_point -> t
     val size: t -> int
-    val add: t -> float * float * float * float * float -> t
-    val iter: t -> f:(float * float * float * float * float -> unit) -> unit
-    val to_list: t -> (float * float * float * float * float) list
-    val get: t -> i:int -> float * float * float * float * float
+    val get: t -> i:int -> stop_point
+    val to_list: t -> stop_point list
   end = struct
     module Element = struct
-      type t =
-        float (* position *)
-        * int (* index added (used to sort stop points added at the same position) *)
-        * float * float * float * float (* r, g, b, a *)
+      type t = {
+        added: int;
+        stop_point: stop_point;
+      }
 
-      let compare (a_pos, a_idx, _, _, _, _) (b_pos, b_idx, _, _, _, _) =
-        match compare a_pos b_pos with
-          | 0 -> compare a_idx b_idx
+      let compare {stop_point=(position_a, _, _, _, _); added=added_a; _} {stop_point=(position_b, _, _, _, _); added=added_b; _} =
+        match compare position_a position_b with
+          | 0 -> compare added_a added_b
           | n -> n
     end
 
@@ -213,8 +217,8 @@ module Pattern = struct
 
     let size = List.length
 
-    let add xs (position, r, g, b, a) =
-      let element = (position, List.length xs, r, g, b, a) in
+    let add xs stop_point =
+      let element = {Element.stop_point; added=List.length xs} in
       let rec aux = function
         | [] -> [element]
         | x::xs as xxs -> match Element.compare element x with
@@ -222,21 +226,18 @@ module Pattern = struct
           | _ -> x::(aux xs)
       in aux xs
 
-    let iter xs ~f =
-      List.iter xs ~f:(fun (position, _, r, g, b, a) -> f (position, r, g, b, a))
-
     let to_list xs =
-      List.map xs ~f:(fun (position, _, r, g, b, a) -> (position, r, g, b, a))
+      List.map xs ~f:(fun {Element.stop_point; _} -> stop_point)
 
     let get xs ~i =
-      let (position, _, r, g, b, a) = List.nth xs i in
-      (position, r, g, b, a)
+      let {Element.stop_point; _} = List.nth xs i in
+      stop_point
   end
 
   type source =
-    | Rgba of float * float * float * float
-    | LinearGradient of (float * float * float * float) * StopPointList.t
-    | RadialGradient of (float * float * float * float * float * float) * StopPointList.t
+    | Rgba of (float * float * float * float) (* (r, g, b, a) *)
+    | LinearGradient of (float * float * float * float) * StopPointList.t (* ((x0, y0, x1, y1), stop_points) *)
+    | RadialGradient of (float * float * float * float * float * float) * StopPointList.t (* ((x0, y0, r0, x1, y1, r1), stop_points) *)
 
   type 'a t = source ref constraint 'a = [<`Solid | `Surface | `Gradient | `Linear | `Radial]
 
@@ -250,7 +251,7 @@ module Pattern = struct
 
   let get_rgba pattern =
     match !pattern with
-      | Rgba (r, g, b, a) -> (r, g, b, a)
+      | Rgba color -> color
       | LinearGradient _ | RadialGradient _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let create_linear ~x0 ~y0 ~x1 ~y1 =
@@ -270,11 +271,12 @@ module Pattern = struct
       | LinearGradient _ | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let add_color_stop_rgba pattern ?(ofs=0.) r g b a =
+    let stop_point = (ofs, r, g, b, a) in
     match !pattern with
       | LinearGradient (points, stops) ->
-        pattern := LinearGradient (points, StopPointList.add stops (ofs, r, g, b, a))
+        pattern := LinearGradient (points, StopPointList.add stops stop_point)
       | RadialGradient (circles, stops) ->
-        pattern := RadialGradient (circles, StopPointList.add stops (ofs, r, g, b, a))
+        pattern := RadialGradient (circles, StopPointList.add stops stop_point)
       | Rgba _ -> raise (Error PATTERN_TYPE_MISMATCH)
 
   let add_color_stop_rgb pattern ?ofs r g b =
