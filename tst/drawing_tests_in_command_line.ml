@@ -2,9 +2,15 @@
 
 open StdLabels
 
-module Tests = DrawingTests.Make(Cairo)
+let () = Tests.MockTests.run ()
 
 let () =
+  let module Tests = Tests.DrawingTests.Make(CairoMock) in
+  Tests.tests
+  |> List.iter ~f:(fun {Tests.draw; _} -> draw (CairoMock.create ()))
+
+let () =
+  let module Tests = Tests.DrawingTests.Make(Cairo) in
   Tests.tests
   |> List.iter ~f:(fun {Tests.name; width; height; draw; known_failure=_} ->
     let img = Cairo.Image.create Cairo.Image.ARGB32 ~width ~height in

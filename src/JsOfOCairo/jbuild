@@ -1,0 +1,20 @@
+(jbuild_version 1)
+
+(rule (
+  (targets (JsOfOCairo.mli))
+  (deps (JsOfOCairo.cppo.mli JsOfOCairo.signatures.ml))
+  (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
+))
+
+(rule (
+  (targets (JsOfOCairo.ml))
+  (deps (JsOfOCairo.cppo.ml JsOfOCairo.signatures.ml))
+  (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
+))
+
+(library (
+  (name JsOfOCairo)
+  (public_name JsOfOCairo)
+  (preprocess (pps (js_of_ocaml-ppx)))
+  (libraries (js_of_ocaml CairoMock))
+))
