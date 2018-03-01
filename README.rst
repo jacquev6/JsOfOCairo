@@ -51,9 +51,8 @@ File ``drawings.ml``::
 Instantiate this functor with ``Cairo`` to create a command-line program.
 File ``draw_on_command_line.ml``::
 
-    module Drawings = Drawings.Make(Cairo)
-
     let () = begin
+      let module Drawings = Drawings.Make(Cairo) in
       let image = Cairo.Image.create Cairo.Image.ARGB32 ~width:100 ~height:100 in
       Drawings.draw (Cairo.create image);
       Cairo.PNG.write image "draw_on_command_line.png";
@@ -90,6 +89,16 @@ File ``draw_in_browser.html``::
       </script>
     </body>
     </html>
+
+As a bonus, *JsOfOCairo* comes with *CairoMock*, which implements the ``JsOfOCairo.S`` signature and simply records the
+calls made on the context object. You can use it to automate some tests on your drawing code::
+
+    let () = begin
+      let module Drawings = Drawings.Make(CairoMock) in
+      let ctx = CairoMock.create () in
+      Drawings.draw ctx;
+      assert (CairoMock.calls ctx = ["arc ~x:50.00 ~y:50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"])
+    end
 
 What is **not** implemented
 ===========================
