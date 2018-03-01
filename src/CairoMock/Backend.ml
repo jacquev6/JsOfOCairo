@@ -139,11 +139,8 @@ module Matrix = struct
     and y0 = yx *. x0' +. yy *. y0' +. y0 in
     {xx; xy; yx; yy; x0; y0}
 
-  let apply {xx; xy; yx; yy; x0; y0} (x, y) =
+  let transform_point {xx; xy; yx; yy; x0; y0} ~x ~y =
     (xx *. x +. xy *. y +. x0, yx *. x +. yy *. y +. y0)
-
-  let transform_point m ~x ~y =
-    apply m (x, y)
 
   let transform_distance {xx; xy; yx; yy; x0=_; y0=_} ~dx ~dy =
     (xx *. dx +. xy *. dy, yx *. dx +. yy *. dy)
