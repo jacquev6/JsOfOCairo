@@ -155,6 +155,148 @@ type context = {
   local: Local.t;
 }
 
+
+let save context =
+  context.html##save;
+  Local.save context.local
+
+let restore context =
+  context.html##restore;
+  Local.restore context.local
+
+
+let set_matrix context ({xx; xy; yx; yy; x0; y0} as transformation) =
+  context.html##setTransform xx yx xy yy x0 y0;
+  Local.set_transformation context.local ~transformation
+
+let get_matrix context =
+  Local.transformation context.local
+
+let transform context m =
+  set_matrix context (Matrix.multiply (Local.transformation context.local) m)
+
+let scale context ~x ~y =
+  transform context (Matrix.init_scale ~x ~y)
+
+let translate context ~x ~y =
+  transform context (Matrix.init_translate ~x ~y)
+
+let rotate context ~angle =
+  transform context (Matrix.init_rotate ~angle)
+
+let identity_matrix context =
+  set_matrix context (Matrix.init_identity ())
+
+let device_to_user context ~x ~y =
+  Matrix.transform_point (Matrix.init_inverse (Local.transformation context.local)) ~x ~y
+
+let device_to_user_distance context ~x ~y =
+  Matrix.transform_distance (Matrix.init_inverse (Local.transformation context.local)) ~dx:x ~dy:y
+
+let user_to_device context ~x ~y =
+  Matrix.transform_point (Local.transformation context.local) ~x ~y
+
+let user_to_device_distance context ~x ~y =
+  Matrix.transform_distance (Local.transformation context.local) ~dx:x ~dy:y
+
+
+let make_rel context ~x:dx ~y:dy =
+  match Local.current_point context.local with
+    | None -> raise (Error NO_CURRENT_POINT)
+    | Some (x, y) -> (x +. dx, y +. dy)
+
+let move_to context ~x ~y =
+  context.html##moveTo x y;
+  Local.set_start_point context.local (x, y);
+  Local.set_start_point_as_current_point context.local
+
+let rel_move_to context ~x ~y =
+  let (x, y) = make_rel context ~x ~y in
+  move_to context ~x ~y
+
+let line_to context ~x ~y =
+  context.html##lineTo x y;
+  Local.set_start_point_if_none context.local (x, y);
+  Local.set_current_point context.local (x, y)
+
+let rel_line_to context ~x ~y =
+  let (x, y) = make_rel context ~x ~y in
+  line_to context ~x ~y
+
+let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
+  context.html##bezierCurveTo x1 y1 x2 y2 x3 y3;
+  Local.set_start_point_if_none context.local (x1, y1);
+  Local.set_current_point context.local (x3, y3)
+
+let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
+  let (x1, y1) = make_rel context ~x:x1 ~y:y1
+  and (x2, y2) = make_rel context ~x:x2 ~y:y2
+  and (x3, y3) = make_rel context ~x:x3 ~y:y3 in
+  curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
+
+let rectangle context ~x ~y ~w ~h =
+  Local.set_current_point context.local (x, y);
+  context.html##rect x y w h
+
+let arc context ~x ~y ~r ~a1 ~a2 =
+  context.html##arc x y r a1 a2 Js._false;
+  Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
+  Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
+
+let arc_negative context ~x ~y ~r ~a1 ~a2 =
+  context.html##arc x y r a1 a2 Js._true;
+  Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
+  Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
+
+module Path = struct
+  let get_current_point context =
+    match Local.current_point context.local with
+      | None -> (0., 0.)
+      | Some (x, y) -> (x, y)
+
+  let clear context =
+    context.html##beginPath;
+    Local.reset_start_point context.local;
+    Local.reset_current_point context.local
+
+  let close context =
+    context.html##closePath;
+    Local.set_start_point_as_current_point context.local
+end
+
+let stroke_preserve context =
+  context.html##stroke
+
+let stroke context =
+  stroke_preserve context;
+  Path.clear context
+
+let fill_preserve context =
+  match Local.fill_rule context.local with
+    | WINDING -> context.html##fill
+    | EVEN_ODD -> (Js.Unsafe.coerce context.html)##fill (Js.string "evenodd")
+
+let fill context =
+  fill_preserve context;
+  Path.clear context
+
+let clip_preserve context =
+  context.html##clip
+
+let clip context =
+  clip_preserve context;
+  Path.clear context
+
+let paint ?(alpha=1.) context =
+  save context;
+  context.html##.globalAlpha := alpha;
+  identity_matrix context;
+  let width = (float_of_int context.html##.canvas##.width)
+  and height = (float_of_int context.html##.canvas##.height) in
+  context.html##fillRect 0. 0. width height;
+  restore context
+
+
 let set_line_width context width =
   context.html##.lineWidth := width
 
@@ -170,25 +312,81 @@ let get_dash context =
   let html = Js.Unsafe.coerce context.html in
   (Js.to_array (html##getLineDash), html##.lineDashOffset)
 
-let move_to context ~x ~y =
-  context.html##moveTo x y;
-  Local.set_start_point context.local (x, y);
-  Local.set_start_point_as_current_point context.local
+let set_fill_rule context fill_rule =
+  Local.set_fill_rule context.local ~fill_rule
 
-let line_to context ~x ~y =
-  context.html##lineTo x y;
-  Local.set_start_point_if_none context.local (x, y);
-  Local.set_current_point context.local (x, y)
+let get_fill_rule context =
+  Local.fill_rule context.local
 
-let arc context ~x ~y ~r ~a1 ~a2 =
-  context.html##arc x y r a1 a2 Js._false;
-  Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
-  Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
+let set_line_cap context cap =
+  let cap = match cap with
+    | BUTT -> "butt"
+    | ROUND -> "round"
+    | SQUARE -> "square"
+  in
+  context.html##.lineCap := Js.string cap
 
-let arc_negative context ~x ~y ~r ~a1 ~a2 =
-  context.html##arc x y r a1 a2 Js._true;
-  Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
-  Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
+let get_line_cap context =
+  match Js.to_string context.html##.lineCap with
+    | "round" -> ROUND
+    | "square" -> SQUARE
+    | _ -> BUTT
+
+let set_line_join context join =
+  let join = match join with
+    | JOIN_MITER ->  "miter"
+    | JOIN_ROUND -> "round"
+    | JOIN_BEVEL -> "bevel"
+  in
+  context.html##.lineJoin := Js.string join
+
+let get_line_join context =
+  match Js.to_string context.html##.lineJoin with
+    | "round" -> JOIN_ROUND
+    | "bevel" -> JOIN_BEVEL
+    | _ -> JOIN_MITER
+
+let set_miter_limit context l =
+  context.html##.miterLimit := l
+
+let get_miter_limit context =
+  context.html##.miterLimit
+
+let set_operator context operator =
+  let operator = match operator with
+    | CLEAR -> failwith "Unsupported operator CLEAR"
+    | SOURCE -> failwith "Unsupported operator SOURCE"
+    | OVER -> "source-over"
+    | ATOP -> "source-atop"
+    | IN -> "source-in"
+    | OUT -> "source-out"
+    | DEST_OVER -> "destination-over"
+    | DEST_ATOP -> "destination-atop"
+    | DEST_IN -> "destination-in"
+    | DEST_OUT -> "destination-out"
+    | ADD -> "lighter"
+    | XOR -> "xor"
+    | DEST -> failwith "Unsupported operator DEST"
+    | SATURATE -> failwith "Unsupported operator SATURATE"
+  in
+  context.html##.globalCompositeOperation := Js.string operator
+
+let get_operator context =
+  match Js.to_string context.html##.globalCompositeOperation with
+    | "over" -> OVER (* Special case for node-canvas which seems to have a wrong default value *)
+    | "add" -> ADD (* Special case for node-canvas *)
+    | "source-over" -> OVER
+    | "source-atop" -> ATOP
+    | "source-in" -> IN
+    | "source-out" -> OUT
+    | "destination-over" -> DEST_OVER
+    | "destination-atop" -> DEST_ATOP
+    | "destination-in" -> DEST_IN
+    | "destination-out" -> DEST_OUT
+    | "lighter" -> ADD
+    | "xor" -> XOR
+    | op -> failwith (Printf.sprintf "Unexpected globalCompositeOperation %S" op)
+
 
 let set_source context pattern =
   let convert x = string_of_int (int_of_float (255.0 *. x)) in
@@ -228,150 +426,6 @@ let set_source_rgb context ~r ~g ~b =
 let set_source_rgba context ~r ~g ~b ~a =
   set_source context (Pattern.create_rgba ~r ~g ~b ~a)
 
-let device_to_user context ~x ~y =
-  Matrix.transform_point (Matrix.init_inverse (Local.transformation context.local)) ~x ~y
-
-let device_to_user_distance context ~x ~y =
-  Matrix.transform_distance (Matrix.init_inverse (Local.transformation context.local)) ~dx:x ~dy:y
-
-let user_to_device context ~x ~y =
-  Matrix.transform_point (Local.transformation context.local) ~x ~y
-
-let user_to_device_distance context ~x ~y =
-  Matrix.transform_distance (Local.transformation context.local) ~dx:x ~dy:y
-
-module Path = struct
-  let get_current_point context =
-    match Local.current_point context.local with
-      | None -> (0., 0.)
-      | Some (x, y) -> (x, y)
-
-  let clear context =
-    context.html##beginPath;
-    Local.reset_start_point context.local;
-    Local.reset_current_point context.local
-
-  let close context =
-    context.html##closePath;
-    Local.set_start_point_as_current_point context.local
-end
-
-let stroke_preserve context =
-  context.html##stroke
-
-let stroke context =
-  stroke_preserve context;
-  Path.clear context
-
-let set_fill_rule context fill_rule =
-  Local.set_fill_rule context.local ~fill_rule
-
-let get_fill_rule context =
-  Local.fill_rule context.local
-
-let fill_preserve context =
-  match Local.fill_rule context.local with
-    | WINDING -> context.html##fill
-    | EVEN_ODD -> (Js.Unsafe.coerce context.html)##fill (Js.string "evenodd")
-
-let fill context =
-  fill_preserve context;
-  Path.clear context
-
-let clip_preserve context =
-  context.html##clip
-
-let clip context =
-  clip_preserve context;
-  Path.clear context
-
-let set_matrix context ({xx; xy; yx; yy; x0; y0} as transformation) =
-  context.html##setTransform xx yx xy yy x0 y0;
-  Local.set_transformation context.local ~transformation
-
-let get_matrix context =
-  Local.transformation context.local
-
-let transform context m =
-  set_matrix context (Matrix.multiply (Local.transformation context.local) m)
-
-let scale context ~x ~y =
-  transform context (Matrix.init_scale ~x ~y)
-
-let translate context ~x ~y =
-  transform context (Matrix.init_translate ~x ~y)
-
-let rotate context ~angle =
-  transform context (Matrix.init_rotate ~angle)
-
-let identity_matrix context =
-  set_matrix context (Matrix.init_identity ())
-
-let save context =
-  context.html##save;
-  Local.save context.local
-
-let set_line_cap context cap =
-  let cap = match cap with
-    | BUTT -> "butt"
-    | ROUND -> "round"
-    | SQUARE -> "square"
-  in
-  context.html##.lineCap := Js.string cap
-
-let get_line_cap context =
-  match Js.to_string context.html##.lineCap with
-    | "round" -> ROUND
-    | "square" -> SQUARE
-    | _ -> BUTT
-
-let set_line_join context join =
-  let join = match join with
-    | JOIN_MITER ->  "miter"
-    | JOIN_ROUND -> "round"
-    | JOIN_BEVEL -> "bevel"
-  in
-  context.html##.lineJoin := Js.string join
-
-let get_line_join context =
-  match Js.to_string context.html##.lineJoin with
-    | "round" -> JOIN_ROUND
-    | "bevel" -> JOIN_BEVEL
-    | _ -> JOIN_MITER
-
-let set_miter_limit context l =
-  context.html##.miterLimit := l
-
-let get_miter_limit context =
-  context.html##.miterLimit
-
-let make_rel context ~x:dx ~y:dy =
-  match Local.current_point context.local with
-    | None -> raise (Error NO_CURRENT_POINT)
-    | Some (x, y) -> (x +. dx, y +. dy)
-
-let rel_move_to context ~x ~y =
-  let (x, y) = make_rel context ~x ~y in
-  move_to context ~x ~y
-
-let rel_line_to context ~x ~y =
-  let (x, y) = make_rel context ~x ~y in
-  line_to context ~x ~y
-
-let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-  context.html##bezierCurveTo x1 y1 x2 y2 x3 y3;
-  Local.set_start_point_if_none context.local (x1, y1);
-  Local.set_current_point context.local (x3, y3)
-
-let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-  let (x1, y1) = make_rel context ~x:x1 ~y:y1
-  and (x2, y2) = make_rel context ~x:x2 ~y:y2
-  and (x3, y3) = make_rel context ~x:x3 ~y:y3 in
-  curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
-
-let rectangle context ~x ~y ~w ~h =
-  Local.set_current_point context.local (x, y);
-  context.html##rect x y w h
 
 let _set_font context ({slant; weight; size; family} as font) =
   Local.set_font context.local ~font;
@@ -385,10 +439,6 @@ let _set_font context ({slant; weight; size; family} as font) =
   in
   let font = Printf.sprintf "%s %s %npx %s" font_style font_weight (int_of_float size) family in
   context.html##.font := Js.string font
-
-let restore context =
-  context.html##restore;
-  Local.restore context.local
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
   _set_font context {(Local.font context.local) with slant; weight; family}
@@ -422,15 +472,6 @@ let text_extents context s =
     y_advance = 0.;
   }
 
-let paint ?(alpha=1.) context =
-  save context;
-  context.html##.globalAlpha := alpha;
-  identity_matrix context;
-  let width = (float_of_int context.html##.canvas##.width)
-  and height = (float_of_int context.html##.canvas##.height) in
-  context.html##fillRect 0. 0. width height;
-  restore context
-
 let create canvas =
   let html = canvas##getContext Dom_html._2d_
   and local = Local.create () in
@@ -440,38 +481,3 @@ let create canvas =
   } in
   set_line_width context 2.0;
   context
-
-let set_operator context operator =
-  let operator = match operator with
-    | CLEAR -> failwith "Unsupported operator CLEAR"
-    | SOURCE -> failwith "Unsupported operator SOURCE"
-    | OVER -> "source-over"
-    | ATOP -> "source-atop"
-    | IN -> "source-in"
-    | OUT -> "source-out"
-    | DEST_OVER -> "destination-over"
-    | DEST_ATOP -> "destination-atop"
-    | DEST_IN -> "destination-in"
-    | DEST_OUT -> "destination-out"
-    | ADD -> "lighter"
-    | XOR -> "xor"
-    | DEST -> failwith "Unsupported operator DEST"
-    | SATURATE -> failwith "Unsupported operator SATURATE"
-  in
-  context.html##.globalCompositeOperation := Js.string operator
-
-let get_operator context =
-  match Js.to_string context.html##.globalCompositeOperation with
-    | "over" -> OVER (* Special case for node-canvas which seems to have a wrong default value *)
-    | "add" -> ADD (* Special case for node-canvas *)
-    | "source-over" -> OVER
-    | "source-atop" -> ATOP
-    | "source-in" -> IN
-    | "source-out" -> OUT
-    | "destination-over" -> DEST_OVER
-    | "destination-atop" -> DEST_ATOP
-    | "destination-in" -> DEST_IN
-    | "destination-out" -> DEST_OUT
-    | "lighter" -> ADD
-    | "xor" -> XOR
-    | op -> failwith (Printf.sprintf "Unexpected globalCompositeOperation %S" op)
