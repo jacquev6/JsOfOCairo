@@ -3,4 +3,5 @@
 (library (
   (name CairoMock)
   (public_name CairoMock)
+;  (preprocess (pps (bisect_ppx)))
 ))

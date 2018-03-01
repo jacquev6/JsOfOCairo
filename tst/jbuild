@@ -4,12 +4,14 @@
   (name Tests)
   (modules (DrawingTests MockTests))
   (libraries (JsOfOCairo CairoMock))
+;  (preprocess (pps (bisect_ppx)))
 ))
 
 (executable (
   (name drawing_tests_in_command_line)
   (modules (drawing_tests_in_command_line))
   (libraries (Tests cairo2))
+;  (preprocess (pps (bisect_ppx)))
 ))
 
 (executable (
