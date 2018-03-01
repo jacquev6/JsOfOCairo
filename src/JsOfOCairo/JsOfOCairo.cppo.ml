@@ -200,18 +200,18 @@ let set_source context pattern =
       let color = convert_rgba r g b a in
       context.html##.fillStyle := color;
       context.html##.strokeStyle := color
-    | Pattern.LinearGradient ((x0, y0, x1, y1), stops) ->
+    | Pattern.LinearGradient {points=(x0, y0, x1, y1); stop_points} ->
       let gradient = context.html##createLinearGradient x0 y0 x1 y1 in
-      stops
+      stop_points
       |> Pattern.StopPointList.to_list
       |> List.iter ~f:(fun (position, r, g, b, a) ->
         gradient##addColorStop position (convert_rgba r g b a)
       );
       context.html##.fillStyle_gradient := gradient;
       context.html##.strokeStyle_gradient := gradient
-    | Pattern.RadialGradient ((x0, y0, r0, x1, y1, r1), stops) ->
+    | Pattern.RadialGradient {circles=(x0, y0, r0, x1, y1, r1); stop_points} ->
       let gradient = context.html##createRadialGradient x0 y0 r0 x1 y1 r1 in
-      stops
+      stop_points
       |> Pattern.StopPointList.to_list
       |> List.iter ~f:(fun (position, r, g, b, a) ->
         gradient##addColorStop position (convert_rgba r g b a)

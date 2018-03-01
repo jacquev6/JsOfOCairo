@@ -154,9 +154,9 @@ let print_stop_point_list () ps =
 let print_source () = function
   | Pattern.Rgba (r, g, b, a) ->
     Printf.sprintf "Rgba {r=%.2f; g=%.2f; b=%.2f; a=%.2f}" r g b a
-  | Pattern.LinearGradient ((x1, y1, x2, y2), stop_points) ->
+  | Pattern.LinearGradient {points=(x1, y1, x2, y2); stop_points} ->
     Printf.sprintf "LinearGradient {x0=%.2f; y0=%.2f; x1=%.2f; y1=%.2f; stop_points=%a}" x1 y1 x2 y2 print_stop_point_list stop_points
-  | Pattern.RadialGradient ((x1, y1, r1, x2, y2, r2), stop_points) ->
+  | Pattern.RadialGradient {circles=(x1, y1, r1, x2, y2, r2); stop_points} ->
     Printf.sprintf "RadialGradient {x0=%.2f; y0=%.2f; r0=%.2f; x1=%.2f; y1=%.2f; r1%.2f; stop_points=%a}" x1 y1 r1 x2 y2 r2 print_stop_point_list stop_points
 
 let set_source context pattern =
