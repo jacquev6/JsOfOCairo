@@ -3,7 +3,7 @@
 (library (
   (name Tests)
   (modules (DrawingTests MockTests))
-  (libraries (JsOfOCairo CairoMock))
+  (libraries (General JsOfOCairo CairoMock))
 ;  (preprocess (pps (bisect_ppx)))
 ))
 
@@ -15,19 +15,28 @@
 ))
 
 (executable (
+  (name unit_tests)
+  (modules (unit_tests))
+  (libraries (Tests General cairo2))
+;  (preprocess (pps (bisect_ppx)))
+))
+
+(executable (
   (name drawing_tests_in_javascript)
   (modules (drawing_tests_in_javascript))
   (preprocess (pps (js_of_ocaml-ppx)))
   (libraries (Tests js_of_ocaml))
+  (js_of_ocaml ((flags (+nat.js))))
 ))
 
 (alias (
   (name runtest)
-  (deps (drawing_tests_in_command_line.bc drawing_tests_in_javascript.bc.js drawing_tests_in_node.js))
+  (deps (unit_tests.bc drawing_tests_in_command_line.bc drawing_tests_in_javascript.bc.js drawing_tests_in_node.js))
   (action (progn
     (run mkdir drawing_tests)
     (run mkdir drawing_tests/in_command_line)
     (run mkdir drawing_tests/in_node)
+    (run ${exe:unit_tests.bc})
     (run ${exe:drawing_tests_in_command_line.bc})
     (run ${bin:node} drawing_tests_in_node.js)
   ))
