@@ -1,8 +1,6 @@
 (* Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-module type S = sig
-  #include "JsOfOCairo.signatures.ml"
-end
+module type S = CairoMock.S
 
 include S
 

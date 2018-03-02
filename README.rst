@@ -114,7 +114,8 @@ This doesn't make much sense in an HTML5 context.
 An attempt has been made to implement ``set_source_for_image`` using a hidden canvas but it's been unsuccessful.
 
 A few other functions commented out at the beginning of
-`JsOfOCairo_S.mli <https://github.com/jacquev6/JsOfOCairo/blob/master/src/JsOfOCairo_S.mli>`_ have been dismissed as well.
+`CairoMock.signatures.ml <https://github.com/jacquev6/JsOfOCairo/blob/master/src/CairoMock/CairoMock.signatures.ml>`_ have been dismissed as well.
+@todo Verify link above
 
 Testing strategy
 ================

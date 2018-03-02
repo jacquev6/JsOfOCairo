@@ -1,5 +1,9 @@
 open StdLabels
 
+module type S = sig
+  #include "CairoMock.signatures.ml"
+end
+
 module Backend = Backend
 
 include Backend

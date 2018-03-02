@@ -16,9 +16,9 @@ clear
 
 # https://github.com/aantron/bisect_ppx/blob/master/doc/advanced.md#Jbuilder suggests
 # modifying the jbuild file for release. Let's modify it for tests instead.
-sed -i "s/^;\(.*bisect_ppx.*\)$/\1/" $(find . -name jbuild)
+sed -i "s/^;\(.*(bisect_ppx).*\)$/\1/" $(find . -name jbuild)
 jbuilder runtest --dev
-sed -i "s/^\(.*bisect_ppx.*\)$/;\1/" $(find . -name jbuild)
+sed -i "s/^\(.*(bisect_ppx).*\)$/;\1/" $(find . -name jbuild)
 if [ -f _build/default/tst/bisect0001.out ]
 then
   echo

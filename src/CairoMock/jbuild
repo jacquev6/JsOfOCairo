@@ -1,5 +1,31 @@
 (jbuild_version 1)
 
+(rule (
+  (targets (CairoMock.mli))
+  (deps (CairoMock.cppo.mli CairoMock.signatures.ml))
+  (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
+))
+
+(rule (
+  (targets (CairoMock.intermediate.ml))
+  (deps (CairoMock.cppo.ml CairoMock.signatures.ml))
+  (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
+))
+
+; Files produced by cppo have file-line directives like:
+;     # 1 "CairoMock.cppo.ml"
+; They generate errors when jbuilder calls bisect_ppx:
+;     (cd _build/default && ./.ppx/bisect_ppx/ppx.exe --dump-ast --cookie 'library-name="CairoMock"' -o src/CairoMock/CairoMock.pp.ml --impl src/CairoMock/CairoMock.ml)
+;     File "src/CairoMock/CairoMock.ml", line 1:
+;     Error: I/O error: CairoMock.cppo.ml: No such file or directory
+; So we prepend the directory name to the file name, look like:
+;     # 1 "src/CairoMock/CairoMock.cppo.ml"
+(rule (
+  (targets (CairoMock.ml))
+  (deps (CairoMock.intermediate.ml))
+  (action (with-stdout-to ${@} (run ${bin:sed} "s|\"CairoMock|\"src/CairoMock/CairoMock|" ${<})))
+))
+
 (library (
   (name CairoMock)
   (public_name CairoMock)

@@ -2,9 +2,7 @@
 
 open StdLabels
 
-module type S = sig
-  #include "JsOfOCairo.signatures.ml"
-end
+module type S = CairoMock.S
 
 (*
 Canvas:
