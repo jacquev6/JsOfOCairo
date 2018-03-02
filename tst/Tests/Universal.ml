@@ -188,5 +188,22 @@ end) = struct
       check_coords ~expected:(28., 59.) (user_to_device ctx ~x:7. ~y:8.);
       check_coords ~expected:(23., 53.) (user_to_device_distance ctx ~x:7. ~y:8.);
     ));
+    "invalid restore" >: (lazy (
+      let ctx = N.create () in
+      expect_exception ~expected:(Error INVALID_RESTORE) (lazy (restore ctx))
+    ));
+    "no current point" >:: (
+      let make name f =
+        name >: (lazy (
+          let ctx = N.create () in
+          expect_exception ~expected:(Error NO_CURRENT_POINT) (lazy (f ctx))
+        ))
+      in
+      [
+        make "rel_move_to" (rel_move_to ~x:1. ~y:2.);
+        make "rel_line_to" (rel_line_to ~x:1. ~y:2.);
+        make "rel_curve_to" (rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.);
+      ]
+    );
   ]
 end
