@@ -8,6 +8,29 @@ module Make(C: CairoMock.S)(N: sig
 end) = struct
   open C
 
+  let check_matrix =
+    let equal {xx; xy; yx; yy; x0; y0} m =
+      (
+        Fl.approx_equal m.xx xx
+        && Fl.approx_equal m.xy xy
+        && Fl.approx_equal m.yx yx
+        && Fl.approx_equal m.yy yy
+        && Fl.approx_equal m.x0 x0
+        && Fl.approx_equal m.y0 y0
+      )
+    and repr {xx; xy; yx; yy; x0; y0} =
+      Frmt.apply "{xx=%f; xy=%f; yx=%f; yy=%f; x0=%f; y0=%f}" xx xy yx yy x0 y0
+    in
+    check ~equal ~repr
+
+  let check_coords =
+    let equal (x0, y0) (x1, y1) =
+      (Fl.approx_equal x0 x1 && Fl.approx_equal y0 y1)
+    and repr (x, y) =
+      Frmt.apply "(%f, %f)" x y
+    in
+    check ~equal ~repr
+
   let test = ~:: "Universal tests on %s" N.name [
     "saved-and-restored settings" >:: (
       let make name setter getter check initial_value other_value other_values =
@@ -133,5 +156,37 @@ end) = struct
         make "JBIG2_GLOBAL_MISSING" JBIG2_GLOBAL_MISSING "CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID used but no CAIRO_MIME_TYPE_JBIG2_GLOBAL data provided";
       ]
     );
+    "transformations" >:: (
+      let identity = {xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.} in
+      let make name t expected =
+        name >: (lazy (
+          let ctx = N.create () in
+          check_matrix ~expected:identity (get_matrix ctx);
+          t ctx;
+          check_matrix ~expected (get_matrix ctx);
+          save ctx;
+          check_matrix ~expected (get_matrix ctx);
+          identity_matrix ctx;
+          check_matrix ~expected:identity (get_matrix ctx);
+          restore ctx;
+          check_matrix ~expected (get_matrix ctx);
+        ))
+      in
+      [
+        make "translate" (translate ~x:2. ~y:3.) {xx=1.; xy=0.; yx=0.; yy=1.; x0=2.; y0=3.};
+        make "scale" (scale ~x:2. ~y:3.) {xx=2.; xy=0.; yx=0.; yy=3.; x0=0.; y0=0.};
+        make "rotate" (rotate ~angle:(Fl.pi /. 4.)) (let s = Fl.sqrt(2.) /. 2. in {xx=s; xy=(-.s); yx=s; yy=s; x0=0.; y0=0.});
+        make "set_matrix" (fun c -> set_matrix c {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.}) {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.};
+        make "transform" (fun c -> scale c ~x:2. ~y:3.; transform c {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.}) {xx=2.; xy=4.; yx=9.; yy=12.; x0=10.; y0=18.};
+      ]
+    );
+    "coordinates transformation" >: (lazy (
+      let ctx = N.create () in
+      set_matrix ctx {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.};
+      check_coords ~expected:(-2., 2.) (device_to_user ctx ~x:7. ~y:8.);
+      check_coords ~expected:(-6., 6.5) (device_to_user_distance ctx ~x:7. ~y:8.);
+      check_coords ~expected:(28., 59.) (user_to_device ctx ~x:7. ~y:8.);
+      check_coords ~expected:(23., 53.) (user_to_device_distance ctx ~x:7. ~y:8.);
+    ));
   ]
 end
