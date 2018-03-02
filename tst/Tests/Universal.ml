@@ -297,5 +297,79 @@ end) = struct
         make "clip_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip_preserve c) (3., 4.);
       ]
     );
+    "patterns" >:: Pattern.[
+      "create_rgb, get_rgba" >: (lazy (
+        let p = create_rgb ~r:0.1 ~g:0.2 ~b:0.3 in
+        check_poly ~repr:(fun (a, b, c, d) -> Frmt.apply "(%f, %f, %f, %f)" a b c d) ~expected:(0.1, 0.2, 0.3, 1.) (get_rgba p)
+      ));
+      "create_rgba, get_rgba" >: (lazy (
+        let p = create_rgba ~r:0.1 ~g:0.2 ~b:0.3 ~a:0.4 in
+        check_poly ~repr:(fun (a, b, c, d) -> Frmt.apply "(%f, %f, %f, %f)" a b c d) ~expected:(0.1, 0.2, 0.3, 0.4) (get_rgba p)
+      ));
+      "create_linear, get_linear_points" >: (lazy (
+        let p = create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4. in
+        check_poly ~repr:(fun (a, b, c, d) -> Frmt.apply "(%f, %f, %f, %f)" a b c d) ~expected:(1., 2., 3., 4.) (get_linear_points p)
+      ));
+      "create_radial, get_radial_circles" >: (lazy (
+        let p = create_radial ~x0:1. ~y0:2. ~r0:3. ~x1:4. ~y1:5. ~r1:6. in
+        check_poly ~repr:(fun (a, b, c, d, e, f) -> Frmt.apply "(%f, %f, %f, %f, %f, %f)" a b c d e f) ~expected:(1., 2., 3., 4., 5., 6.) (get_radial_circles p)
+      ));
+      "create_linear, add_color_stop_rgba, get_color_stop_count, get_color_stop_rgba" >: (lazy (
+        let p = create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4. in
+        add_color_stop_rgba p ~ofs:0.1 0.2 0.3 0.4 0.5;
+        check_int ~expected:1 (get_color_stop_count p);
+        check_poly ~repr:(fun (a, b, c, d, e) -> Frmt.apply "(%f, %f, %f, %f, %f)" a b c d e) ~expected:(0.1, 0.2, 0.3, 0.4, 0.5) (get_color_stop_rgba p ~idx:0)
+      ));
+      "create_radial, add_color_stop_rgb, get_color_stop_count, get_color_stop_rgba" >: (lazy (
+        let p = create_radial ~x0:1. ~y0:2. ~r0:3. ~x1:4. ~y1:5. ~r1:6. in
+        add_color_stop_rgb p 0.2 0.3 0.4;
+        check_int ~expected:1 (get_color_stop_count p);
+        check_poly ~repr:(fun (a, b, c, d, e) -> Frmt.apply "(%f, %f, %f, %f, %f)" a b c d e) ~expected:(0., 0.2, 0.3, 0.4, 1.) (get_color_stop_rgba p ~idx:0)
+      ));
+      "multiple color stops" >: (lazy (
+        let p = create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4. in
+        add_color_stop_rgb p ~ofs:0.2 0.2 0.2 0.2;
+        add_color_stop_rgb p ~ofs:0.1 0.1 0.1 0.1;
+        add_color_stop_rgb p ~ofs:0.2 0.21 0.21 0.21;
+        add_color_stop_rgb p ~ofs:0.3 0.3 0.3 0.3;
+        check_int ~expected:4 (get_color_stop_count p);
+        check_poly ~repr:(fun (a, b, c, d, e) -> Frmt.apply "(%f, %f, %f, %f, %f)" a b c d e) ~expected:(0.1, 0.1, 0.1, 0.1, 1.) (get_color_stop_rgba p ~idx:0);
+        check_poly ~repr:(fun (a, b, c, d, e) -> Frmt.apply "(%f, %f, %f, %f, %f)" a b c d e) ~expected:(0.2, 0.2, 0.2, 0.2, 1.) (get_color_stop_rgba p ~idx:1);
+        check_poly ~repr:(fun (a, b, c, d, e) -> Frmt.apply "(%f, %f, %f, %f, %f)" a b c d e) ~expected:(0.2, 0.21, 0.21, 0.21, 1.) (get_color_stop_rgba p ~idx:2);
+        check_poly ~repr:(fun (a, b, c, d, e) -> Frmt.apply "(%f, %f, %f, %f, %f)" a b c d e) ~expected:(0.3, 0.3, 0.3, 0.3, 1.) (get_color_stop_rgba p ~idx:3)
+      ));
+      (* @todo Investigate this test. It should fail with PATTERN_TYPE_MISMATCH but seems to pass with Cairo
+      "create_rgb, add_color_stop_rgb" >: (lazy (
+        let p = create_rgb ~r:0.1 ~g:0.2 ~b:0.3 in
+        let ctx = N.create () in
+        (* Forget type *)
+        set_source ctx p;
+        let p = get_source ctx in
+        add_color_stop_rgb p 0.2 0.3 0.4
+      ));
+      *)
+      "mismatch" >:: (
+        let make name p f =
+          name >: (lazy (
+            let ctx = N.create () in
+            (* Forget type *)
+            set_source ctx p;
+            let p = get_source ctx in
+            expect_exception ~expected:(Error PATTERN_TYPE_MISMATCH) (lazy (f p))
+          ))
+        in
+        [
+          make "create_rgb, get_linear_points" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_linear_points;
+          make "create_rgb, get_radial_circles" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_radial_circles;
+          (* make "create_rgb, add_color_stop_rgba" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) (fun p -> add_color_stop_rgba p 0.1 0.2 0.3 0.4 ~ofs:0.5); *)
+          make "create_rgb, get_color_stop_count" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_color_stop_count;
+          make "create_rgb, get_color_stop_rgba" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) (get_color_stop_rgba ~idx:0);
+          make "create_linear, get_rgba" (create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4.) get_rgba;
+          make "create_linear, get_radial_circles" (create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4.) get_radial_circles;
+          make "create_radial, get_rgba" (create_radial ~x0:1. ~y0:2. ~r0:3. ~x1:4. ~y1:5. ~r1:6.) get_rgba;
+          make "create_radial, get_linear_points" (create_radial ~x0:1. ~y0:2. ~r0:3. ~x1:4. ~y1:5. ~r1:6.) get_linear_points;
+        ]
+      );
+    ];
   ]
 end
