@@ -2,7 +2,7 @@
 
 open StdLabels
 
-module Tests = Tests.DrawingTests.Make(Cairo)
+module Tests = DrawingTests.Make(Cairo)
 
 let () =
   Tests.tests
