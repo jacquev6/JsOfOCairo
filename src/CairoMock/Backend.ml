@@ -122,6 +122,7 @@ module Matrix = struct
 
   let init_inverse {xx; xy; yx; yy; x0; y0} =
     let d = xx *. yy -. xy *. yx in
+    if d = 0. then raise (Error INVALID_MATRIX);
     let xx = yy /. d
     and xy = -. xy /. d
     and yx = -. yx /. d
