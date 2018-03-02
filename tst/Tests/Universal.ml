@@ -23,9 +23,9 @@ end) = struct
     in
     check ~equal ~repr
 
-  let check_coords =
+  let check_coords ?precision =
     let equal (x0, y0) (x1, y1) =
-      (Fl.approx_equal x0 x1 && Fl.approx_equal y0 y1)
+      (Fl.approx_equal ?precision x0 x1 && Fl.approx_equal ?precision y0 y1)
     and repr (x, y) =
       Frmt.apply "(%f, %f)" x y
     in
@@ -158,11 +158,11 @@ end) = struct
     );
     "transformations" >:: (
       let identity = {xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.} in
-      let make name t expected =
+      let make name f expected =
         name >: (lazy (
           let ctx = N.create () in
           check_matrix ~expected:identity (get_matrix ctx);
-          t ctx;
+          f ctx;
           check_matrix ~expected (get_matrix ctx);
           save ctx;
           check_matrix ~expected (get_matrix ctx);
@@ -203,6 +203,46 @@ end) = struct
         make "rel_move_to" (rel_move_to ~x:1. ~y:2.);
         make "rel_line_to" (rel_line_to ~x:1. ~y:2.);
         make "rel_curve_to" (rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.);
+        make "Path.clear" (fun c -> move_to c ~x:1. ~y:2.; Path.clear c; rel_move_to c ~x:3. ~y:4.);
+        make "stroke" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; stroke c; rel_move_to c ~x:3. ~y:4.);
+        make "fill" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; fill c; rel_move_to c ~x:3. ~y:4.);
+        make "clip" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip c; rel_move_to c ~x:3. ~y:4.);
+      ]
+    );
+    "current point" >:: (
+      let make name f expected =
+        name >: (lazy (
+          let ctx = N.create () in
+          f ctx;
+          (* Low precision because Cairo makes approximations on arcs *)
+          check_coords ~precision:1e-3 ~expected (Path.get_current_point ctx)
+        ))
+      in
+      [
+        make "no-op" (fun _ -> ()) (0., 0.);
+        make "move_to" (move_to ~x:1. ~y:2.) (1., 2.);
+        make "rel_move_to" (fun c -> move_to c ~x:1. ~y:2.; rel_move_to c ~x:3. ~y:4.) (4., 6.);
+        make "line_to" (line_to ~x:1. ~y:2.) (1., 2.);
+        make "rel_line_to" (fun c -> move_to c ~x:1. ~y:2.; rel_line_to c ~x:3. ~y:4.) (4., 6.);
+        make "rectangle" (rectangle ~x:1. ~y:2. ~w:3. ~h:4.) (1., 2.);
+        "arc" >:: [
+          make "0" (arc ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:0.) (4., 2.);
+          make "pi / 6" (arc ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 6.)) (1. +. 3. *. Fl.sqrt(3.) /. 2., 2. +. 3. *. 0.5);
+          make "pi / 4" (arc ~x:1. ~y:2. ~r:3. ~a1:0. ~a2:(Fl.pi /. 4.)) (1. +. 3. *. Fl.sqrt(2.) /. 2., 2. +. 3. *. Fl.sqrt(2.) /. 2.);
+          make "pi / 2" (arc ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 2.)) (1., 5.);
+        ];
+        "arc_negative" >:: [
+          make "0" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:0.) (4., 2.);
+          make "pi / 6" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 6.)) (1. +. 3. *. Fl.sqrt(3.) /. 2., 2. +. 3. *. 0.5);
+          make "pi / 4" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:0. ~a2:(Fl.pi /. 4.)) (1. +. 3. *. Fl.sqrt(2.) /. 2., 2. +. 3. *. Fl.sqrt(2.) /. 2.);
+          make "pi / 2" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 2.)) (1., 5.);
+        ];
+        make "curve_to" (curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.) (5., 6.);
+        make "rel_line_to" (fun c -> move_to c ~x:1. ~y:2.; rel_curve_to c ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.) (6., 8.);
+        make "Path.close" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; line_to c ~x:5. ~y:6.; Path.close c) (1., 2.);
+        make "stroke_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; stroke_preserve c) (3., 4.);
+        make "fill_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; fill_preserve c) (3., 4.);
+        make "clip_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip_preserve c) (3., 4.);
       ]
     );
   ]
