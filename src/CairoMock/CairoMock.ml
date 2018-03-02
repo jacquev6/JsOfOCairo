@@ -76,7 +76,8 @@ let save context =
 let restore context =
   let states =
     match context.states with
-      | [] | [_] -> raise (Error INVALID_RESTORE)
+      | [] (*BISECT-IGNORE*) (* This cannot happen: restore is the only function removing states and it refuses to remove the last one. *)
+      | [_] -> raise (Error INVALID_RESTORE)
       | _::states -> states
   in
   context.states <- states;
@@ -136,7 +137,7 @@ let user_to_device_distance context ~x:dx ~y:dy =
   call context (dx', dy') "user_to_device_distance ~x:%.2f ~y:%.2f -> (%.2f, %.2f)" dx dy dx' dy'
 
 
-let mutate_points context ?(start=`None) ?(current=`None) format =
+let mutate_points context ?(start=`None) ~current format =
   let transformation = (state context).transformation in
   let make_relative ~dx ~dy =
     let (x, y) =
@@ -156,7 +157,6 @@ let mutate_points context ?(start=`None) ?(current=`None) format =
       Points.set_start context.points ~transformation ~x ~y
   end;
   begin match current with
-    | `None -> ()
     | `Reset -> Points.reset_current context.points
     | `FromStart -> Points.set_current_from_start context.points
     | `Set (x, y) -> Points.set_current context.points ~transformation ~x ~y

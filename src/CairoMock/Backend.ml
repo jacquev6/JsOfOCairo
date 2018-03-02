@@ -219,7 +219,7 @@ module Pattern = struct
       let rec aux = function
         | [] -> [element]
         | x::xs as xxs -> match Element.compare element x with
-          | -1 | 0 -> element::xxs
+          | -1 -> element::xxs
           | _ -> x::(aux xs)
       in aux xs
 
