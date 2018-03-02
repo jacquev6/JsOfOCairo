@@ -7,20 +7,6 @@ let pi = atan2 0. (-1.)
 module Make(C: CairoMock.S) = struct
   type test = {name: string; width: int; height: int; draw: C.context -> unit; known_failure: bool}
 
-  let check_transform transform ctx (x, y) (x', y') =
-    let (x'', y'') = transform ctx ~x ~y in
-    if abs_float ((x'' -. x') /. x') > 0.01 || abs_float ((y'' -. y') /. y') > 0.01 then
-      (*BISECT-IGNORE-BEGIN*) (* Test code *)
-      let transform =
-        if transform == C.device_to_user_distance then "device_to_user_distance"
-        else if transform == C.device_to_user then "device_to_user"
-        else if transform == C.user_to_device_distance then "user_to_device_distance"
-        else if transform == C.user_to_device then "user_to_device"
-        else "unknown"
-      in
-      failwith (Printf.sprintf "Expected %s (%.2f, %.2f) = (%.2f, %.2f), got (%.2f, %.2f)" transform x y x' y' x'' y'')
-      (*BISECT-IGNORE-END*)
-
   let make_one ~known_failure name width height draw =
     {name; width; height; draw; known_failure}
 
@@ -359,17 +345,9 @@ module Make(C: CairoMock.S) = struct
       C.stroke_preserve ctx;
     );
     make "scale" 100 100 (fun ctx ->
-      check_transform C.user_to_device ctx (10., 20.) (10., 20.);
-      check_transform C.user_to_device_distance ctx (10., 20.) (10., 20.);
-      check_transform C.device_to_user ctx (10., 20.) (10., 20.);
-      check_transform C.device_to_user_distance ctx (10., 20.) (10., 20.);
       C.move_to ctx ~x:10. ~y:10.;
       C.line_to ctx ~x:50. ~y:30.;
       C.scale ctx ~x:3. ~y:0.5;
-      check_transform C.user_to_device ctx (10., 20.) (30., 10.);
-      check_transform C.user_to_device_distance ctx (10., 20.) (30., 10.);
-      check_transform C.device_to_user ctx (9., 20.) (3., 40.);
-      check_transform C.device_to_user_distance ctx (9., 20.) (3., 40.);
       C.line_to ctx ~x:30. ~y:180.;
       C.stroke ctx;
     );
@@ -379,20 +357,12 @@ module Make(C: CairoMock.S) = struct
       C.scale ctx ~x:3. ~y:0.5;
       C.line_to ctx ~x:30. ~y:180.;
       C.identity_matrix ctx;
-      check_transform C.user_to_device ctx (10., 20.) (10., 20.);
-      check_transform C.user_to_device_distance ctx (10., 20.) (10., 20.);
-      check_transform C.device_to_user ctx (10., 20.) (10., 20.);
-      check_transform C.device_to_user_distance ctx (10., 20.) (10., 20.);
       C.stroke ctx;
     );
     make "translate" 100 100 (fun ctx ->
       C.move_to ctx ~x:10. ~y:10.;
       C.line_to ctx ~x:50. ~y:30.;
       C.translate ctx ~x:20. ~y:(-30.);
-      check_transform C.user_to_device ctx (10., 20.) (30., -10.);
-      check_transform C.user_to_device_distance ctx (10., 20.) (10., 20.);
-      check_transform C.device_to_user ctx (10., 20.) (-10., 50.);
-      check_transform C.device_to_user_distance ctx (10., 20.) (10., 20.);
       C.line_to ctx ~x:70. ~y:120.;
       C.stroke ctx;
     );
@@ -401,10 +371,6 @@ module Make(C: CairoMock.S) = struct
       C.line_to ctx ~x:50. ~y:30.;
       C.translate ctx ~x:20. ~y:(-30.);
       C.scale ctx ~x:3. ~y:0.5;
-      check_transform C.user_to_device ctx (10., 20.) (50., -20.);
-      check_transform C.user_to_device_distance ctx (10., 20.) (30., 10.);
-      check_transform C.device_to_user ctx (38., 10.) (6., 80.);
-      check_transform C.device_to_user_distance ctx (9., 20.) (3., 40.);
       C.line_to ctx ~x:20. ~y:200.;
       C.stroke ctx;
     );
@@ -413,10 +379,6 @@ module Make(C: CairoMock.S) = struct
       C.line_to ctx ~x:50. ~y:30.;
       C.scale ctx ~x:3. ~y:0.5;
       C.translate ctx ~x:20. ~y:(-30.);
-      check_transform C.user_to_device ctx (10., 20.) (90., -5.);
-      check_transform C.user_to_device_distance ctx (10., 20.) (30., 10.);
-      check_transform C.device_to_user ctx (9., 20.) (-17., 70.);
-      check_transform C.device_to_user_distance ctx (9., 20.) (3., 40.);
       C.line_to ctx ~x:10. ~y:180.;
       C.stroke ctx;
     );
@@ -424,10 +386,6 @@ module Make(C: CairoMock.S) = struct
       C.move_to ctx ~x:10. ~y:10.;
       C.line_to ctx ~x:50. ~y:30.;
       C.rotate ctx ~angle:0.1;
-      check_transform C.user_to_device ctx (10., 20.) (7.95, 20.90);
-      check_transform C.user_to_device_distance ctx (10., 20.) (7.95, 20.90);
-      check_transform C.device_to_user ctx (9., 20.) (10.95, 19.00);
-      check_transform C.device_to_user_distance ctx (9., 20.) (10.95, 19.00);
       C.line_to ctx ~x:80. ~y:70.;
       C.stroke ctx;
     );
@@ -438,10 +396,6 @@ module Make(C: CairoMock.S) = struct
       C.translate ctx ~x:10. ~y:20.;
       C.scale ctx ~x:(-2.) ~y:0.3;
       C.rotate ctx ~angle:0.1;
-      check_transform C.user_to_device ctx (10., 20.) (-8.50, 25.55);
-      check_transform C.user_to_device_distance ctx (10., 20.) (-16.45, 4.65);
-      check_transform C.device_to_user ctx (9., 20.) (-0.81, -3.26);
-      check_transform C.device_to_user_distance ctx (9., 20.) (0.87, 63.57);
       C.line_to ctx ~x:(-24.) ~y:205.;
       C.stroke ctx;
     );
@@ -461,36 +415,6 @@ module Make(C: CairoMock.S) = struct
     ) (fun ctx ->
       assert ((C.Pattern.get_rgba (C.get_source ctx)) = (0., 0., 0., 1.));
       C.move_to ctx ~x:10. ~y:20.;
-      C.line_to ctx ~x:90. ~y:20.;
-      C.stroke ctx;
-    );
-    make_save_restore "translate" 100 40 (fun ctx ->
-      C.translate ctx ~x:50. ~y:20.;
-    ) (fun ctx ->
-      C.move_to ctx ~x:10. ~y:20.;
-      C.line_to ctx ~x:90. ~y:20.;
-      C.stroke ctx;
-      check_transform C.user_to_device ctx (10., 10.) (10., 10.);
-    );
-    make_save_restore "scale" 100 40 (fun ctx ->
-      C.scale ctx ~x:5. ~y:2.;
-    ) (fun ctx ->
-      C.move_to ctx ~x:10. ~y:20.;
-      C.line_to ctx ~x:90. ~y:20.;
-      C.stroke ctx;
-      check_transform C.user_to_device ctx (10., 10.) (10., 10.);
-    );
-    make_save_restore "rotate" 100 40 (fun ctx ->
-      C.rotate ctx ~angle:0.1;
-    ) (fun ctx ->
-      C.move_to ctx ~x:10. ~y:20.;
-      C.line_to ctx ~x:90. ~y:20.;
-      C.stroke ctx;
-      check_transform C.user_to_device ctx (10., 10.) (10., 10.);
-    );
-    make_save_restore "move_to" 100 40 (fun ctx ->
-      C.move_to ctx ~x:10. ~y:20.;
-    ) (fun ctx ->
       C.line_to ctx ~x:90. ~y:20.;
       C.stroke ctx;
     );
