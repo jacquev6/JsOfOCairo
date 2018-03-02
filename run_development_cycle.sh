@@ -19,16 +19,8 @@ clear
 sed -i "s/^;\(.*(bisect_ppx).*\)$/\1/" $(find . -name jbuild)
 jbuilder runtest --dev
 sed -i "s/^\(.*(bisect_ppx).*\)$/;\1/" $(find . -name jbuild)
-if [ -f _build/default/tst/bisect0001.out ]
-then
-  echo
-  bisect-summary _build/default/tst/bisect????.out
-  echo
-  bisect-ppx-report -I _build/default -html _build/bisect _build/default/tst/bisect????.out
-  echo "See coverage report in $(pwd)/_build/bisect/index.html"
-else
-  echo "Coverage report from previous test run: $(pwd)/_build/bisect/index.html"
-fi
+echo
+echo "See coverage report in $(pwd)/_build/default/bisect/index.html"
 
 # https://github.com/mapbox/pixelmatch#install
 node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > _build/default/pixelmatch.js

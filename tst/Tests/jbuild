@@ -1,0 +1,7 @@
+(jbuild_version 1)
+
+(library (
+  (name Tests)
+  (libraries (General CairoMock))
+;  (preprocess (pps (bisect_ppx)))
+))

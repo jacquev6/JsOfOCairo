@@ -4,7 +4,7 @@ open StdLabels
 
 let pi = atan2 0. (-1.)
 
-module Make(C: JsOfOCairo.S) = struct
+module Make(C: CairoMock.S) = struct
   type test = {name: string; width: int; height: int; draw: C.context -> unit; known_failure: bool}
 
   let check_transform transform ctx (x, y) (x', y') =
@@ -227,7 +227,7 @@ module Make(C: JsOfOCairo.S) = struct
       C.fill ctx;
     );
     make "set_fill_rule" 200 60 (fun ctx ->
-      assert (C.get_fill_rule ctx = C.WINDING);
+      C.set_fill_rule ctx C.EVEN_ODD;
       C.move_to ctx ~x:10. ~y:10.;
       C.line_to ctx ~x:40. ~y:10.;
       C.line_to ctx ~x:40. ~y:50.;
@@ -238,10 +238,9 @@ module Make(C: JsOfOCairo.S) = struct
       C.line_to ctx ~x:50. ~y:30.;
       C.line_to ctx ~x:50. ~y:40.;
       C.line_to ctx ~x:10. ~y:40.;
-      C.Path.close ctx;
-      C.set_fill_rule ctx C.EVEN_ODD;
-      assert (C.get_fill_rule ctx = C.EVEN_ODD);
       C.fill ctx;
+
+      C.set_fill_rule ctx C.WINDING;
       C.move_to ctx ~x:110. ~y:10.;
       C.line_to ctx ~x:140. ~y:10.;
       C.line_to ctx ~x:140. ~y:50.;
@@ -252,13 +251,7 @@ module Make(C: JsOfOCairo.S) = struct
       C.line_to ctx ~x:150. ~y:30.;
       C.line_to ctx ~x:150. ~y:40.;
       C.line_to ctx ~x:110. ~y:40.;
-      C.Path.close ctx;
-      C.save ctx;
-      C.set_fill_rule ctx C.WINDING;
-      assert (C.get_fill_rule ctx = C.WINDING);
       C.fill ctx;
-      C.restore ctx;
-      assert (C.get_fill_rule ctx = C.EVEN_ODD);
     );
     make "arc_negative stroke fill_preserve" 100 100 (fun ctx ->
       C.arc_negative ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:4.;
@@ -452,12 +445,15 @@ module Make(C: JsOfOCairo.S) = struct
       C.line_to ctx ~x:(-24.) ~y:205.;
       C.stroke ctx;
     );
-    make_save_restore "line_width" 100 40 (fun ctx ->
-      C.set_line_width ctx 10.;
-    ) (fun ctx ->
-      assert (C.get_line_width ctx = 2.);
+    make "line_width" 100 60 (fun ctx ->
+      C.set_line_width ctx 5.;
       C.move_to ctx ~x:10. ~y:20.;
       C.line_to ctx ~x:90. ~y:20.;
+      C.stroke ctx;
+
+      C.set_line_width ctx 10.;
+      C.move_to ctx ~x:10. ~y:40.;
+      C.line_to ctx ~x:90. ~y:40.;
       C.stroke ctx;
     );
     make_save_restore "source" 100 40 (fun ctx ->
@@ -563,47 +559,38 @@ module Make(C: JsOfOCairo.S) = struct
     );
     make "line cap" 100 50 (fun ctx ->
       C.set_line_width ctx 8.;
-      assert (C.get_line_cap ctx = C.BUTT);
-      C.move_to ctx ~x:10. ~y:10.;
-      C.line_to ctx ~x:90. ~y:10.;
-      C.stroke ctx;
+
       C.set_line_cap ctx C.ROUND;
-      assert (C.get_line_cap ctx = C.ROUND);
       C.move_to ctx ~x:10. ~y:20.;
       C.line_to ctx ~x:90. ~y:20.;
       C.stroke ctx;
+
       C.set_line_cap ctx C.SQUARE;
-      assert (C.get_line_cap ctx = C.SQUARE);
       C.move_to ctx ~x:10. ~y:30.;
       C.line_to ctx ~x:90. ~y:30.;
       C.stroke ctx;
+
       C.set_line_cap ctx C.BUTT;
-      assert (C.get_line_cap ctx = C.BUTT);
       C.move_to ctx ~x:10. ~y:40.;
       C.line_to ctx ~x:90. ~y:40.;
       C.stroke ctx;
     );
     make "line join" 100 100 (fun ctx ->
       C.set_line_width ctx 8.;
-      assert (C.get_line_join ctx = C.JOIN_MITER);
-      C.move_to ctx ~x:10. ~y:10.;
-      C.line_to ctx ~x:90. ~y:10.;
-      C.line_to ctx ~x:90. ~y:90.;
-      C.stroke ctx;
+
       C.set_line_join ctx C.JOIN_ROUND;
-      assert (C.get_line_join ctx = C.JOIN_ROUND);
       C.move_to ctx ~x:10. ~y:20.;
       C.line_to ctx ~x:80. ~y:20.;
       C.line_to ctx ~x:80. ~y:90.;
       C.stroke ctx;
+
       C.set_line_join ctx C.JOIN_BEVEL;
-      assert (C.get_line_join ctx = C.JOIN_BEVEL);
       C.move_to ctx ~x:10. ~y:30.;
       C.line_to ctx ~x:70. ~y:30.;
       C.line_to ctx ~x:70. ~y:90.;
       C.stroke ctx;
+
       C.set_line_join ctx C.JOIN_MITER;
-      assert (C.get_line_join ctx = C.JOIN_MITER);
       C.move_to ctx ~x:10. ~y:40.;
       C.line_to ctx ~x:60. ~y:40.;
       C.line_to ctx ~x:60. ~y:90.;
@@ -612,7 +599,8 @@ module Make(C: JsOfOCairo.S) = struct
     make "miter limit" 120 90 (fun ctx ->
       C.set_line_width ctx 5.;
       C.set_line_join ctx C.JOIN_MITER;
-      assert (C.get_miter_limit ctx = 10.);
+
+      C.set_miter_limit ctx 10.;
       C.move_to ctx ~x:10. ~y:10.;
       C.line_to ctx ~x:50. ~y:10.;
       C.line_to ctx ~x:10. ~y:(10. +. 8.3);
@@ -620,8 +608,8 @@ module Make(C: JsOfOCairo.S) = struct
       C.line_to ctx ~x:50. ~y:30.;
       C.line_to ctx ~x:10. ~y:(30. +. 8.);
       C.stroke ctx;
+
       C.set_miter_limit ctx 30.;
-      assert (C.get_miter_limit ctx = 30.);
       C.move_to ctx ~x:10. ~y:50.;
       C.line_to ctx ~x:50. ~y:50.;
       C.line_to ctx ~x:10. ~y:(50. +. 3.);
@@ -817,13 +805,11 @@ module Make(C: JsOfOCairo.S) = struct
       (* (SATURATE, "SATURATE"); *)
     ]
     |> List.map ~f:(fun (operator, operator_name) ->
-      make_one ~known_failure:false (Printf.sprintf "set_operator get_operator %s" operator_name) 100 100 (fun ctx ->
+      make_one ~known_failure:false (Printf.sprintf "set_operator %s" operator_name) 100 100 (fun ctx ->
         C.set_source_rgba ctx ~r:0. ~g:0. ~b:0.8 ~a:0.8;
         C.rectangle ctx ~x:10. ~y:10. ~w:50. ~h:50.;
         C.fill ctx;
-        assert (C.get_operator ctx = C.OVER);
         C.set_operator ctx operator;
-        assert (C.get_operator ctx = operator);
         C.set_source_rgba ctx ~r:0.8 ~g:0. ~b:0. ~a:0.8;
         C.arc ctx ~x:50. ~y:50. ~r:30. ~a1:0. ~a2:6.28;
         C.fill ctx;

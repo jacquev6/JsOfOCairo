@@ -2,8 +2,8 @@
 
 open StdLabels
 
-module JsOfOCairoTests = DrawingTests.Make(JsOfOCairo)
-module CairoMockTests = DrawingTests.Make(CairoMock)
+module JsOfOCairoTests = Tests.Drawing.Make(JsOfOCairo)
+module CairoMockTests = Tests.Drawing.Make(CairoMock)
 
 let drawing_tests =
   List.map2 JsOfOCairoTests.tests CairoMockTests.tests ~f:(fun {JsOfOCairoTests.name; width; height; draw; known_failure} {CairoMockTests.draw=draw_mock; _} ->
