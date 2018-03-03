@@ -320,8 +320,20 @@ end) = struct
         let p = create_rgb ~r:0.1 ~g:0.2 ~b:0.3 in
         check_float_tuple_4 ~expected:(0.1, 0.2, 0.3, 1.) (get_rgba p)
       ));
+      "set_source_rgb, get_rgba" >: (lazy (
+        let ctx = N.create () in
+        set_source_rgb ctx ~r:0.1 ~g:0.2 ~b:0.3;
+        let p = get_source ctx in
+        check_float_tuple_4 ~expected:(0.1, 0.2, 0.3, 1.) (get_rgba p)
+      ));
       "create_rgba, get_rgba" >: (lazy (
         let p = create_rgba ~r:0.1 ~g:0.2 ~b:0.3 ~a:0.4 in
+        check_float_tuple_4 ~expected:(0.1, 0.2, 0.3, 0.4) (get_rgba p)
+      ));
+      "set_source_rgba, get_rgba" >: (lazy (
+        let ctx = N.create () in
+        set_source_rgba ctx ~r:0.1 ~g:0.2 ~b:0.3 ~a:0.4;
+        let p = get_source ctx in
         check_float_tuple_4 ~expected:(0.1, 0.2, 0.3, 0.4) (get_rgba p)
       ));
       "create_linear, get_linear_points" >: (lazy (
@@ -391,5 +403,6 @@ end) = struct
         ]
       );
     ];
+    (* Functions about text and fonts are not covered by these tests because they don't behave the same accross all implementations. *)
   ]
 end
