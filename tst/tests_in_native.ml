@@ -27,6 +27,18 @@ let test = "Tests in native" >:: [
     end) in
     T.test
   );
+  "Drawing tests on Cairo" >:: (
+    let module T = Tests.Drawing.Make(Cairo) in
+    T.tests
+    |> Li.map ~f:(fun {T.name; width; height; draw; known_failure=_} ->
+      name >: (lazy (
+        let img = Cairo.Image.create Cairo.Image.ARGB32 ~width ~height in
+        let ctx = Cairo.create img in
+        draw ctx;
+        Cairo.PNG.write img (Frmt.apply "Tests/Drawing/Cairo/%s.png" name);
+      ))
+    )
+  );
 ]
 
 let () =

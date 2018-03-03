@@ -67,7 +67,7 @@
         $("#drawing_tests").append(html_template.format(test.name, test.width, test.height, script))
 
         var image = $(new Image());
-        image.attr("src", "_build/default/tst/drawing_tests/in_command_line/{0}.png".format(test.name));
+        image.attr("src", "_build/default/tst/Tests/Drawing/Cairo/{0}.png".format(test.name));
         image.data("test", test);
         image.on("load", function() {
           var test = $(this).data("test");
