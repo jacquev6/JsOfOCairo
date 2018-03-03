@@ -187,47 +187,47 @@ end) = struct
       ]
     );
     "matrix" >:: [
-        "init_identity" >: (lazy (
-          check_matrix ~expected:{xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.} (Matrix.init_identity ())
+      "init_identity" >: (lazy (
+        check_matrix ~expected:{xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.} (Matrix.init_identity ())
+      ));
+      "init_translate" >: (lazy (
+        check_matrix ~expected:{xx=1.; xy=0.; yx=0.; yy=1.; x0=2.; y0=3.} (Matrix.init_translate ~x:2. ~y:3.)
+      ));
+      "init_scale" >: (lazy (
+        check_matrix ~expected:{xx=2.; xy=0.; yx=0.; yy=3.; x0=0.; y0=0.} (Matrix.init_scale ~x:2. ~y:3.)
+      ));
+      "init_rotate" >: (lazy (
+        check_matrix ~expected:{xx=(Fl.sqrt 3. /. 2.); xy=(-0.5); yx=0.5; yy=(Fl.sqrt 3. /. 2.); x0=0.; y0=0.} (Matrix.init_rotate ~angle:(Fl.pi /. 6.))
+      ));
+      "invert" >:: [
+        "non invertible" >: (lazy (
+          expect_exception ~expected:(Error INVALID_MATRIX) (lazy (
+            let m = {xx=1.; xy=2.; yx=1.; yy=2.; x0=3.; y0=4.} in
+            Matrix.invert m
+          ))
         ));
-        "init_translate" >: (lazy (
-          check_matrix ~expected:{xx=1.; xy=0.; yx=0.; yy=1.; x0=2.; y0=3.} (Matrix.init_translate ~x:2. ~y:3.)
-        ));
-        "init_scale" >: (lazy (
-          check_matrix ~expected:{xx=2.; xy=0.; yx=0.; yy=3.; x0=0.; y0=0.} (Matrix.init_scale ~x:2. ~y:3.)
-        ));
-        "init_rotate" >: (lazy (
-          check_matrix ~expected:{xx=(Fl.sqrt 3. /. 2.); xy=(-0.5); yx=0.5; yy=(Fl.sqrt 3. /. 2.); x0=0.; y0=0.} (Matrix.init_rotate ~angle:(Fl.pi /. 6.))
-        ));
-        "invert" >:: [
-          "non invertible" >: (lazy (
-            expect_exception ~expected:(Error INVALID_MATRIX) (lazy (
-              let m = {xx=1.; xy=2.; yx=1.; yy=2.; x0=3.; y0=4.} in
-              Matrix.invert m
-            ))
-          ));
-          "invertible" >: (lazy (
-            let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
-            Matrix.invert m;
-            check_matrix ~expected:{xx=(-2.); xy=1.; yx=1.5; yy=(-0.5); x0=4.; y0=(-4.5)} m
-          ));
-        ];
-        "scale" >: (lazy (
+        "invertible" >: (lazy (
           let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
-          Matrix.scale m ~x:7. ~y:8.;
-          check_matrix ~expected:{xx=7.; xy=16.; yx=21.; yy=32.; x0=5.; y0=6.} m
+          Matrix.invert m;
+          check_matrix ~expected:{xx=(-2.); xy=1.; yx=1.5; yy=(-0.5); x0=4.; y0=(-4.5)} m
         ));
-        "translate" >: (lazy (
-          let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
-          Matrix.translate m ~x:7. ~y:8.;
-          check_matrix ~expected:{xx=1.; xy=2.; yx=3.; yy=4.; x0=28.; y0=59.} m
-        ));
-        "rotate" >: (lazy (
-          let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
-          Matrix.rotate m ~angle:(Fl.pi /. 6.);
-          let s = Fl.sqrt 3. /. 2. in
-          check_matrix ~expected:{xx=(s +. 1.); xy=(2. *. s -. 0.5); yx=(3. *. s +. 2.); yy=(4. *. s -. 1.5); x0=5.; y0=6.} m
-        ));
+      ];
+      "scale" >: (lazy (
+        let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
+        Matrix.scale m ~x:7. ~y:8.;
+        check_matrix ~expected:{xx=7.; xy=16.; yx=21.; yy=32.; x0=5.; y0=6.} m
+      ));
+      "translate" >: (lazy (
+        let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
+        Matrix.translate m ~x:7. ~y:8.;
+        check_matrix ~expected:{xx=1.; xy=2.; yx=3.; yy=4.; x0=28.; y0=59.} m
+      ));
+      "rotate" >: (lazy (
+        let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
+        Matrix.rotate m ~angle:(Fl.pi /. 6.);
+        let s = Fl.sqrt 3. /. 2. in
+        check_matrix ~expected:{xx=(s +. 1.); xy=(2. *. s -. 0.5); yx=(3. *. s +. 2.); yy=(4. *. s -. 1.5); x0=5.; y0=6.} m
+      ));
     ];
     "coordinates transformation" >: (lazy (
       let ctx = N.create ()
