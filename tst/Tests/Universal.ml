@@ -338,16 +338,19 @@ end) = struct
         check_poly ~repr:(fun (a, b, c, d, e) -> Frmt.apply "(%f, %f, %f, %f, %f)" a b c d e) ~expected:(0.2, 0.21, 0.21, 0.21, 1.) (get_color_stop_rgba p ~idx:2);
         check_poly ~repr:(fun (a, b, c, d, e) -> Frmt.apply "(%f, %f, %f, %f, %f)" a b c d e) ~expected:(0.3, 0.3, 0.3, 0.3, 1.) (get_color_stop_rgba p ~idx:3)
       ));
-      (* @todo Investigate this test. It should fail with PATTERN_TYPE_MISMATCH but seems to pass with Cairo
       "create_rgb, add_color_stop_rgb" >: (lazy (
-        let p = create_rgb ~r:0.1 ~g:0.2 ~b:0.3 in
         let ctx = N.create () in
-        (* Forget type *)
-        set_source ctx p;
+        set_source ctx (create_rgb ~r:0.1 ~g:0.2 ~b:0.3);
         let p = get_source ctx in
-        add_color_stop_rgb p 0.2 0.3 0.4
+        (* This is a bit weird: add_color_stop_rgb returns silently, but puts the pattern in a state where all getters fail. *)
+        add_color_stop_rgb p ~ofs:0.1 0.1 0.1 0.1;
+        add_color_stop_rgb p ~ofs:0.2 0.2 0.2 0.2;
+        expect_exception ~expected:(Error PATTERN_TYPE_MISMATCH) (lazy (get_rgba p));
+        expect_exception ~expected:(Error PATTERN_TYPE_MISMATCH) (lazy (get_color_stop_count p));
+        expect_exception ~expected:(Error PATTERN_TYPE_MISMATCH) (lazy (get_linear_points p));
+        expect_exception ~expected:(Error PATTERN_TYPE_MISMATCH) (lazy (get_radial_circles p));
+        expect_exception ~expected:(Error PATTERN_TYPE_MISMATCH) (lazy (get_color_stop_rgba ~idx:0 p));
       ));
-      *)
       "mismatch" >:: (
         let make name p f =
           name >: (lazy (
@@ -361,7 +364,6 @@ end) = struct
         [
           make "create_rgb, get_linear_points" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_linear_points;
           make "create_rgb, get_radial_circles" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_radial_circles;
-          (* make "create_rgb, add_color_stop_rgba" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) (fun p -> add_color_stop_rgba p 0.1 0.2 0.3 0.4 ~ofs:0.5); *)
           make "create_rgb, get_color_stop_count" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_color_stop_count;
           make "create_rgb, get_color_stop_rgba" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) (get_color_stop_rgba ~idx:0);
           make "create_linear, get_rgba" (create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4.) get_rgba;
