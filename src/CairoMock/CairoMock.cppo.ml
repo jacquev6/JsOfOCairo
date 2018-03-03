@@ -55,6 +55,7 @@ let create () = {
   points = Points.create ();
 }
 
+(* @todo Refactor display of return value and catching of exception *)
 let call context ret =
   Printf.ksprintf (fun call ->
     context.calls <- call::context.calls;
@@ -81,7 +82,7 @@ let restore context =
   let states =
     match context.states with
       | [] (*BISECT-IGNORE*) (* This cannot happen: restore is the only function removing states and it refuses to remove the last one. *)
-      | [_] -> raise (Error INVALID_RESTORE)
+      | [_] -> call context () "restore -> raise (Error INVALID_RESTORE)"; raise (Error INVALID_RESTORE)
       | _::states -> states
   in
   context.states <- states;
@@ -175,19 +176,37 @@ let move_to context ~x ~y =
   mutate_points context ~start:(`Set (x, y)) ~current:`FromStart "move_to ~x:%.2f ~y:%.2f" x y
 
 let rel_move_to context ~x ~y =
-  mutate_points context ~start:(`Relative (x, y)) ~current:`FromStart "rel_move_to ~x:%.2f ~y:%.2f" x y
+  try
+    mutate_points context ~start:(`Relative (x, y)) ~current:`FromStart "rel_move_to ~x:%.2f ~y:%.2f" x y
+  with
+    | (Error NO_CURRENT_POINT) as e -> begin
+      call context () "rel_move_to ~x:%.2f ~y:%.2f -> raise (Error NO_CURRENT_POINT)" x y;
+      raise e
+    end
 
 let line_to context ~x ~y =
   mutate_points context ~start:(`IfNone (x, y)) ~current:(`Set (x, y)) "line_to ~x:%.2f ~y:%.2f" x y
 
 let rel_line_to context ~x ~y =
-  mutate_points context ~start:(`IfNone (x, y)) ~current:(`Relative (x, y)) "rel_line_to ~x:%.2f ~y:%.2f" x y
+  try
+    mutate_points context ~start:(`IfNone (x, y)) ~current:(`Relative (x, y)) "rel_line_to ~x:%.2f ~y:%.2f" x y
+  with
+    | (Error NO_CURRENT_POINT) as e -> begin
+      call context () "rel_line_to ~x:%.2f ~y:%.2f -> raise (Error NO_CURRENT_POINT)" x y;
+      raise e
+    end
 
 let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
   mutate_points context ~start:(`IfNone (x1, y1)) ~current:(`Set (x3, y3)) "curve_to ~x1:%.2f ~y1:%.2f ~x2:%.2f ~y2:%.2f ~x3:%.2f ~y3:%.2f" x1 y1 x2 y2 x3 y3
 
 let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-  mutate_points context ~start:(`IfNone (x1, y1)) ~current:(`Relative (x3, y3)) "rel_curve_to ~x1:%.2f ~y1:%.2f ~x2:%.2f ~y2:%.2f ~x3:%.2f ~y3:%.2f" x1 y1 x2 y2 x3 y3
+  try
+    mutate_points context ~start:(`IfNone (x1, y1)) ~current:(`Relative (x3, y3)) "rel_curve_to ~x1:%.2f ~y1:%.2f ~x2:%.2f ~y2:%.2f ~x3:%.2f ~y3:%.2f" x1 y1 x2 y2 x3 y3
+  with
+    | (Error NO_CURRENT_POINT) as e -> begin
+      call context () "rel_curve_to ~x1:%.2f ~y1:%.2f ~x2:%.2f ~y2:%.2f ~x3:%.2f ~y3:%.2f -> raise (Error NO_CURRENT_POINT)" x1 y1 x2 y2 x3 y3;
+      raise e
+    end
 
 let rectangle context ~x ~y ~w ~h =
   mutate_points context ~current:(`Set (x, y)) "rectangle ~x:%.2f ~y:%.2f ~w:%.2f ~h:%.2f" x y w h
@@ -338,7 +357,7 @@ let print_source () = function
     Printf.sprintf "LinearGradient {x0=%.2f; y0=%.2f; x1=%.2f; y1=%.2f; stop_points=%a}" x1 y1 x2 y2 print_stop_point_list stop_points
   | Pattern.RadialGradient {circles=(x1, y1, r1, x2, y2, r2); stop_points} ->
     Printf.sprintf "RadialGradient {x0=%.2f; y0=%.2f; r0=%.2f; x1=%.2f; y1=%.2f; r1%.2f; stop_points=%a}" x1 y1 r1 x2 y2 r2 print_stop_point_list stop_points
-  | Pattern.TypeMismatch -> "TypeMismatch"
+  | Pattern.TypeMismatch -> "TypeMismatch" (*BISECT-IGNORE*) (* Impossible case, or.. Am I being lazy? *)
 
 let set_source context pattern =
   let source = !pattern in

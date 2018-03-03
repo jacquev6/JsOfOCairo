@@ -1,20 +1,25 @@
 open General.Abbr
 open Tst
 
-let test = "Unit tests on CairoMock" >:: CairoMock.(
-  let make_n name fs expected =
-    name >: (lazy (
-      let c = create () in
-      Li.iter ~f:(fun f -> ignore (f c)) fs;
-      let actual = calls c in
-      check_string_list ~expected actual
-    ))
-  in
-  let make name f expected =
-    make_n name [f] [expected]
-  in
-  [
+open CairoMock
+
+let make_n name fs expected =
+  name >: (lazy (
+    let c = create () in
+    Li.iter ~f:(fun f -> ignore (f c)) fs;
+    let actual = calls c in
+    check_string_list ~expected actual
+  ))
+
+let make name f expected =
+  make_n name [f] [expected]
+
+let catch error f ctx =
+  expect_exception ~expected:(Error error) (lazy (f ctx))
+
+let test = "Unit tests on CairoMock" >:: [
     make_n "save, restore" [save; restore] ["save"; "restore"];
+    make "invalid restore" (catch INVALID_RESTORE restore) "restore -> raise (Error INVALID_RESTORE)";
 
     make "scale" (scale ~x:3. ~y:2.) "scale ~x:3.00 ~y:2.00";
     make "translate" (translate ~x:3. ~y:2.) "translate ~x:3.00 ~y:2.00";
@@ -29,10 +34,13 @@ let test = "Unit tests on CairoMock" >:: CairoMock.(
     make "device_to_user_distance" (device_to_user_distance ~x:2. ~y:3.) "device_to_user_distance ~x:2.00 ~y:3.00 -> (2.00, 3.00)";
 
     make "move_to" (move_to ~x:4.05 ~y:2.957) "move_to ~x:4.05 ~y:2.96";
+    make "invalid rel_move_to" (catch NO_CURRENT_POINT (rel_move_to ~x:4.05 ~y:2.957)) "rel_move_to ~x:4.05 ~y:2.96 -> raise (Error NO_CURRENT_POINT)";
     make_n "rel_move_to" [move_to ~x:1. ~y:2.; rel_move_to ~x:3. ~y:4.] ["move_to ~x:1.00 ~y:2.00"; "rel_move_to ~x:3.00 ~y:4.00"];
     make "line_to" (line_to ~x:4.05 ~y:2.957) "line_to ~x:4.05 ~y:2.96";
+    make "invalid rel_line_to" (catch NO_CURRENT_POINT (rel_line_to ~x:4.05 ~y:2.957)) "rel_line_to ~x:4.05 ~y:2.96 -> raise (Error NO_CURRENT_POINT)";
     make_n "rel_line_to" [move_to ~x:1. ~y:2.; rel_line_to ~x:3. ~y:4.] ["move_to ~x:1.00 ~y:2.00"; "rel_line_to ~x:3.00 ~y:4.00"];
     make "curve_to" (curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.) "curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00";
+    make "invalid rel_curve_to" (catch NO_CURRENT_POINT (rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.)) "rel_curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00 -> raise (Error NO_CURRENT_POINT)";
     make_n "rel_curve_to" [move_to ~x:1. ~y:2.; rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.] ["move_to ~x:1.00 ~y:2.00"; "rel_curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00"];
     make "rectangle" (rectangle ~x:2. ~y:3. ~w:4. ~h:5.) "rectangle ~x:2.00 ~y:3.00 ~w:4.00 ~h:5.00";
     make "arc" (arc ~x:1. ~y:2. ~r:3. ~a1:4. ~a2:5.) "arc ~x:1.00 ~y:2.00 ~r:3.00 ~a1:4.00 ~a2:5.00";
@@ -40,6 +48,7 @@ let test = "Unit tests on CairoMock" >:: CairoMock.(
     make "Path.close" Path.close "Path.close";
     make "Path.clear" Path.clear "Path.clear";
     make "Path.get_current_point" Path.get_current_point "Path.get_current_point -> (0.00, 0.00)";
+    make_n "move_to, Path.get_current_point" [move_to ~x:1. ~y:2.; ignore % Path.get_current_point] ["move_to ~x:1.00 ~y:2.00"; "Path.get_current_point -> (1.00, 2.00)"];
 
     make "stroke" stroke "stroke";
     make "stroke_preserve" stroke_preserve "stroke_preserve";
@@ -56,25 +65,49 @@ let test = "Unit tests on CairoMock" >:: CairoMock.(
     make "get_dash" get_dash "get_dash -> ([||], 0.00)";
     make "set_fill_rule" (fun c -> set_fill_rule c EVEN_ODD) "set_fill_rule EVEN_ODD";
     make "get_fill_rule" get_fill_rule "get_fill_rule -> WINDING";
-    make "set_line_cap" (fun c -> set_line_cap c ROUND) "set_line_cap ROUND";
+    make "set_line_cap ROUND" (fun c -> set_line_cap c ROUND) "set_line_cap ROUND";
+    make "set_line_cap SQUARE" (fun c -> set_line_cap c SQUARE) "set_line_cap SQUARE";
     make "get_line_cap" get_line_cap "get_line_cap -> BUTT";
-    make "set_line_join" (fun c -> set_line_join c JOIN_ROUND) "set_line_join JOIN_ROUND";
+    make "set_line_join JOIN_ROUND" (fun c -> set_line_join c JOIN_ROUND) "set_line_join JOIN_ROUND";
+    make "set_line_join JOIN_BEVEL" (fun c -> set_line_join c JOIN_BEVEL) "set_line_join JOIN_BEVEL";
     make "get_line_join" get_line_join "get_line_join -> JOIN_MITER";
     make "set_miter_limit" (fun c -> set_miter_limit c 3.) "set_miter_limit 3.00";
     make "get_miter_limit" get_miter_limit "get_miter_limit -> 10.00";
-    make "set_operator" (fun c -> set_operator c DEST) "set_operator DEST";
+    make "set_operator DEST" (fun c -> set_operator c DEST) "set_operator DEST";
+    make "set_operator CLEAR" (fun c -> set_operator c CLEAR) "set_operator CLEAR";
+    make "set_operator SOURCE" (fun c -> set_operator c SOURCE) "set_operator SOURCE";
+    make "set_operator IN" (fun c -> set_operator c IN) "set_operator IN";
+    make "set_operator OUT" (fun c -> set_operator c OUT) "set_operator OUT";
+    make "set_operator ATOP" (fun c -> set_operator c ATOP) "set_operator ATOP";
+    make "set_operator DEST_OVER" (fun c -> set_operator c DEST_OVER) "set_operator DEST_OVER";
+    make "set_operator DEST_IN" (fun c -> set_operator c DEST_IN) "set_operator DEST_IN";
+    make "set_operator DEST_OUT" (fun c -> set_operator c DEST_OUT) "set_operator DEST_OUT";
+    make "set_operator DEST_ATOP" (fun c -> set_operator c DEST_ATOP) "set_operator DEST_ATOP";
+    make "set_operator XOR" (fun c -> set_operator c XOR) "set_operator XOR";
+    make "set_operator ADD" (fun c -> set_operator c ADD) "set_operator ADD";
+    make "set_operator SATURATE" (fun c -> set_operator c SATURATE) "set_operator SATURATE";
     make "get_operator" get_operator "get_operator -> OVER";
 
     make "set_source_rgb" (set_source_rgb ~r:0.5 ~g:0.6 ~b:0.7) "set_source_rgb ~r:0.50 ~g:0.60 ~b:0.70";
     make "set_source_rgba" (set_source_rgba ~r:0.5 ~g:0.6 ~b:0.7 ~a:0.8) "set_source_rgba ~r:0.50 ~g:0.60 ~b:0.70 ~a:0.80";
-    make "set_source" (fun c -> set_source c (Pattern.create_rgb ~r:0.5 ~g:0.6 ~b:0.7)) "set_source (Rgba {r=0.50; g=0.60; b=0.70; a=1.00})";
+    make "set_source Rgba" (fun c -> set_source c (Pattern.create_rgb ~r:0.5 ~g:0.6 ~b:0.7)) "set_source (Rgba {r=0.50; g=0.60; b=0.70; a=1.00})";
+    make
+      "set_source LinearPattern"
+      (fun c ->
+        let p = Pattern.create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4. in
+        Pattern.add_color_stop_rgb p 0.1 0.2 0.3;
+        set_source c p
+      )
+      "set_source (LinearGradient {x0=1.00; y0=2.00; x1=3.00; y1=4.00; stop_points=[{position=0.00; r=0.10; g=0.20; b=0.30; a=1.00}]})"
+    ;
+    make "set_source RadialPattern" (fun c -> set_source c (Pattern.create_radial ~x0:1. ~y0:2. ~r0:5. ~x1:3. ~y1:4. ~r1:6.)) "set_source (RadialGradient {x0=1.00; y0=2.00; r0=5.00; x1=3.00; y1=4.00; r16.00; stop_points=[]})";
     make "get_source" get_source "get_source -> (Rgba {r=0.00; g=0.00; b=0.00; a=1.00})";
 
     make "set_font_size" (fun c -> set_font_size c 3.) "set_font_size 3.00";
     make "select_font_face" (fun c -> select_font_face c "foo-bar") "select_font_face ~slant:Upright ~weight:Normal \"foo-bar\"";
-    make "select_font_face with slant and weight" (fun c -> select_font_face c ~slant:Italic ~weight:Bold "foo-bar") "select_font_face ~slant:Italic ~weight:Bold \"foo-bar\"";
+    make "select_font_face Italic Bold" (fun c -> select_font_face c ~slant:Italic ~weight:Bold "foo-bar") "select_font_face ~slant:Italic ~weight:Bold \"foo-bar\"";
+    make "select_font_face Oblique" (fun c -> select_font_face c ~slant:Oblique "foo-bar") "select_font_face ~slant:Oblique ~weight:Normal \"foo-bar\"";
     make "show_text" (fun c -> show_text c "flibidiboo") "show_text \"flibidiboo\"";
     make "text_extents" (fun c -> text_extents c "abcd") "text_extents \"abcd\" -> {x_bearing=0.00; y_bearing=0.00; width=32.00; height=10.00; x_advance=32.00; y_advance=0.00}";
     make "font_extents" font_extents "font_extents -> {ascent=10.00; descent=2.50; baseline=0.00; max_x_advance=20.00; max_y_advance=0.00}";
-  ]
-)
+]
