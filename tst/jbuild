@@ -54,35 +54,12 @@
 (executable (
   (name tests_in_browser)
   (modules (tests_in_browser))
-  (libraries (Tests))
-  (preprocess (pps (js_of_ocaml-ppx)))
-  (js_of_ocaml ((flags (+nat.js))))
-))
-
-(alias (
-  (name runtest)
-  (deps (tests_in_browser.bc.js))
-  (action (progn
-    (echo "Have a look at drawing_tests_in_browser.html\n")
-  ))
-))
-
-
-
-
-
-(executable (
-  (name drawing_tests_in_javascript)
-  (modules (drawing_tests_in_javascript))
-  (preprocess (pps (js_of_ocaml-ppx)))
   (libraries (Tests JsOfOCairo))
+  (preprocess (pps (js_of_ocaml-ppx)))
   (js_of_ocaml ((flags (+nat.js))))
 ))
 
 (alias (
   (name runtest)
-  (deps (drawing_tests_in_javascript.bc.js))
-  (action (progn
-    (echo "Have a look at drawing_tests_in_browser.html\n")
-  ))
+  (deps (tests_in_browser.html pixelmatch.js tests_in_browser.bc.js tests_in_native.sentinel))
 ))

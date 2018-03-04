@@ -11,6 +11,8 @@ if ! [ -d node_modules ]
 then
     npm install canvas pixelmatch browserify
 fi
+# https://github.com/mapbox/pixelmatch#install
+node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > tst/pixelmatch.js
 
 clear
 
@@ -22,10 +24,8 @@ sed -i "s/^\(.*(bisect_ppx).*\)$/;\1/" $(find . -name jbuild)
 echo
 echo "See coverage report in $(pwd)/_build/default/bisect/index.html"
 
-# https://github.com/mapbox/pixelmatch#install
-node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > _build/default/pixelmatch.js
 echo
-echo "Have a look at $(pwd)/drawing_tests_in_browser.html"
+echo "Check test results in $(pwd)/_build/default/tst/tests_in_browser.html"
 echo
 
 # OPAM package
