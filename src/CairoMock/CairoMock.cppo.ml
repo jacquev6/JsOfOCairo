@@ -8,6 +8,8 @@ module Backend = Backend
 
 include Backend
 
+(* @todo Split into a mock (for state management emulating Cairo) and a decorator (for recording of calls) *)
+
 module State = struct
   type t = {
     dashes: float array;
