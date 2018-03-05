@@ -1,14 +1,10 @@
 (* Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-open StdLabels
-
 module type S = sig
-  #include "CairoMock.signatures.ml"
+  #include "CairoMock.S.incl.mli"
 end
 
-module Backend = Backend
-
-include Backend
+#include "Backend.incl.ml"
 
 (* @todo Split into a mock (for state management emulating Cairo) and a decorator (for recording of calls) *)
 

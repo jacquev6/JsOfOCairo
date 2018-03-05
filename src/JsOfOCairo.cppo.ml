@@ -1,9 +1,5 @@
 (* Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-open StdLabels
-
-module CairoMock = CairoMock
-
 module type S = CairoMock.S
 
 (*
@@ -17,7 +13,7 @@ Cairo:
 - utop -require cairo2
 *)
 
-include CairoMock.Backend
+#include "Backend.incl.ml"
 
 module Html = struct
   type t = Dom_html.canvasRenderingContext2D Js.t
