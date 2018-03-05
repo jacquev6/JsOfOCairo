@@ -5,7 +5,7 @@
 set -o errexit
 
 eval `opam config env`
-opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 General jbuilder bisect_ppx bisect-summary
+opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 General jbuilder bisect_ppx
 
 if ! [ -d node_modules ]
 then
