@@ -1,43 +1,65 @@
 (jbuild_version 1)
 
-(library (
-  (name DrawingTests)
-  (modules (DrawingTests))
-  (libraries (JsOfOCairo))
+
+(executable (
+  (name tests_in_native)
+  (modules (tests_in_native))
+  (libraries (Tests cairo2))
 ;  (preprocess (pps (bisect_ppx)))
 ))
 
-(executable (
-  (name drawing_tests_in_command_line)
-  (modules (drawing_tests_in_command_line))
-  (libraries (DrawingTests cairo2))
-;  (preprocess (pps (bisect_ppx)))
+(rule (
+  (targets (tests_in_native.sentinel))
+  (deps (tests_in_native.exe))
+  (action (progn
+    (run ${bin:rm} -f bisect0001.out bisect0002.out)
+    (run ${bin:mkdir} -p Tests/Drawing/Cairo)
+    (run ${exe:tests_in_native.exe})
+    ;(run ${bin:bisect-summary} bisect0001.out)
+    (run ${bin:bisect-ppx-report} -I .. -html ../bisect bisect0001.out)
+    (write-file tests_in_native.sentinel sentinel)
+  ))
 ))
 
-(executable (
-  (name unit_tests)
-  (modules (unit_tests))
-  (libraries (CairoMock JsOfOCairo DrawingTests General cairo2))
-;  (preprocess (pps (bisect_ppx)))
+(alias (
+  (name runtest)
+  (deps (tests_in_native.sentinel))
 ))
 
+
 (executable (
-  (name drawing_tests_in_javascript)
-  (modules (drawing_tests_in_javascript))
+  (name tests_in_node)
+  (modules (tests_in_node))
+  (libraries (Tests JsOfOCairo))
   (preprocess (pps (js_of_ocaml-ppx)))
-  (libraries (DrawingTests js_of_ocaml))
+  (js_of_ocaml ((flags (+nat.js))))
+))
+
+(rule (
+  (targets (tests_in_node.sentinel))
+  (deps (tests_in_node.bc.js tests_in_native.sentinel))
+  (action (progn
+    (run ${bin:mkdir} -p Tests/Drawing/JsOfOCairo)
+    (run ${bin:node} tests_in_node.bc.js)
+    (write-file tests_in_node.sentinel sentinel)
+  ))
+))
+
+(alias (
+  (name runtest)
+  (deps (tests_in_node.sentinel))
+))
+
+
+(executable (
+  (name tests_in_browser)
+  (modules (tests_in_browser))
+  (libraries (Tests JsOfOCairo))
+  (preprocess (pps (js_of_ocaml-ppx)))
   (js_of_ocaml ((flags (+nat.js))))
 ))
 
 (alias (
   (name runtest)
-  (deps (unit_tests.bc drawing_tests_in_command_line.bc drawing_tests_in_javascript.bc.js drawing_tests_in_node.js))
-  (action (progn
-    (run mkdir drawing_tests)
-    (run mkdir drawing_tests/in_command_line)
-    (run mkdir drawing_tests/in_node)
-    (run ${exe:unit_tests.bc})
-    (run ${exe:drawing_tests_in_command_line.bc})
-    (run ${bin:node} drawing_tests_in_node.js)
-  ))
+  (deps (tests_in_browser.html pixelmatch.js tests_in_browser.bc.js tests_in_native.sentinel))
 ))

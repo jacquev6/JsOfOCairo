@@ -414,6 +414,8 @@ let set_source context pattern =
       );
       context.html##.fillStyle_gradient := gradient;
       context.html##.strokeStyle_gradient := gradient
+    | Pattern.TypeMismatch ->
+      ()
 
 let get_source context =
   ref (Local.source context.local)
