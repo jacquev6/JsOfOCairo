@@ -40,7 +40,7 @@ end = struct
     T.tests
     |> Li.iter_i ~f:(fun ~i {T.name; width; height; draw} ->
       let cairo_image = Dom_html.createImg Dom_html.document in
-      cairo_image##.src := (Js.string (Frmt.apply "Tests/Drawing/Cairo/%s.png" name));
+      cairo_image##.src := Js.string (Frmt.apply "Tests/Drawing/Cairo/%s.png" name);
       cairo_image##.onload := (Dom.handler (fun _ ->
         let cairo_canvas = Dom_html.createCanvas Dom_html.document in
         cairo_canvas##.width := width;
