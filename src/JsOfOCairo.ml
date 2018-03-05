@@ -2,6 +2,8 @@
 
 open StdLabels
 
+module CairoMock = CairoMock
+
 module type S = CairoMock.S
 
 (*

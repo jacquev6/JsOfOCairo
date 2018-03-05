@@ -4,6 +4,6 @@
 
 (library (
   (name Tests)
-  (libraries (General CairoMock))
+  (libraries (General JsOfOCairo))
 ;  (preprocess (pps (bisect_ppx)))
 ))

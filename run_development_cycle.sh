@@ -20,9 +20,9 @@ rm -f _build/default/tst/*.sentinel
 
 # https://github.com/aantron/bisect_ppx/blob/master/doc/advanced.md#Jbuilder suggests
 # modifying the jbuild file for release. Let's modify it for tests instead.
-sed -i "s/^;\(.*(bisect_ppx).*\)$/\1/" $(find . -name jbuild)
+sed -i "s/^;\(.*bisect_ppx).*\)$/\1/" $(find . -name jbuild)
 jbuilder runtest --dev
-sed -i "s/^\(.*(bisect_ppx).*\)$/;\1/" $(find . -name jbuild)
+sed -i "s/^\(.*bisect_ppx).*\)$/;\1/" $(find . -name jbuild)
 echo
 echo "See coverage report in $(pwd)/_build/default/bisect/index.html"
 
@@ -33,9 +33,8 @@ echo
 # OPAM package
 # ============
 
-opam pin --yes --no-action add JsOfOCairo .
-opam pin --yes --no-action add CairoMock .
-opam reinstall --yes JsOfOCairo CairoMock
+opam pin --yes --no-action add .
+opam reinstall --yes JsOfOCairo
 
 cd demo
 ./demo.sh
