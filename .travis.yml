@@ -18,7 +18,8 @@ install:
   - opam switch --yes $OCAML_VERSION
   - eval `opam config env`
   - opam switch
-  - opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 jbuilder
+  - opam pin add --yes --no-action General --dev-repo
+  - opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 General jbuilder
   - opam upgrade --yes
   - opam list
 
