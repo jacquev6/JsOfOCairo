@@ -10,8 +10,8 @@ Here is `DrawGrammar <https://jacquev6.github.io/DrawGrammar/>`_, a real-life ap
 
 There is no real documentation besides this README.rst file.
 If a function is present in JsOfOCairo, it should behave as described in the `Cairo OCaml Tutorial <http://cairo.forge.ocamlcore.org/tutorial/index.html>`__.
-Have a look at the `interface file <https://github.com/jacquev6/JsOfOCairo/blob/master/src/S.ml>`_ to know which functions *are* implemented.
-You can also have a look at the `test file <https://github.com/jacquev6/JsOfOCairo/blob/master/src/DrawingTests.ml>`_ to see if what you're looking for is implemented and tested.
+Have a look at the `interface file <https://github.com/jacquev6/JsOfOCairo/blob/master/src/CairoMock.S.incl.ml>`_ to know which functions *are* implemented.
+You can also have a look at the `test results <https://jacquev6.github.io/JsOfOCairo/>`_ to see if what you're looking for is implemented and tested.
 
 Questions? Remarks? Bugs? Want to contribute? `Open an issue <https://github.com/jacquev6/JsOfOCairo/issues>`__!
 
@@ -51,8 +51,9 @@ File ``drawings.ml``::
 Instantiate this functor with ``Cairo`` to create a command-line program.
 File ``draw_on_command_line.ml``::
 
+    module Drawings = Drawings.Make(Cairo)
+
     let () = begin
-      let module Drawings = Drawings.Make(Cairo) in
       let image = Cairo.Image.create Cairo.Image.ARGB32 ~width:100 ~height:100 in
       Drawings.draw (Cairo.create image);
       Cairo.PNG.write image "draw_on_command_line.png";
@@ -93,8 +94,9 @@ File ``draw_in_browser.html``::
 As a bonus, *JsOfOCairo* comes with *CairoMock*, which implements the ``JsOfOCairo.S`` signature and simply records the
 calls made on the context object. You can use it to automate some tests on your drawing code::
 
+    module Drawings = Drawings.Make(CairoMock)
+
     let () = begin
-      let module Drawings = Drawings.Make(CairoMock) in
       let ctx = CairoMock.create () in
       Drawings.draw ctx;
       assert (CairoMock.calls ctx = ["arc ~x:50.00 ~y:50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"])
@@ -114,7 +116,7 @@ This doesn't make much sense in an HTML5 context.
 An attempt has been made to implement ``set_source_for_image`` using a hidden canvas but it's been unsuccessful.
 
 A few other functions commented out at the beginning of
-`CairoMock.signatures.ml <https://github.com/jacquev6/JsOfOCairo/blob/master/src/CairoMock/CairoMock.signatures.ml>`_ have been dismissed as well.
+`CairoMock.S.incl.ml <https://github.com/jacquev6/JsOfOCairo/blob/master/src/CairoMock.S.incl.ml>`_ have been dismissed as well.
 
 Testing strategy
 ================
