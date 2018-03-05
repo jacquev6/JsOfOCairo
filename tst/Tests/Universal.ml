@@ -279,6 +279,8 @@ end) = struct
         make "clip" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip c; rel_move_to c ~x:3. ~y:4.);
       ]
     );
+    (* @todo Check what happens to current point during save and restore *)
+    (* @todo Check what happens to current point during paint *)
     "current point" >:: (
       let make name f expected =
         name >: (lazy (
@@ -315,6 +317,7 @@ end) = struct
         make "clip_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip_preserve c) (3., 4.);
       ]
     );
+    (* @todo Check that sources are saved and restored *)
     "patterns" >:: Pattern.[
       "create_rgb, get_rgba" >: (lazy (
         let p = create_rgb ~r:0.1 ~g:0.2 ~b:0.3 in

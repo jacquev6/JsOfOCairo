@@ -53,26 +53,13 @@ let test = "Tests in node.js" >:: [
   );
   "Drawing tests on JsOfOCairo" >:: (
     let known_failures = [
+      "set_dash";
       "paint with alpha 3";
       "paint with alpha 4";
-      "text extents: move_to";
-      "text: scale";
-      "text extents: scale";
-      "text: transform";
-      "text extents: transform";
-      "text extents: set_font_size";
-      "text extents: set_font_face serif upright normal";
-      "text extents: set_font_face serif upright bold";
-      "text extents: set_font_face serif italic normal";
-      "text extents: set_font_face serif oblique normal";
-      "text extents: set_font_face sans-serif";
-      "text extents: set_font_face cursive";
-      "text extents: set_font_face fantasy";
-      "text extents: set_font_face monospace";
     ] in
     let module T = Tests.Drawing.Make(JsOfOCairo) in
     T.tests
-    |> Li.map ~f:(fun {T.name; width; height; draw; known_failure=_} ->
+    |> Li.map ~f:(fun {T.name; width; height; draw} ->
       let known_failure = Li.Poly.contains known_failures name in
       name >: (lazy (
         let cairo_image = new%js image in
@@ -101,21 +88,16 @@ let test = "Tests in node.js" >:: [
         in
         diff_context##putImageData diff_data 0. 0.;
 
-        let failure =
-          if known_failure && differences = 0 then
-            Some "Expected failure but drawings are identical"
-          else if not known_failure && differences <> 0 then
-            Some "Drawings are different"
-          else
-            None
-        in
-        failure
-        |> Opt.iter ~f:(fun reason ->
+        if differences <> 0 then begin
           writeTo cairo_canvas (Js.string (Frmt.apply "Tests/Drawing/JsOfOCairo/%s.Cairo.png" name));
           writeTo jsooc_canvas (Js.string (Frmt.apply "Tests/Drawing/JsOfOCairo/%s.JsOfOCairo.png" name));
           writeTo diff_canvas (Js.string (Frmt.apply "Tests/Drawing/JsOfOCairo/%s.diff.png" name));
-          fail "%s" reason
-        )
+        end;
+
+        if known_failure && differences = 0 then
+          fail "Expected failure but drawings are identical"
+        else if not known_failure && differences <> 0 then
+          fail "Drawings are different"
       ))
     )
   );

@@ -38,7 +38,7 @@ end = struct
     let data = OCamlStandard.Array.make tests_count None
     and count = ref 0 in
     T.tests
-    |> Li.iter_i ~f:(fun ~i {T.name; width; height; draw; known_failure=_} ->
+    |> Li.iter_i ~f:(fun ~i {T.name; width; height; draw} ->
       let cairo_image = Dom_html.createImg Dom_html.document in
       cairo_image##.src := (Js.string (Frmt.apply "Tests/Drawing/Cairo/%s.png" name));
       cairo_image##.onload := (Dom.handler (fun _ ->
