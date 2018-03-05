@@ -132,6 +132,15 @@ end) = struct
           make "dashes" (fun c dashes -> set_dash c dashes) (fun c -> get_dash c |> Tu2.get_0) (check_poly ~repr) [||] [|1.; 2.|] (degrade [[|3.; 4.; 5.; 6.|]; [|7.; 8.; 9.; 10.; 11.; 12.|]] [[|3.|]; [|4.; 5.; 6.|]]));
           make "offset" (fun c ofs -> set_dash c ~ofs [|10.; 10.|]) (fun c -> get_dash c |> Tu2.get_1) check_float_exact 0. 2. [3.];
         ];
+        make
+          "source"
+          (fun c (r, g, b, a) -> set_source_rgba c ~r ~g ~b ~a)
+          (fun c -> get_source c |> Pattern.get_rgba)
+          (check_float_tuple_4)
+          (0., 0., 0., 1.)
+          (1., 0., 0., 0.5)
+          [(0., 0., 1., 0.7)]
+        ;
       ]
     );
     "status_to_string" >:: (
@@ -279,8 +288,6 @@ end) = struct
         make "clip" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip c; rel_move_to c ~x:3. ~y:4.);
       ]
     );
-    (* @todo Check what happens to current point during save and restore *)
-    (* @todo Check what happens to current point during paint *)
     "current point" >:: (
       let make name f expected =
         name >: (lazy (
@@ -293,6 +300,23 @@ end) = struct
       [
         make "no-op" (fun _ -> ()) (0., 0.);
         make "move_to" (move_to ~x:1. ~y:2.) (1., 2.);
+        make "paint" paint (0., 0.);
+        make "move_to, paint" (fun c -> move_to c ~x:1. ~y:2.; paint c) (1., 2.);
+        make "save, move_to, restore"
+          (fun c ->
+            save c;
+            move_to c ~x:1. ~y:2.;
+            restore c;
+          )
+          (1., 2.);
+        make "save, scale, move_to, restore"
+          (fun c ->
+            save c;
+            scale c ~x:3. ~y:4.;
+            move_to c ~x:1. ~y:2.;
+            restore c;
+          )
+          (3., 8.);
         make "rel_move_to" (fun c -> move_to c ~x:1. ~y:2.; rel_move_to c ~x:3. ~y:4.) (4., 6.);
         make "line_to" (line_to ~x:1. ~y:2.) (1., 2.);
         make "rel_line_to" (fun c -> move_to c ~x:1. ~y:2.; rel_line_to c ~x:3. ~y:4.) (4., 6.);
@@ -302,6 +326,7 @@ end) = struct
           make "pi / 6" (arc ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 6.)) (1. +. 3. *. Fl.sqrt(3.) /. 2., 2. +. 3. *. 0.5);
           make "pi / 4" (arc ~x:1. ~y:2. ~r:3. ~a1:0. ~a2:(Fl.pi /. 4.)) (1. +. 3. *. Fl.sqrt(2.) /. 2., 2. +. 3. *. Fl.sqrt(2.) /. 2.);
           make "pi / 2" (arc ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 2.)) (1., 5.);
+          make "3 pi" (arc ~x:1. ~y:2. ~r:3. ~a1:(Fl.pi /. 2.) ~a2:(3. *. Fl.pi)) (-2., 2.);
         ];
         "arc_negative" >:: [
           make "0" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:0.) (4., 2.);
@@ -317,7 +342,6 @@ end) = struct
         make "clip_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip_preserve c) (3., 4.);
       ]
     );
-    (* @todo Check that sources are saved and restored *)
     "patterns" >:: Pattern.[
       "create_rgb, get_rgba" >: (lazy (
         let p = create_rgb ~r:0.1 ~g:0.2 ~b:0.3 in
