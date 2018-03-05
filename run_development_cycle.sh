@@ -5,7 +5,7 @@
 set -o errexit
 
 eval `opam config env`
-opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 General jbuilder bisect_ppx
+opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 General jbuilder bisect_ppx bisect-summary
 
 if ! [ -d node_modules ]
 then
@@ -24,6 +24,9 @@ sed -i "s/^;\(.*bisect_ppx).*\)$/\1/" $(find . -name jbuild)
 jbuilder runtest --dev
 sed -i "s/^\(.*bisect_ppx).*\)$/;\1/" $(find . -name jbuild)
 echo
+bisect-summary _build/default/tst/bisect????.out
+echo
+bisect-ppx-report -I _build/default -html _build/default/bisect _build/default/tst/bisect????.out
 echo "See coverage report in $(pwd)/_build/default/bisect/index.html"
 
 echo

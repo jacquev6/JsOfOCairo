@@ -13,11 +13,8 @@
   (targets (tests_in_native.sentinel))
   (deps (tests_in_native.exe))
   (action (progn
-    (run ${bin:rm} -f bisect0001.out bisect0002.out)
     (run ${bin:mkdir} -p Tests/Drawing/Cairo)
     (run ${exe:tests_in_native.exe})
-    ;(run ${bin:bisect-summary} bisect0001.out)
-    (run ${bin:bisect-ppx-report} -I .. -html ../bisect bisect0001.out)
     (write-file tests_in_native.sentinel sentinel)
   ))
 ))
