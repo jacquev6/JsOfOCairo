@@ -16,6 +16,8 @@ node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > ts
 
 clear
 
+rm -f _build/default/tst/*.sentinel
+
 # https://github.com/aantron/bisect_ppx/blob/master/doc/advanced.md#Jbuilder suggests
 # modifying the jbuild file for release. Let's modify it for tests instead.
 sed -i "s/^;\(.*(bisect_ppx).*\)$/\1/" $(find . -name jbuild)
