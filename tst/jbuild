@@ -37,10 +37,10 @@
 
 (rule (
   (targets (tests_in_node.sentinel))
-  (deps (tests_in_node.js tests_in_node.bc.js tests_in_native.sentinel))
+  (deps (tests_in_node.bc.js tests_in_native.sentinel))
   (action (progn
     (run ${bin:mkdir} -p Tests/Drawing/JsOfOCairo)
-    (run ${bin:node} tests_in_node.js)
+    (run ${bin:node} tests_in_node.bc.js)
     (write-file tests_in_node.sentinel sentinel)
   ))
 ))

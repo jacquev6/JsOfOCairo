@@ -3,6 +3,21 @@
 open General.Abbr
 open Tst
 
+let () = Js.Unsafe.eval_string {|
+  global["Canvas"] = require("canvas");
+  global["Image"] = Canvas.Image;
+  var fs = require("fs");
+  global["pixelmatch"] = require("pixelmatch");
+
+  global["writeTo"] = function(canvas, fileName) {
+    var out = fs.createWriteStream(fileName);
+    var stream = canvas.pngStream();
+    stream.on("data", function(chunk) {
+      out.write(chunk);
+    });
+  }
+|}
+
 let (canvas: (int -> int -> Dom_html.canvasElement Js.t) Js.constr) =
   Js.Unsafe.global##._Canvas
 
