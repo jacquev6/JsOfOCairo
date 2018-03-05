@@ -18,35 +18,25 @@
 ))
 
 (rule (
-  (targets (CairoMock.intermediate.1.ml))
+  (targets (CairoMock.intermediate.ml))
   (deps (CairoMock.cppo.ml Backend.incl.ml CairoMock.S.incl.mli))
   (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
 ))
 (rule (
-  (targets (CairoMock.intermediate.2.ml))
-  (deps (CairoMock.intermediate.1.ml))
-  (action (with-stdout-to ${@} (run ${bin:sed} "s|\"CairoMock|\"src/CairoMock|" ${<})))
-))
-(rule (
   (targets (CairoMock.ml))
-  (deps (CairoMock.intermediate.2.ml))
-  (action (with-stdout-to ${@} (run ${bin:sed} "s|\"Backend|\"src/Backend|" ${<})))
+  (deps (CairoMock.intermediate.ml))
+  (action (with-stdout-to ${@} (run ${bin:sed} "s|# \([0-9]\+\) \"|# \\1 \"src/|" ${<})))
 ))
 
 (rule (
-  (targets (JsOfOCairo.intermediate.1.ml))
+  (targets (JsOfOCairo.intermediate.ml))
   (deps (JsOfOCairo.cppo.ml Backend.incl.ml))
   (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
 ))
 (rule (
-  (targets (JsOfOCairo.intermediate.2.ml))
-  (deps (JsOfOCairo.intermediate.1.ml))
-  (action (with-stdout-to ${@} (run ${bin:sed} "s|\"JsOfOCairo|\"src/JsOfOCairo|" ${<})))
-))
-(rule (
   (targets (JsOfOCairo.ml))
-  (deps (JsOfOCairo.intermediate.2.ml))
-  (action (with-stdout-to ${@} (run ${bin:sed} "s|\"Backend|\"src/Backend|" ${<})))
+  (deps (JsOfOCairo.intermediate.ml))
+  (action (with-stdout-to ${@} (run ${bin:sed} "s|# \([0-9]\+\) \"|# \\1 \"src/|" ${<})))
 ))
 
 ; Programs that link to js_of_ocaml cannot run as native or bytecode,
