@@ -1,5 +1,6 @@
-(jbuild_version 1)
+; Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net>
 
+(jbuild_version 1)
 
 (executable (
   (name tests_in_native)

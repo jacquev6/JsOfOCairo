@@ -1,3 +1,5 @@
+(* Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net> *)
+
 open StdLabels
 
 type status =
