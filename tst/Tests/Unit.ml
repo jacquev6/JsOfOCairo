@@ -58,12 +58,13 @@ let test = "Unit tests on CairoMock" >:: [
   make "fill_preserve" fill_preserve "fill_preserve";
   make "clip" clip "clip";
   make "clip_preserve" clip_preserve "clip_preserve";
-  make "paint" paint "paint ~alpha:1.00";
+  make "paint" paint "paint";
   make "paint with alpha" (paint ~alpha:0.5) "paint ~alpha:0.50";
 
   make "set_line_width" (fun c -> set_line_width c 3.) "set_line_width 3.00";
   make "get_line_width" get_line_width "get_line_width -> 2.00";
-  make "set_dash" (fun c -> set_dash c [|2.; 3.|]) "set_dash ~ofs:0.00 [|2.00; 3.00|]";
+  make "set_dash" (fun c -> set_dash c [|2.; 3.|]) "set_dash [|2.00; 3.00|]";
+  make "set_dash with ofs" (fun c -> set_dash c ~ofs:2. [|3.; 4.|]) "set_dash ~ofs:2.00 [|3.00; 4.00|]";
   make "get_dash" get_dash "get_dash -> ([||], 0.00)";
   make "set_fill_rule" (fun c -> set_fill_rule c EVEN_ODD) "set_fill_rule EVEN_ODD";
   make "get_fill_rule" get_fill_rule "get_fill_rule -> WINDING";
@@ -94,7 +95,7 @@ let test = "Unit tests on CairoMock" >:: [
   make "set_source_rgba" (set_source_rgba ~r:0.5 ~g:0.6 ~b:0.7 ~a:0.8) "set_source_rgba ~r:0.50 ~g:0.60 ~b:0.70 ~a:0.80";
   make "set_source Rgba" (fun c -> set_source c (Pattern.create_rgb ~r:0.5 ~g:0.6 ~b:0.7)) "set_source (Rgba {r=0.50; g=0.60; b=0.70; a=1.00})";
   make
-    "set_source LinearPattern"
+    "set_source LinearGradient"
     (fun c ->
       let p = Pattern.create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4. in
       Pattern.add_color_stop_rgb p 0.1 0.2 0.3;
@@ -102,13 +103,15 @@ let test = "Unit tests on CairoMock" >:: [
     )
     "set_source (LinearGradient {x0=1.00; y0=2.00; x1=3.00; y1=4.00; stop_points=[{position=0.00; r=0.10; g=0.20; b=0.30; a=1.00}]})"
   ;
-  make "set_source RadialPattern" (fun c -> set_source c (Pattern.create_radial ~x0:1. ~y0:2. ~r0:5. ~x1:3. ~y1:4. ~r1:6.)) "set_source (RadialGradient {x0=1.00; y0=2.00; r0=5.00; x1=3.00; y1=4.00; r16.00; stop_points=[]})";
+  make "set_source RadialGradient" (fun c -> set_source c (Pattern.create_radial ~x0:1. ~y0:2. ~r0:5. ~x1:3. ~y1:4. ~r1:6.)) "set_source (RadialGradient {x0=1.00; y0=2.00; r0=5.00; x1=3.00; y1=4.00; r16.00; stop_points=[]})";
   make "get_source" get_source "get_source -> (Rgba {r=0.00; g=0.00; b=0.00; a=1.00})";
 
   make "set_font_size" (fun c -> set_font_size c 3.) "set_font_size 3.00";
-  make "select_font_face" (fun c -> select_font_face c "foo-bar") "select_font_face ~slant:Upright ~weight:Normal \"foo-bar\"";
+  make "select_font_face" (fun c -> select_font_face c "foo-bar") "select_font_face \"foo-bar\"";
+  make "select_font_face Upright" (fun c -> select_font_face c ~slant:Upright "foo-bar") "select_font_face ~slant:Upright \"foo-bar\"";
+  make "select_font_face Oblique" (fun c -> select_font_face c ~slant:Oblique "foo-bar") "select_font_face ~slant:Oblique \"foo-bar\"";
+  make "select_font_face Normal" (fun c -> select_font_face c ~weight:Normal "foo-bar") "select_font_face ~weight:Normal \"foo-bar\"";
   make "select_font_face Italic Bold" (fun c -> select_font_face c ~slant:Italic ~weight:Bold "foo-bar") "select_font_face ~slant:Italic ~weight:Bold \"foo-bar\"";
-  make "select_font_face Oblique" (fun c -> select_font_face c ~slant:Oblique "foo-bar") "select_font_face ~slant:Oblique ~weight:Normal \"foo-bar\"";
   make "show_text" (fun c -> show_text c "flibidiboo") "show_text \"flibidiboo\"";
   make "text_extents" (fun c -> text_extents c "abcd") "text_extents \"abcd\" -> {x_bearing=0.00; y_bearing=0.00; width=32.00; height=10.00; x_advance=32.00; y_advance=0.00}";
   make "font_extents" font_extents "font_extents -> {ascent=10.00; descent=2.50; baseline=0.00; max_x_advance=20.00; max_y_advance=0.00}";
