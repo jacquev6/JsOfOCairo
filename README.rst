@@ -10,7 +10,7 @@ Here is `DrawGrammar <https://jacquev6.github.io/DrawGrammar/>`_, a real-life ap
 
 There is no real documentation besides this README.rst file.
 If a function is present in JsOfOCairo, it should behave as described in the `Cairo OCaml Tutorial <http://cairo.forge.ocamlcore.org/tutorial/index.html>`__.
-Have a look at the `interface file <https://github.com/jacquev6/JsOfOCairo/blob/master/src/CairoMock.S.incl.mli>`_ to know which functions *are* implemented.
+Have a look at the `interface file <https://github.com/jacquev6/JsOfOCairo/blob/master/src/S.incl.mli>`_ to know which functions *are* implemented.
 You can also have a look at the `test results <https://jacquev6.github.io/JsOfOCairo/>`_ to see if what you're looking for is implemented and tested.
 
 Questions? Remarks? Bugs? Want to contribute? `Open an issue <https://github.com/jacquev6/JsOfOCairo/issues>`__!
@@ -116,7 +116,7 @@ This doesn't make much sense in an HTML5 context.
 An attempt has been made to implement ``set_source_for_image`` using a hidden canvas but it's been unsuccessful.
 
 A few other functions commented out at the beginning of
-`CairoMock.S.incl.ml <https://github.com/jacquev6/JsOfOCairo/blob/master/src/CairoMock.S.incl.mli>`_ have been dismissed as well.
+`S.incl.ml <https://github.com/jacquev6/JsOfOCairo/blob/master/src/S.incl.mli>`_ have been dismissed as well.
 
 Testing strategy
 ================

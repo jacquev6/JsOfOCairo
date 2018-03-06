@@ -13,13 +13,13 @@
 
 (rule (
   (targets (CairoMock.mli))
-  (deps (CairoMock.cppo.mli CairoMock.S.incl.mli))
+  (deps (CairoMock.cppo.mli S.incl.mli))
   (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
 ))
 
 (rule (
   (targets (CairoMock.intermediate.ml))
-  (deps (CairoMock.cppo.ml Backend.incl.ml CairoMock.S.incl.mli))
+  (deps (CairoMock.cppo.ml Backend.incl.ml S.incl.mli))
   (action (run ${bin:cppo} -V OCAML:${ocaml_version} ${<} -o ${@}))
 ))
 (rule (

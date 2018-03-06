@@ -1,7 +1,7 @@
 (* Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net> *)
 
 module type S = sig
-  #include "CairoMock.S.incl.mli"
+  #include "S.incl.mli"
 end
 
 module Mock = struct
