@@ -102,6 +102,8 @@ calls made on the context object. You can use it to automate some tests on your 
       assert (CairoMock.calls ctx = ["arc ~x:50.00 ~y:50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"])
     end
 
+*CairoMock* itself is split into *CairoMock.Mock*, an actual mock implementation of ``JsOfOCairo.S`` that does nothing, and *CairoMock.Decorate*, that can be used to record calls made on *any* implementation of ``JsOfOCairo.S``. So, you can draw and record calls at the same time.
+
 What is **not** implemented
 ===========================
 
