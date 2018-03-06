@@ -613,6 +613,8 @@ module Decorate(C: S) = struct
 
   type context = Context.t
 
+  let create = Context.create
+
   let calls = Context.calls
 
   #define CC Context.call context
@@ -763,7 +765,7 @@ module Decorate(C: S) = struct
 
 
   let set_source context source =
-    CC "set_source %a" A.source source P.unit (fun c -> C.set_source c source)
+    CC "set_source %a" A.source (Obj.magic source) P.unit (fun c -> C.set_source c source)
 
   let get_source context =
     CC "get_source" P.source C.get_source
