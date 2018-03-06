@@ -1,5 +1,12 @@
 (* Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net> *)
 
+let is_travis =
+  try
+    let _ = Sys.getenv "TRAVIS" in
+    true
+  with
+    | Not_found -> false
+
 open General.Abbr
 open Tst
 
@@ -131,7 +138,11 @@ end) = struct
     );
     make "font_extents" font_extents (
       match N.backend with
-        | `Cairo -> "font_extents -> {ascent=10.00; descent=3.00; baseline=12.00; max_x_advance=19.00; max_y_advance=0.00}"
+        | `Cairo ->
+          if is_travis then
+            "font_extents -> {ascent=10.00; descent=3.00; baseline=12.00; max_x_advance=17.00; max_y_advance=0.00}"
+          else
+            "font_extents -> {ascent=10.00; descent=3.00; baseline=12.00; max_x_advance=19.00; max_y_advance=0.00}"
         | `Node (*BISECT-IGNORE*) (* Test code *)
         | `Browser (*BISECT-IGNORE*) (* Test code *)
         | `CairoMock -> "font_extents -> {ascent=10.00; descent=2.50; baseline=0.00; max_x_advance=20.00; max_y_advance=0.00}"
