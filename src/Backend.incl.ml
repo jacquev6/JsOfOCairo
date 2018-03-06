@@ -85,7 +85,7 @@ let status_to_string = function
 let status_repr = function
   | INVALID_RESTORE -> "INVALID_RESTORE"
   | NO_CURRENT_POINT -> "NO_CURRENT_POINT"
-  (*BISECT-IGNORE-BEGIN*) (* @todo Can we make Cairo raise some of these exceptions? *)
+  (*BISECT-IGNORE-BEGIN*) (* I don't know how to make Cairo raise these exceptions *)
   | INVALID_POP_GROUP -> "INVALID_POP_GROUP"
   | INVALID_MATRIX -> "INVALID_MATRIX"
   | INVALID_STATUS -> "INVALID_STATUS"
