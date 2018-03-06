@@ -15,6 +15,11 @@ Cairo:
 
 #include "Backend.incl.ml"
 
+let () = Printexc.register_printer (function
+  | Error status -> Some (Printf.sprintf "JsOfOCairo.Error(%s)" (status_repr status))
+  | _ -> None
+)
+
 module Html = struct
   type t = Dom_html.canvasRenderingContext2D Js.t
 end

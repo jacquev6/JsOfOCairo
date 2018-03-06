@@ -18,6 +18,11 @@ end) = struct
   module DecoratedC = CairoMock.Decorate(C)
   open DecoratedC
 
+  let backend_name = match N.backend with
+    | `Cairo -> "Cairo"
+    | `Node | `Browser -> "JsOfOCairo"
+    | `CairoMock -> "CairoMock"
+
   let make_n name fs expected =
     name >: (lazy (
       let c = create (N.create ()) in
@@ -27,14 +32,16 @@ end) = struct
     ))
 
   let make name f expected =
-    make_n name [f] [expected]
+    Frmt.with_result ~f:(fun expected ->
+      make_n name [f] [expected]
+    ) expected
 
   let catch error f ctx =
     expect_exception ~expected:(Error error) (lazy (f ctx))
 
   let test = ~:: "Decoration tests on CairoMock.Decorate(%s)" N.name ([
     make_n "save, restore" [save; restore] ["save"; "restore"];
-    make "invalid restore" (catch INVALID_RESTORE restore) "restore -> raise (Error INVALID_RESTORE)";
+    make "invalid restore" (catch INVALID_RESTORE restore) "restore -> raise (%s.Error(INVALID_RESTORE))" backend_name;
 
     make "scale" (scale ~x:3. ~y:2.) "scale ~x:3.00 ~y:2.00";
     make "translate" (translate ~x:3. ~y:2.) "translate ~x:3.00 ~y:2.00";
@@ -49,13 +56,13 @@ end) = struct
     make "device_to_user_distance" (device_to_user_distance ~x:2. ~y:3.) "device_to_user_distance ~x:2.00 ~y:3.00 -> (2.00, 3.00)";
 
     make "move_to" (move_to ~x:4.05 ~y:2.957) "move_to ~x:4.05 ~y:2.96";
-    make "invalid rel_move_to" (catch NO_CURRENT_POINT (rel_move_to ~x:4.05 ~y:2.957)) "rel_move_to ~x:4.05 ~y:2.96 -> raise (Error NO_CURRENT_POINT)";
+    make "invalid rel_move_to" (catch NO_CURRENT_POINT (rel_move_to ~x:4.05 ~y:2.957)) "rel_move_to ~x:4.05 ~y:2.96 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
     make_n "rel_move_to" [move_to ~x:1. ~y:2.; rel_move_to ~x:3. ~y:4.] ["move_to ~x:1.00 ~y:2.00"; "rel_move_to ~x:3.00 ~y:4.00"];
     make "line_to" (line_to ~x:4.05 ~y:2.957) "line_to ~x:4.05 ~y:2.96";
-    make "invalid rel_line_to" (catch NO_CURRENT_POINT (rel_line_to ~x:4.05 ~y:2.957)) "rel_line_to ~x:4.05 ~y:2.96 -> raise (Error NO_CURRENT_POINT)";
+    make "invalid rel_line_to" (catch NO_CURRENT_POINT (rel_line_to ~x:4.05 ~y:2.957)) "rel_line_to ~x:4.05 ~y:2.96 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
     make_n "rel_line_to" [move_to ~x:1. ~y:2.; rel_line_to ~x:3. ~y:4.] ["move_to ~x:1.00 ~y:2.00"; "rel_line_to ~x:3.00 ~y:4.00"];
     make "curve_to" (curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.) "curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00";
-    make "invalid rel_curve_to" (catch NO_CURRENT_POINT (rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.)) "rel_curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00 -> raise (Error NO_CURRENT_POINT)";
+    make "invalid rel_curve_to" (catch NO_CURRENT_POINT (rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.)) "rel_curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
     make_n "rel_curve_to" [move_to ~x:1. ~y:2.; rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.] ["move_to ~x:1.00 ~y:2.00"; "rel_curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00"];
     make "rectangle" (rectangle ~x:2. ~y:3. ~w:4. ~h:5.) "rectangle ~x:2.00 ~y:3.00 ~w:4.00 ~h:5.00";
     make "arc" (arc ~x:1. ~y:2. ~r:3. ~a1:4. ~a2:5.) "arc ~x:1.00 ~y:2.00 ~r:3.00 ~a1:4.00 ~a2:5.00";

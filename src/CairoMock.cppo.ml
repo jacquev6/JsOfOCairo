@@ -7,6 +7,11 @@ end
 module Mock = struct
   #include "Backend.incl.ml"
 
+  let () = Printexc.register_printer (function
+    | Error status -> Some (Printf.sprintf "CairoMock.Error(%s)" (status_repr status))
+    | _ -> None
+  )
+
   module State = struct
     type t = {
       dashes: float array;
@@ -421,47 +426,6 @@ module Decorate(C: S) = struct
     let float x =
       Printf.sprintf "%.2f" x
 
-    let status = function
-      | INVALID_RESTORE -> "INVALID_RESTORE"
-      | NO_CURRENT_POINT -> "NO_CURRENT_POINT"
-      (*BISECT-IGNORE-BEGIN*) (* @todo Can we make Cairo raise some of these exceptions? *)
-      | INVALID_POP_GROUP -> "INVALID_POP_GROUP"
-      | INVALID_MATRIX -> "INVALID_MATRIX"
-      | INVALID_STATUS -> "INVALID_STATUS"
-      | NULL_POINTER -> "NULL_POINTER"
-      | INVALID_STRING -> "INVALID_STRING"
-      | INVALID_PATH_DATA -> "INVALID_PATH_DATA"
-      | READ_ERROR -> "READ_ERROR"
-      | WRITE_ERROR -> "WRITE_ERROR"
-      | SURFACE_FINISHED -> "SURFACE_FINISHED"
-      | SURFACE_TYPE_MISMATCH -> "SURFACE_TYPE_MISMATCH"
-      | PATTERN_TYPE_MISMATCH -> "PATTERN_TYPE_MISMATCH"
-      | INVALID_CONTENT -> "INVALID_CONTENT"
-      | INVALID_FORMAT -> "INVALID_FORMAT"
-      | INVALID_VISUAL -> "INVALID_VISUAL"
-      | FILE_NOT_FOUND -> "FILE_NOT_FOUND"
-      | INVALID_DASH -> "INVALID_DASH"
-      | INVALID_DSC_COMMENT -> "INVALID_DSC_COMMENT"
-      | INVALID_INDEX -> "INVALID_INDEX"
-      | CLIP_NOT_REPRESENTABLE -> "CLIP_NOT_REPRESENTABLE"
-      | TEMP_FILE_ERROR -> "TEMP_FILE_ERROR"
-      | INVALID_STRIDE -> "INVALID_STRIDE"
-      | FONT_TYPE_MISMATCH -> "FONT_TYPE_MISMATCH"
-      | USER_FONT_IMMUTABLE -> "USER_FONT_IMMUTABLE"
-      | USER_FONT_ERROR -> "USER_FONT_ERROR"
-      | NEGATIVE_COUNT -> "NEGATIVE_COUNT"
-      | INVALID_CLUSTERS -> "INVALID_CLUSTERS"
-      | INVALID_SLANT -> "INVALID_SLANT"
-      | INVALID_WEIGHT -> "INVALID_WEIGHT"
-      | INVALID_SIZE -> "INVALID_SIZE"
-      | USER_FONT_NOT_IMPLEMENTED -> "USER_FONT_NOT_IMPLEMENTED"
-      | DEVICE_TYPE_MISMATCH -> "DEVICE_TYPE_MISMATCH"
-      | DEVICE_ERROR -> "DEVICE_ERROR"
-      | INVALID_MESH_CONSTRUCTION -> "INVALID_MESH_CONSTRUCTION"
-      | DEVICE_FINISHED -> "DEVICE_FINISHED"
-      | JBIG2_GLOBAL_MISSING -> "JBIG2_GLOBAL_MISSING"
-      (*BISECT-IGNORE-END*)
-
     let matrix {xx; xy; yx; yy; x0; y0} =
       Printf.sprintf "{xx=%.2f; xy=%.2f; yx=%.2f; yy=%.2f; x0=%.2f; y0=%.2f}" xx xy yx yy x0 y0
 
@@ -613,9 +577,8 @@ module Decorate(C: S) = struct
           context.calls <- call::context.calls;
           ret
         end with
-          | (C.Error status) as ex -> begin
-            (* @todo Be more generic: print and re-raise any exception *)
-            let call = Printf.sprintf "%s -> raise (Error %s)" call (P.status status) in
+          | ex -> begin
+            let call = Printf.sprintf "%s -> raise (%s)" call (Printexc.to_string ex) in
             context.calls <- call::context.calls;
             raise ex
           end
