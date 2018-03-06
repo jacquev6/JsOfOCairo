@@ -3,7 +3,7 @@
 let is_travis =
   try
     let _ = Sys.getenv "TRAVIS" in
-    true
+    true (*BISECT-IGNORE*) (* Test code *)
   with
     | Not_found -> false
 
@@ -20,7 +20,7 @@ end) = struct
 
   let backend_name = match N.backend with
     | `Cairo -> "Cairo"
-    | `Node | `Browser -> "JsOfOCairo"
+    | `Node | `Browser -> "JsOfOCairo" (*BISECT-IGNORE*) (* Test code *)
     | `CairoMock -> "CairoMock"
 
   let make_n name fs expected =
@@ -147,7 +147,7 @@ end) = struct
       match N.backend with
         | `Cairo ->
           if is_travis then
-            "font_extents -> {ascent=10.00; descent=3.00; baseline=12.00; max_x_advance=17.00; max_y_advance=0.00}"
+            "font_extents -> {ascent=10.00; descent=3.00; baseline=12.00; max_x_advance=17.00; max_y_advance=0.00}" (*BISECT-IGNORE*) (* Test code *)
           else
             "font_extents -> {ascent=10.00; descent=3.00; baseline=12.00; max_x_advance=19.00; max_y_advance=0.00}"
         | `Node (*BISECT-IGNORE*) (* Test code *)

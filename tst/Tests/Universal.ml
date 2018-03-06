@@ -10,6 +10,11 @@ module Make(C: CairoMock.S)(N: sig
 end) = struct
   open C
 
+  let backend_name = match N.backend with
+    | `Cairo -> "Cairo"
+    | `Node | `Browser -> "JsOfOCairo" (*BISECT-IGNORE*) (* Test code *)
+    | `CairoMock -> "CairoMock"
+
   let check_matrix =
     let equal {xx; xy; yx; yy; x0; y0} m =
       (
@@ -185,6 +190,15 @@ end) = struct
         make "JBIG2_GLOBAL_MISSING" JBIG2_GLOBAL_MISSING "CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID used but no CAIRO_MIME_TYPE_JBIG2_GLOBAL data provided";
       ]
     );
+    "exceptions" >:: [
+      "Cairo Error" >: (lazy (
+        check_string ~expected:(Frmt.apply "%s.Error(INVALID_RESTORE)" backend_name) (Exn.to_string (Error INVALID_RESTORE));
+      ));
+      "Not Cairo" >: (lazy (
+        (* This test covers the None case in the registered printer *)
+        check_string ~expected:"Not_found" (Exn.to_string Not_found);
+      ))
+    ];
     "transformations" >:: (
       let identity = {xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.} in
       let make name f expected =
