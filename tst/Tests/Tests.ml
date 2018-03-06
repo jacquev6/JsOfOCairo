@@ -1,7 +1,5 @@
 (* Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-module LocalUnit = Unit
-
 open General.Abbr
 open Tst
 
@@ -17,7 +15,7 @@ module Make(X: sig
   module N: sig
     val name: string
     val create: unit -> C.context
-    val degraded: bool
+    val backend: [`Cairo | `Node | `Browser | `CairoMock ]
   end
 
   module DrawingTest(T: sig
@@ -29,24 +27,31 @@ end) = struct
   open X
 
   let test = title >:: [
-    LocalUnit.test;
+    (
+      let module T = Decoration.Make(CairoMock.Mock)(struct
+        let name = "CairoMock.Mock"
+        let create = CairoMock.Mock.create
+        let backend = `CairoMock
+      end) in
+      T.test
+    );
+    (
+      let module T = Decoration.Make(C)(N) in
+      T.test
+    );
     (
       let module T = Universal.Make(CairoMock.Mock)(struct
         let name = "CairoMock.Mock"
-
-        let degraded = false
-
         let create = CairoMock.Mock.create
+        let backend = `CairoMock
       end) in
       T.test
     );
     (
       let module T = Universal.Make(CairoMock)(struct
         let name = "CairoMock"
-
-        let degraded = false
-
         let create = CairoMock.create
+        let backend = `CairoMock
       end) in
       T.test
     );
@@ -58,11 +63,8 @@ end) = struct
       let module DecoratedC = CairoMock.Decorate(C) in
       let module T = Universal.Make(DecoratedC)(struct
         let name = Frmt.apply "CairoMock.Decorate(%s)" N.name
-
-        let degraded = N.degraded
-
-        let create () =
-          DecoratedC.create (N.create ())
+        let create () = DecoratedC.create (N.create ())
+        let backend = N.backend
       end) in
       T.test
     );

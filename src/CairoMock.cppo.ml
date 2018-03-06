@@ -268,12 +268,23 @@ module Mock = struct
   let set_font_size context size =
     mutate_state context (fun s -> {s with font={s.font with size}})
 
-  let show_text _ _ =
-    ()
+  let show_text context s =
+    let (x, y) =
+      Path.get_current_point context
+    and width =
+      (state context).font.size *. 0.8 *. (float_of_int (String.length s))
+    in
+    mutate_points context ~start:`None ~current:(`Set (x +. width, y))
 
   let font_extents context =
     let ascent = (state context).font.size in
-    {ascent; descent=ascent /. 4.; baseline=0.; max_x_advance=2. *. ascent; max_y_advance=0.}
+    {
+      ascent;
+      descent=ascent /. 4.;
+      baseline=0.;
+      max_x_advance=2. *. ascent;
+      max_y_advance=0.;
+    }
 
   let text_extents context s =
     let width =

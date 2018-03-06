@@ -11,11 +11,11 @@ module T = Tests.Make(struct
   module N = struct
     let name = "Cairo"
 
-    let degraded = false
-
     let create () =
       let img = Cairo.Image.create Cairo.Image.ARGB32 ~width:10 ~height:10 in
       Cairo.create img
+
+    let backend = `Cairo
   end
 
   module DrawingTest(T: sig

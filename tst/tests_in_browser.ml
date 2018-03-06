@@ -72,13 +72,13 @@ let () = DrawingTests.onload (fun cairo_images ->
     module N = struct
       let name = "JsOfOCairo"
 
-      let degraded = true
-
       let create () =
         let canvas = Dom_html.createCanvas Dom_html.document in
         canvas##.width := 10;
         canvas##.height := 10;
         JsOfOCairo.create canvas
+
+      let backend = `Browser
     end
 
     module DrawingTest(T: sig

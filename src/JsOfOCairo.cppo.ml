@@ -445,7 +445,9 @@ let set_font_size context size =
   _set_font context {(Local.font context.local) with size}
 
 let show_text context s =
-  let (x, y) = Path.get_current_point context in
+  let (x, y) = Path.get_current_point context
+  and w = (context.html##measureText (Js.string s))##.width in
+  Local.set_current_point context.local (x +. w, y);
   context.html##fillText (Js.string s) x y
 
 let font_extents context =

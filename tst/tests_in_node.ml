@@ -46,10 +46,10 @@ module T = Tests.Make(struct
   module N = struct
     let name = "JsOfOCairo"
 
-    let degraded = true
-
     let create () =
       JsOfOCairo.create (new%js canvas 10 10)
+
+    let backend = `Node
   end
 
   module DrawingTest(T: sig

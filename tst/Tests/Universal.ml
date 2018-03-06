@@ -5,16 +5,10 @@ open Tst
 
 module Make(C: CairoMock.S)(N: sig
   val name: string
-  val degraded: bool
   val create: unit -> C.context
+  val backend: [`Cairo | `Node | `Browser | `CairoMock ]
 end) = struct
   open C
-
-  let degrade a b =
-    if N.degraded then
-      a (*BISECT-IGNORE*) (* Test code *)
-    else
-      a @ b
 
   let check_matrix =
     let equal {xx; xy; yx; yy; x0; y0} m =
@@ -120,7 +114,7 @@ end) = struct
           | SATURATE -> "SATURATE"
           (*BISECT-IGNORE-END*)
         in
-        make "operator" set_operator get_operator (check_poly ~repr) OVER IN (degrade [OUT; ATOP; DEST_OVER; DEST_IN; DEST_OUT; DEST_ATOP; XOR; ADD] [CLEAR; SOURCE; DEST; SATURATE]));
+        make "operator" set_operator get_operator (check_poly ~repr) OVER IN ([OUT; ATOP; DEST_OVER; DEST_IN; DEST_OUT; DEST_ATOP; XOR; ADD] @ (if N.backend = `Node || N.backend = `Browser then [] else [CLEAR; SOURCE; DEST; SATURATE]))); (*BISECT-IGNORE*) (* Test code *)
         "dash" >:: [
           (let repr dashes =
             (*BISECT-IGNORE-BEGIN*)
@@ -131,7 +125,7 @@ end) = struct
             |> Frmt.apply "[|%s|]"
             (*BISECT-IGNORE-END*)
           in
-          make "dashes" (fun c dashes -> set_dash c dashes) (fun c -> get_dash c |> Tu2.get_0) (check_poly ~repr) [||] [|1.; 2.|] (degrade [[|3.; 4.; 5.; 6.|]; [|7.; 8.; 9.; 10.; 11.; 12.|]] [[|3.|]; [|4.; 5.; 6.|]]));
+          make "dashes" (fun c dashes -> set_dash c dashes) (fun c -> get_dash c |> Tu2.get_0) (check_poly ~repr) [||] [|1.; 2.|] ([[|3.; 4.; 5.; 6.|]; [|7.; 8.; 9.; 10.; 11.; 12.|]] @ (if N.backend = `Node || N.backend = `Browser then [] else [[|3.|]; [|4.; 5.; 6.|]]))); (*BISECT-IGNORE*) (* Test code *)
           make "offset" (fun c ofs -> set_dash c ~ofs [|10.; 10.|]) (fun c -> get_dash c |> Tu2.get_1) check_float_exact 0. 2. [3.];
         ];
         make
@@ -342,6 +336,20 @@ end) = struct
         make "stroke_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; stroke_preserve c) (3., 4.);
         make "fill_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; fill_preserve c) (3., 4.);
         make "clip_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip_preserve c) (3., 4.);
+        make "show_text" (fun c -> move_to c ~x:1. ~y:2.; show_text c "Hello") (
+          match N.backend with
+            | `Cairo
+            | `Node (*BISECT-IGNORE*) (* Test code *)
+            | `Browser -> (27., 2.) (*BISECT-IGNORE*) (* Test code *)
+            | `CairoMock -> (41., 2.)
+        );
+        make "scale, show_text" (fun c -> scale c ~x:10.0 ~y:5.; move_to c ~x:1. ~y:2.; show_text c "Hello") (
+          match N.backend with
+            | `Cairo -> (26.4, 2.)
+            | `Node (*BISECT-IGNORE*) (* Test code *)
+            | `Browser -> (27., 2.) (*BISECT-IGNORE*) (* Test code *)
+            | `CairoMock -> (41., 2.)
+        );
       ]
     );
     "patterns" >:: Pattern.[

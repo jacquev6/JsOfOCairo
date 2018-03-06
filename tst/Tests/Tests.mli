@@ -8,7 +8,7 @@ module Make(X: sig
   module N: sig
     val name: string
     val create: unit -> C.context
-    val degraded: bool
+    val backend: [`Cairo | `Node | `Browser | `CairoMock ]
   end
 
   module DrawingTest(T: sig

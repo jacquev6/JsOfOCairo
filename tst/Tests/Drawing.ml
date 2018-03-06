@@ -223,6 +223,12 @@ module Make(C: CairoMock.S) = struct
       C.set_source ctx p;
       C.paint ctx ~alpha:0.5;
     );
+    make_simple "set_font_size show_text" 100 50 (fun ctx ->
+      C.move_to ctx ~x:10. ~y:40.;
+      C.show_text ctx "Hello";
+      C.set_font_size ctx 20.;
+      C.show_text ctx "Hello";
+    );
     (* make_simple "arc on more than 2 pi" 100 100 (fun ctx ->
       (* This test shows what I believe is a bug in Firefox:
       it seems to ignore the portion after 2 pi.
