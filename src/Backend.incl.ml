@@ -234,6 +234,9 @@ module Pattern = struct
       stop_point
   end
 
+  (* This is just to cover StopPointList.to_list, which is used only in JsOfOCairo, whose test coverage isn't measured. *)
+  let _ = StopPointList.(add empty (0., 0., 0., 0., 0.) |> to_list)
+
   (* When we drop support of OCaml 4.02, we can use [inline records](https://caml.inria.fr/pub/docs/manual-ocaml-4.06/extn.html#s%3Ainline-records) *)
   type linear_gradient = {
     points: float * float * float * float; (* (x0, y0, x1, y1) *)
