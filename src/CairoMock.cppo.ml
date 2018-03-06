@@ -432,14 +432,15 @@ module Decorate(C: S) = struct
     let coords (x, y) =
       Printf.sprintf "(%.2f, %.2f)" x y
 
-    let dashes_ofs (dashes, ofs) =
-      let dashes =
-        dashes
-        |> Array.to_list
-        |> List.map ~f:(Printf.sprintf "%.2f")
-        |> String.concat ~sep:"; "
-      in
-      Printf.sprintf "([|%s|], %.2f)" dashes ofs
+    let dashes dashes =
+      dashes
+      |> Array.to_list
+      |> List.map ~f:(Printf.sprintf "%.2f")
+      |> String.concat ~sep:"; "
+      |> Printf.sprintf "[|%s|]"
+
+    let dashes_ofs (ds, ofs) =
+      Printf.sprintf "(%s, %.2f)" (dashes ds) ofs
 
     let fill_rule = function
       | WINDING -> "WINDING"
@@ -532,13 +533,8 @@ module Decorate(C: S) = struct
     let source () =
       P.source
 
-    let dashes () dashes =
-      (* @todo Factorize with P.dashes_ofs *)
-      dashes
-      |> Array.to_list
-      |> List.map ~f:(Printf.sprintf "%.2f")
-      |> String.concat ~sep:"; "
-      |> Printf.sprintf "[|%s|]"
+    let dashes () =
+      P.dashes
 
     let option name p () = function
       | None -> ""
