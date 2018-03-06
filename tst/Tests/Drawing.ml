@@ -3,7 +3,7 @@
 open General.Abbr
 
 module Make(C: CairoMock.S) = struct
-  type test = {name: string; width: int; height: int; draw: C.context -> unit}
+  type t = {name: string; width: int; height: int; draw: C.context -> unit}
 
   let make_simple name width height draw =
     {name; width; height; draw}
