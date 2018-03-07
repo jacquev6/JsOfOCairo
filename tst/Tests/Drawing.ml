@@ -263,20 +263,5 @@ module Make(C: CairoMock.S) = struct
       C.select_font_face ctx ~slant ~weight family;
       C.show_text ctx "Hello";
     );
-    (* make_simple "arc on more than 2 pi" 100 100 (fun ctx ->
-      (* This test shows what I believe is a bug in Firefox:
-      it seems to ignore the portion after 2 pi.
-      The current point is consistent with Cairo's behavior, but the next call to line_to
-      does not start from the current point.
-      @todo Test with Safari (WebKit) and/or Internet Explorer and/or Edge *)
-      C.move_to ctx ~x:50. ~y:60.;
-      C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:(Fl.pi /. 2.) ~a2:(3. *. Fl.pi);
-      let (x, y) = C.Path.get_current_point ctx in
-      Tst.check_float ~precision:1e-3 ~expected:10. x;
-      Tst.check_float ~precision:1e-3 ~expected:50. y;
-      C.line_to ctx ~x:40. ~y:50.;
-      C.set_line_width ctx 3.;
-      C.stroke_preserve ctx;
-    ); *)
   ])
 end

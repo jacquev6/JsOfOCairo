@@ -239,15 +239,14 @@ let rectangle context ~x ~y ~w ~h =
   Local.set_current_point context.local (x, y);
   context.html##rect x y w h
 
-let arc context ~x ~y ~r ~a1 ~a2 =
-  context.html##arc x y r a1 a2 Js._false;
+let arc_ ~dir context ~x ~y ~r ~a1 ~a2 =
+  context.html##arc x y r a1 a2 dir;
   Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
   Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
 
-let arc_negative context ~x ~y ~r ~a1 ~a2 =
-  context.html##arc x y r a1 a2 Js._true;
-  Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
-  Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
+let arc = arc_ ~dir:Js._false
+
+let arc_negative = arc_ ~dir:Js._true
 
 module Path = struct
   let get_current_point context =
