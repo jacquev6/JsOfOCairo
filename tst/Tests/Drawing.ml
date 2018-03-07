@@ -112,8 +112,6 @@ module Make(C: CairoMock.S) = struct
       C.move_to ctx ~x:0. ~y:0.;
       aux 3;
       C.identity_matrix ctx;
-      C.line_to ctx ~x:200. ~y:200.;
-      C.Path.close ctx;
       C.stroke ctx;
     );
     make_simple "scale identity_matrix" 100 100 (fun ctx ->
@@ -124,12 +122,34 @@ module Make(C: CairoMock.S) = struct
       C.identity_matrix ctx;
       C.stroke ctx;
     );
-    (* @todo set_xxx before, during and after path *)
-    (* @todo Demo all drawing functions
-      ([rel_](curve|line|move)_to, arc[_negative], rectangle, Path.close),
-      and (stroke|fill|clip)[_preserve]
-      including clip and paint
-    *)
+    make_list "drawing functions" 100 100 C.[
+      (fill_preserve, stroke);
+      (stroke_preserve, fill);
+      (clip_preserve, fill);
+      (clip_preserve, stroke);
+    ] (fun (f1, f2) ctx ->
+      C.move_to ctx ~x:10. ~y:10.;
+      C.line_to ctx ~x:50. ~y:20.;
+      C.arc ctx ~x:50. ~y:10. ~r:40. ~a1:0. ~a2:1.;
+      C.rel_line_to ctx ~x:10. ~y:30.;
+      C.arc_negative ctx ~x:30. ~y:90. ~r:40. ~a1:0. ~a2:(-1.);
+      C.line_to ctx ~x:50. ~y:90.;
+      C.curve_to ctx ~x1:30. ~y1:90. ~x2:10. ~y2:80. ~x3:20. ~y3:30.;
+      C.Path.close ctx;
+      C.rectangle ctx ~x:40. ~y:50. ~w:30. ~h:20.;
+      C.rel_move_to ctx ~x:10. ~y:(-10.);
+      C.rel_curve_to ctx ~x1:(-10.) ~y1:0. ~x2:20. ~y2:0. ~x3:20. ~y3:(-20.);
+      C.set_line_width ctx 4.;
+      C.set_source_rgb ctx ~r:0.2 ~g:1. ~b:0.2;
+      f1 ctx;
+      C.set_source_rgb ctx ~r:0.2 ~g:0.2 ~b:1.;
+      f2 ctx;
+    );
+    make_simple "clip paint" 50 50 (fun ctx ->
+      C.arc ctx ~x:25. ~y:25. ~r:20. ~a1:1. ~a2:(-1.);
+      C.clip ctx;
+      C.paint ctx;
+    );
     make_list
       "set_source_rgb"
       50 50
@@ -229,6 +249,20 @@ module Make(C: CairoMock.S) = struct
       C.set_font_size ctx 20.;
       C.show_text ctx "Hello";
     );
+    make_list "select_font_face" 50 30 C.[
+      (Upright, Normal, "sans-serif");
+      (Italic, Normal, "sans-serif");
+      (Oblique, Normal, "sans-serif");
+      (Upright, Bold, "sans-serif");
+      (Italic, Bold, "sans-serif");
+      (Oblique, Bold, "sans-serif");
+      (Upright, Normal, "serif");
+      (Upright, Normal, "monospace");
+    ] (fun (slant, weight, family) ctx ->
+      C.move_to ctx ~x:10. ~y:20.;
+      C.select_font_face ctx ~slant ~weight family;
+      C.show_text ctx "Hello";
+    );
     (* make_simple "arc on more than 2 pi" 100 100 (fun ctx ->
       (* This test shows what I believe is a bug in Firefox:
       it seems to ignore the portion after 2 pi.
@@ -244,6 +278,5 @@ module Make(C: CairoMock.S) = struct
       C.set_line_width ctx 3.;
       C.stroke_preserve ctx;
     ); *)
-    (* @todo Test show_text, set_font_size and set_font_face *)
   ])
 end
