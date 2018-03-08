@@ -42,8 +42,10 @@ File ``drawings.ml``::
 
     module Make(C: JsOfOCairo.S) = struct
       let draw ctx =
+        C.save ctx;
         C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:5.;
-        C.stroke ctx
+        C.stroke ctx;
+        C.restore ctx
     end
 
 Instantiate this functor with ``Cairo`` to create a command-line program.
@@ -97,7 +99,7 @@ calls made on the context object. You can use it to automate some tests on your 
     let () = begin
       let ctx = CairoMock.create () in
       Drawings.draw ctx;
-      assert (CairoMock.calls ctx = ["arc ~x:50.00 ~y:50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"])
+      assert (CairoMock.calls ctx = ["save"; "arc ~x:50.00 ~y:50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"; "restore"])
     end
 
 *CairoMock* itself is split into *CairoMock.Mock*, an actual mock implementation of ``JsOfOCairo.S`` that does nothing, and *CairoMock.Decorate*, that can be used to record calls made on *any* implementation of ``JsOfOCairo.S``. So, you can draw and record calls at the same time.
@@ -107,21 +109,19 @@ What is implemented
 
 See the `interface file (S.incl.ml) <https://github.com/jacquev6/JsOfOCairo/blob/master/src/S.incl.mli>`_.
 If a function is present, it should behave as described in the `Cairo OCaml Tutorial <http://cairo.forge.ocamlcore.org/tutorial/index.html>`__.
-There are two exceptions: text-related functions and arcs.
 
-Limitations of text-related functions
--------------------------------------
+How to avoid pitfalls
+=====================
 
-Only a basic subset of functions related to text has been implemented.
-The HTML5 canvas interface doesn't expose much, so this library contains **approximations** of ``get_text_extents`` and ``get_font_extents``.
+There **are** limitations however: text-related functions, arcs, re-use of the same canvas...
+Details of the `limitations identified so far <https://jacquev6.github.io/JsOfOCairo/>`_ are available with the tests.
+We believe they are small enough for the library to be useful anyway.
 
-Limitations of ``arc`` and ``arc_negative``
--------------------------------------------
+Here is a set of rules to follow to stay on the safe side of using *JsOfOCairo*:
 
-If an arc spans more than a full turn, the current point is inconsistent.
-The HTML5 and *Cairo* behaviors are different, and the HTML5 canvas interface doesn't expose the current point.
-To expose it through ``Path.get_current_point``, this library computes the current point like *Cairo*.
-This inconsistency is exposed if you use a function like ``line_to`` after an ``arc`` of more than one full turn.
+- Always call ``save`` just after creating a context, and ``restore`` just before stopping using it.
+- Never create two contexts from the same canvas at the same time: wait until you have ``restore``-d a context before creating another.
+- Never draw arcs of more than one full turn.
 
 What is not implemented
 =======================

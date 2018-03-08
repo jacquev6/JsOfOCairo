@@ -23,8 +23,19 @@ module Make(X: sig
   end): sig
     val run: T.t -> unit
   end
+
+  module Limitation(L: sig
+    type t = {name: string; width: int; height: int; draws: (C.context -> string list) list}
+  end): sig
+    val run: L.t -> unit
+  end
 end) = struct
   open X
+
+  module Limitations = Limitations.Make(C)
+  module Limitation = Limitation(Limitations)
+
+  let () = Li.iter ~f:Limitation.run Limitations.limitations
 
   let test = title >:: [
     (

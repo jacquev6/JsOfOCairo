@@ -11,5 +11,5 @@ let () = begin
   let module Drawings = Drawings.Make(CairoMock) in
   let ctx = CairoMock.create () in
   Drawings.draw ctx;
-  assert (CairoMock.calls ctx = ["arc ~x:50.00 ~y:50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"])
+  assert (CairoMock.calls ctx = ["save"; "arc ~x:50.00 ~y:50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"; "restore"])
 end

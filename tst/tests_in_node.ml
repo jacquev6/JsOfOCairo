@@ -100,6 +100,10 @@ module T = Tests.Make(struct
       else if not known_failure && differences <> 0 then
         fail "Drawings are different"
       end
+
+  module Limitation(L: sig end) = struct
+    let run _ = ()
+  end
 end)
 
 let () =

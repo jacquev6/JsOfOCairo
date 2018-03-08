@@ -126,13 +126,76 @@ let () = DrawingTests.onload (fun cairo_images ->
 
         check_int ~expected:0 differences
     end
+
+    module Limitation(L: sig
+      type t = {name: string; width: int; height: int; draws: (C.context -> string list) list}
+    end) = struct
+      let make_col innerHTML =
+        let div = Dom_html.(createDiv document) in
+        div##setAttribute (Js.string "class") (Js.string "col");
+        div##.innerHTML := Js.string innerHTML;
+        div
+
+      let run {L.name; width; height; draws} =
+        let canvas = Dom_html.(createCanvas document) in
+        canvas##.width := width;
+        canvas##.height := height;
+        let scripts ~i draw =
+          let cairo = Frmt.apply "<div class=\"cairo_pre\" data-src=\"Tests/Limitations/%s.%i.txt\"></div>" name i
+          and jsooc =
+            draw (JsOfOCairo.create canvas)
+            |> Li.map ~f:(Frmt.apply "%s\n")
+            |> StrLi.join
+            |> Frmt.apply "<pre>%s</pre>"
+          in
+          (cairo, jsooc)
+        in
+        let scripts =
+          match draws with
+            | [draw] ->
+              [scripts ~i:0 draw]
+            | _ ->
+              draws
+              |> Li.map_i ~f:(fun ~i draw ->
+                let (cairo, jsooc) = scripts ~i draw
+                and header = Frmt.apply "<p>Context n°%i:</p>" i in
+                (header ^ cairo, header ^ jsooc)
+              )
+        in
+        let cairo_col =
+          let script =
+            scripts
+            |> Li.map ~f:Tu2.get_0
+            |> StrLi.join
+          in
+          make_col (Frmt.apply "<h3>Cairo:</h3>%s<img src=\"Tests/Limitations/%s.png\"></img>" script name)
+        and jsooc_col =
+          let script =
+            scripts
+            |> Li.map ~f:Tu2.get_1
+            |> StrLi.join
+          in
+          let col = make_col (Frmt.apply "<h3>JsOfOCairo:</h3>%s" script) in
+          Dom.appendChild col canvas;
+          col
+        in
+        let container = Dom_html.getElementById (Frmt.apply "limitations_%s" name) in
+        Dom.appendChild container cairo_col;
+        Dom.appendChild container jsooc_col
+    end
   end) in
-  let result = Test.run T.test in
-  Dom.appendChild (Dom_html.getElementById "tests_in_browser") (result_to_element result);
+  T.test
+  |> Test.run
+  |> result_to_element
+  |> Dom.appendChild (Dom_html.getElementById "tests_in_browser");
   ignore (Js.Unsafe.eval_string {|
     jQuery("#tests_in_browser ul ul ul").hide();
     jQuery("#tests_in_browser p").click(function() {
       jQuery(this).parent().children("ul").slideToggle();
     });
+    jQuery("div.cairo_pre").each(function() {
+      var div = jQuery(this);
+      div.load(div.data("src"));
+    })
   |});
 )

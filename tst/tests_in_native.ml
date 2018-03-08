@@ -27,6 +27,24 @@ module T = Tests.Make(struct
       draw ctx;
       Cairo.PNG.write img (Frmt.apply "Tests/Drawing/Cairo/%s.png" name);
   end
+
+  module Limitation(L: sig
+    type t = {name: string; width: int; height: int; draws: (C.context -> string list) list}
+  end) = struct
+    let run {L.name; width; height; draws} =
+      let img = Cairo.Image.create Cairo.Image.ARGB32 ~width ~height in
+      draws
+      |> Li.iter_i ~f:(fun ~i draw ->
+        let ctx = Cairo.create img in
+        let script = draw ctx in
+        OutFile.with_channel (Frmt.apply "Tests/Limitations/%s.%i.txt" name i) ~f:(fun chan ->
+          OutCh.print chan "<pre>\n";
+          Li.iter ~f:(OutCh.print chan "%s\n") script;
+          OutCh.print chan "</pre>"
+        )
+      );
+      Cairo.PNG.write img (Frmt.apply "Tests/Limitations/%s.png" name);
+  end
 end)
 
 let () =

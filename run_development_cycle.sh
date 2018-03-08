@@ -33,10 +33,12 @@ echo
 echo "Check test results in $(pwd)/_build/default/tst/tests_in_browser.html"
 echo
 
-rm -f docs/*.html docs/*.png docs/*.js
+rm -f docs/*.html docs/*.png docs/*.txt docs/*.js
 cp _build/default/tst/Tests/Drawing/Cairo/*.png docs
+cp _build/default/tst/Tests/Limitations/*.png docs
+cp _build/default/tst/Tests/Limitations/*.txt docs
 cp _build/default/tst/tests_in_browser.html docs/index.html
-sed "s|Tests/Drawing/Cairo/||g" _build/default/tst/tests_in_browser.bc.js > docs/tests_in_browser.bc.js
+sed "s|Tests/Drawing/Cairo/||g; s|Tests/Limitations/||g" _build/default/tst/tests_in_browser.bc.js > docs/tests_in_browser.bc.js
 cp _build/default/tst/pixelmatch.js docs
 
 # OPAM package
