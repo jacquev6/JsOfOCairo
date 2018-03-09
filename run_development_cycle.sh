@@ -5,14 +5,7 @@
 set -o errexit
 
 eval `opam config env`
-opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 General jbuilder bisect_ppx bisect-summary
-
-if ! [ -d node_modules ]
-then
-    npm install canvas pixelmatch browserify
-fi
-# https://github.com/mapbox/pixelmatch#install
-node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > tst/pixelmatch.js
+opam install --yes jbuilder js_of_ocaml-ppx js_of_ocaml-compiler conf-npm cairo2 General bisect_ppx bisect-summary
 
 clear
 
@@ -33,7 +26,8 @@ echo
 echo "Check test results in $(pwd)/_build/default/tst/tests_in_browser.html"
 echo
 
-rm -f docs/*.html docs/*.png docs/*.txt docs/*.js
+rm -f docs/*
+touch docs/.nojekyll
 cp _build/default/tst/Tests/Drawing/Cairo/*.png docs
 cp _build/default/tst/Tests/Limitations/*.png docs
 cp _build/default/tst/Tests/Limitations/*.txt docs
@@ -45,7 +39,7 @@ cp _build/default/tst/pixelmatch.js docs
 # ============
 
 opam pin --yes --no-action add .
-opam reinstall --yes JsOfOCairo
+opam reinstall --yes JsOfOCairo --build-test
 
 cd demo
 ./demo.sh

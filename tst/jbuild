@@ -39,6 +39,7 @@
   (deps (tests_in_node.bc.js tests_in_native.sentinel))
   (action (progn
     (run ${bin:mkdir} -p Tests/Drawing/JsOfOCairo)
+    (run ${bin:npm} install canvas pixelmatch)
     (run ${bin:node} tests_in_node.bc.js)
     (write-file tests_in_node.sentinel sentinel)
   ))
@@ -49,6 +50,14 @@
   (deps (tests_in_node.sentinel))
 ))
 
+
+(rule (
+  (targets (pixelmatch.js))
+  (action (progn
+    (run ${bin:npm} install pixelmatch browserify)
+    (with-stdout-to ${@} (system "node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js"))
+  ))
+))
 
 (executable (
   (name tests_in_browser)
