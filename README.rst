@@ -122,6 +122,8 @@ Here is a set of rules to follow to stay on the safe side of using *JsOfOCairo*:
 - Always call ``save`` just after creating a context, and ``restore`` just before stopping using it.
 - Never create two contexts from the same canvas at the same time: wait until you have ``restore``-d a context before creating another.
 - Never draw arcs of more than one full turn.
+- Use only the ``width``returned by ``text_extents``.
+- Use only the ``ascent`` and ``descent`` returned by ``font_extents``.
 
 What is not implemented
 =======================
