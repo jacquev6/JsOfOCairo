@@ -13,9 +13,9 @@ rm -f _build/default/tst/*.sentinel
 
 # https://github.com/aantron/bisect_ppx/blob/master/doc/advanced.md#Jbuilder suggests
 # modifying the jbuild file for release. Let's modify it for tests instead.
-sed -i "s/^;\(.*bisect_ppx).*\)$/\1/" $(find . -name jbuild)
+sed -i "s/^;\(.*; Uncomment for dev mode\)$/\1/; s/^;*\(.*; Comment for dev mode\)$/;\1/" $(find . -name jbuild)
 jbuilder runtest --dev
-sed -i "s/^\(.*bisect_ppx).*\)$/;\1/" $(find . -name jbuild)
+sed -i "s/^;*\(.*; Uncomment for dev mode\)$/;\1/; s/^;\(.*; Comment for dev mode\)$/\1/" $(find . -name jbuild)
 echo
 bisect-summary _build/default/tst/bisect????.out
 echo

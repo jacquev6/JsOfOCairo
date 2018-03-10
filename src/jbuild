@@ -50,7 +50,7 @@
   (name JsOfOCairo)
   (public_name JsOfOCairo)
   (preprocess (pps (js_of_ocaml-ppx)))
-;  (preprocess (pps (js_of_ocaml-ppx bisect_ppx)))
+;  (preprocess (pps (js_of_ocaml-ppx bisect_ppx))); Uncomment for dev mode
   (libraries (js_of_ocaml))
   (wrapped false)
 ))
