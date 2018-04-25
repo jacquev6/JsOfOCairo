@@ -57,8 +57,6 @@ module T = Tests.Make(struct
   end) = struct
     let known_failures = [
       "set_dash";
-      "paint with alpha 3";
-      "paint with alpha 4";
     ]
 
     let run {T.name; width; height; draw} =

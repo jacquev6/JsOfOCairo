@@ -30,8 +30,8 @@
   (targets (node_modules.sentinel))
   (deps (npm-install.sh))
   (action (progn
-;    (system "./npm-install.sh 'canvas@>=1.6.9 <2' 'pixelmatch@>=4.0.2 <5' browserify"); Uncomment for dev mode
-    (run ${bin:npm} install "canvas@>=1.6.9 <2" "pixelmatch@>=4.0.2 <5" browserify); Comment for dev mode
+;    (system "./npm-install.sh 'canvas@>=1.6.10 <2' 'pixelmatch@>=4.0.2 <5' browserify"); Uncomment for dev mode
+    (run ${bin:npm} install "canvas@>=1.6.10 <2" "pixelmatch@>=4.0.2 <5" browserify); Comment for dev mode
     (write-file node_modules.sentinel sentinel)
   ))
 ))
