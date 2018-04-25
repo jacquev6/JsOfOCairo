@@ -1,12 +1,5 @@
 (* Copyright 2017-2018 Vincent Jacques <vincent@vincent-jacques.net> *)
 
-let is_travis =
-  try
-    let _ = Sys.getenv "TRAVIS" in
-    true (*BISECT-IGNORE*) (* Test code *)
-  with
-    | Not_found -> false
-
 open General.Abbr
 open Tst
 
@@ -23,13 +16,21 @@ end) = struct
     | `Node | `Browser -> "JsOfOCairo" (*BISECT-IGNORE*) (* Test code *)
     | `CairoMock -> "CairoMock"
 
-  let make_n name fs expected =
+  let make_n' name fs checks =
     name >: (lazy (
       let c = create (N.create ()) in
       Li.iter ~f:(fun f -> ignore (f c)) fs;
-      let actual = calls c in
-      check_string_list ~expected actual
+      Li.Two.to_pair_list checks (calls c)
+      |> Li.iter ~f:(fun (check, actual) ->
+        check actual
+      )
     ))
+
+  let make' name f check =
+    make_n' name [f] [check]
+
+  let make_n name fs expected =
+    make_n' name fs (Li.map ~f:(fun expected -> check_string ~expected) expected)
 
   let make name f expected =
     Frmt.with_result ~f:(fun expected ->
@@ -135,24 +136,22 @@ end) = struct
     make "select_font_face Normal" (fun c -> select_font_face c ~weight:Normal "foo-bar") "select_font_face ~weight:Normal \"foo-bar\"";
     make "select_font_face Italic Bold" (fun c -> select_font_face c ~slant:Italic ~weight:Bold "foo-bar") "select_font_face ~slant:Italic ~weight:Bold \"foo-bar\"";
     make "show_text" (fun c -> show_text c "flibidiboo") "show_text \"flibidiboo\"";
-    make "text_extents" (fun c -> text_extents c "abcd") (
-      match N.backend with
-        | `Cairo -> "text_extents \"abcd\" -> {x_bearing=0.00; y_bearing=-8.00; width=24.00; height=8.00; x_advance=24.00; y_advance=0.00}"
-        | `Node (*BISECT-IGNORE*) (* Test code *)
-        | `Browser -> (*BISECT-IGNORE*) (* Test code *)
-          "text_extents \"abcd\" -> {x_bearing=0.00; y_bearing=0.00; width=24.00; height=10.00; x_advance=24.00; y_advance=0.00}"
-        | `CairoMock -> "text_extents \"abcd\" -> {x_bearing=0.00; y_bearing=0.00; width=32.00; height=10.00; x_advance=32.00; y_advance=0.00}"
-    );
-    make "font_extents" font_extents (
-      match N.backend with
-        | `Cairo ->
-          if is_travis then
-            "font_extents -> {ascent=10.00; descent=3.00; baseline=12.00; max_x_advance=17.00; max_y_advance=0.00}" (*BISECT-IGNORE*) (* Test code *)
-          else
-            "font_extents -> {ascent=10.00; descent=3.00; baseline=12.00; max_x_advance=19.00; max_y_advance=0.00}"
-        | `Node (*BISECT-IGNORE*) (* Test code *)
-        | `Browser (*BISECT-IGNORE*) (* Test code *)
-        | `CairoMock -> "font_extents -> {ascent=10.00; descent=2.50; baseline=0.00; max_x_advance=20.00; max_y_advance=0.00}"
-    );
+    make' "text_extents"
+      (fun c -> text_extents c "abcd")
+      (Frmt.with_scan_result
+        "text_extents \"abcd\" -> {x_bearing=%f; y_bearing=%f; width=%f; height=%f; x_advance=%f; y_advance=%f}"
+        ~f:(fun _ _ width _ _ _ -> check_float_in ~low:10. ~high:50. width)
+      )
+    ;
+    make' "font_extents"
+      font_extents
+      (Frmt.with_scan_result
+        "font_extents -> {ascent=%f; descent=%f; baseline=%f; max_x_advance=%f; max_y_advance=%f}"
+        ~f:(fun ascent descent _ _ _ ->
+          check_float_in ~low:5. ~high:15. ascent;
+          check_float_in ~low:1. ~high:7. descent
+        )
+      )
+    ;
   ])
 end

@@ -32,6 +32,26 @@ module Make(C: CairoMock.S) = struct
     make "text_extents" 100 10 [fun ctx ->
       ignore (text_extents ctx "Hello")
     ];
+    make "show_text" 100 240 [fun ctx ->
+      set_font_size ctx 20.;
+      [
+        (Upright, Normal, "sans-serif");
+        (Italic, Normal, "sans-serif");
+        (Oblique, Normal, "sans-serif");
+        (Upright, Bold, "sans-serif");
+        (Italic, Bold, "sans-serif");
+        (Oblique, Bold, "sans-serif");
+        (Upright, Normal, "serif");
+        (Upright, Normal, "monospace");
+      ]
+      |> Li.iter ~f:(fun (slant, weight, family) ->
+        move_to ctx ~x:10. ~y:20.;
+        select_font_face ctx ~slant ~weight family;
+        show_text ctx "He";
+        show_text ctx "llo";
+        translate ctx ~x:0. ~y:30.;
+      )
+    ];
     make "reuse_canvas_transformation" 100 60 [
       scale ~x:2. ~y:3.;
       (fun ctx ->

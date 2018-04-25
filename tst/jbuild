@@ -6,7 +6,7 @@
   (name tests_in_native)
   (modules (tests_in_native))
   (libraries (Tests cairo2))
-;  (preprocess (pps (bisect_ppx)))
+;  (preprocess (pps (bisect_ppx))); Uncomment for dev mode
 ))
 
 (rule (
@@ -26,6 +26,17 @@
 ))
 
 
+(rule (
+  (targets (node_modules.sentinel))
+  (deps (npm-install.sh))
+  (action (progn
+;    (system "./npm-install.sh 'canvas@>=1.6.10 <2' 'pixelmatch@>=4.0.2 <5' browserify"); Uncomment for dev mode
+    (run ${bin:npm} install "canvas@>=1.6.10 <2" "pixelmatch@>=4.0.2 <5" browserify); Comment for dev mode
+    (write-file node_modules.sentinel sentinel)
+  ))
+))
+
+
 (executable (
   (name tests_in_node)
   (modules (tests_in_node))
@@ -36,7 +47,7 @@
 
 (rule (
   (targets (tests_in_node.sentinel))
-  (deps (tests_in_node.bc.js tests_in_native.sentinel))
+  (deps (node_modules.sentinel tests_in_node.bc.js tests_in_native.sentinel))
   (action (progn
     (run ${bin:mkdir} -p Tests/Drawing/JsOfOCairo)
     (run ${bin:node} tests_in_node.bc.js)
@@ -49,6 +60,14 @@
   (deps (tests_in_node.sentinel))
 ))
 
+
+(rule (
+  (targets (pixelmatch.js))
+  (deps (node_modules.sentinel))
+  (action (progn
+    (with-stdout-to ${@} (system "node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js"))
+  ))
+))
 
 (executable (
   (name tests_in_browser)

@@ -243,28 +243,5 @@ module Make(C: CairoMock.S) = struct
       C.set_source ctx p;
       C.paint ctx ~alpha:0.5;
     );
-    make_simple "set_font_size show_text" 100 50 (fun ctx ->
-      C.move_to ctx ~x:10. ~y:40.;
-      C.show_text ctx "Hello";
-      C.set_font_size ctx 20.;
-      C.show_text ctx "Hello";
-    );
-    (* Test removed because it failed on Travis-CI:
-    https://travis-ci.org/jacquev6/JsOfOCairo/jobs/350215929#L834
-    make_list "select_font_face" 50 30 C.[
-      (Upright, Normal, "sans-serif");
-      (Italic, Normal, "sans-serif");
-      (Oblique, Normal, "sans-serif");
-      (Upright, Bold, "sans-serif");
-      (Italic, Bold, "sans-serif");
-      (Oblique, Bold, "sans-serif");
-      (Upright, Normal, "serif");
-      (Upright, Normal, "monospace");
-    ] (fun (slant, weight, family) ctx ->
-      C.move_to ctx ~x:10. ~y:20.;
-      C.select_font_face ctx ~slant ~weight family;
-      C.show_text ctx "Hello";
-    );
-    *)
   ])
 end

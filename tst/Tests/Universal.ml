@@ -299,13 +299,16 @@ end) = struct
       ]
     );
     "current point" >:: (
-      let make name f expected =
+      let make' name f check =
         name >: (lazy (
           let ctx = N.create () in
           f ctx;
-          (* Low precision because Cairo makes approximations on arcs *)
-          check_coords ~precision:1e-3 ~expected (Path.get_current_point ctx)
+          check (Path.get_current_point ctx)
         ))
+      in
+      let make name f expected =
+        (* Low precision because Cairo makes approximations on arcs *)
+        make' name f (check_coords ~precision:1e-3 ~expected)
       in
       [
         make "no-op" (fun _ -> ()) (0., 0.);
@@ -350,19 +353,9 @@ end) = struct
         make "stroke_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; stroke_preserve c) (3., 4.);
         make "fill_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; fill_preserve c) (3., 4.);
         make "clip_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip_preserve c) (3., 4.);
-        make "show_text" (fun c -> move_to c ~x:1. ~y:2.; show_text c "Hello") (
-          match N.backend with
-            | `Cairo
-            | `Node (*BISECT-IGNORE*) (* Test code *)
-            | `Browser -> (27., 2.) (*BISECT-IGNORE*) (* Test code *)
-            | `CairoMock -> (41., 2.)
-        );
-        make "scale, show_text" (fun c -> scale c ~x:10.0 ~y:5.; move_to c ~x:1. ~y:2.; show_text c "Hello") (
-          match N.backend with
-            | `Cairo -> (26.4, 2.)
-            | `Node (*BISECT-IGNORE*) (* Test code *)
-            | `Browser -> (27., 2.) (*BISECT-IGNORE*) (* Test code *)
-            | `CairoMock -> (41., 2.)
+        make' "show_text" (fun c -> move_to c ~x:1. ~y:2.; show_text c "Hello") (fun (x, y) ->
+          check_float_in ~low:10. ~high:50. x;
+          check_float ~expected:2. y
         );
       ]
     );

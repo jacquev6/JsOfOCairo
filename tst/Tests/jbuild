@@ -5,5 +5,5 @@
 (library (
   (name Tests)
   (libraries (General JsOfOCairo))
-;  (preprocess (pps (bisect_ppx)))
+;  (preprocess (pps (bisect_ppx))); Uncomment for dev mode
 ))

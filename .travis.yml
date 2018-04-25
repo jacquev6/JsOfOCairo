@@ -19,13 +19,9 @@ install:
   - eval `opam config env`
   - opam switch
   - opam pin add --yes --no-action General --dev-repo
-  - opam install --yes js_of_ocaml-ppx js_of_ocaml-compiler cairo2 General jbuilder
+  - opam install --yes jbuilder js_of_ocaml-ppx js_of_ocaml-compiler conf-npm cairo2 General
   - opam upgrade --yes
   - opam list
-
-  - npm install canvas@1.6.7 browserify@14.5.0 pixelmatch@4.0.2
-  - node_modules/.bin/browserify -s pixelmatch node_modules/pixelmatch/index.js > tst/pixelmatch.js
-#  - npm list
 script:
   - jbuilder runtest
 env:
