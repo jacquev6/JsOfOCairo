@@ -1,25 +1,28 @@
-opam-version: "1.2"
+opam-version: "2.0"
 version: "1.1.1"
 maintainer: "Vincent Jacques <vincent@vincent-jacques.net>"
 authors: "Vincent Jacques <vincent@vincent-jacques.net>"
-dev-repo: "https://github.com/jacquev6/JsOfOCairo.git"
+dev-repo: "git+https://github.com/jacquev6/JsOfOCairo.git"
 license: "MIT"
 homepage: "https://github.com/jacquev6/JsOfOCairo"
 doc: "https://github.com/jacquev6/JsOfOCairo"
 bug-reports: "http://github.com/jacquev6/JsOfOCairo/issues/"
-available: [ocaml-version >= "4.02.3"]
 build: [
   ["dune" "build" "-p" name "-j" jobs]
-]
-build-test: [
-  ["dune" "runtest" "-p" name]
+  ["dune" "runtest" "-p" name] {with-test}
 ]
 depends: [
+  "ocaml" {>= "4.02.3"}
   "dune" {build}
   "js_of_ocaml-compiler" {build & >= "3.0" & < "4.0"}
   "js_of_ocaml-ppx" {build & >= "3.0" & < "4.0"}
   "js_of_ocaml" {>= "3.0" & < "4.0"}
-  "General" {test & >= "0.5.0"}
-  "cairo2" {test & >= "0.5" & < "0.6"}
-  "conf-npm" {test}
+  "General" {with-test & >= "0.5.0"}
+  "cairo2" {with-test & >= "0.5" & < "0.6"}
+  "conf-npm" {with-test}
 ]
+synopsis: "Library to reuse Cairo-based drawing code in web browsers"
+description: """
+JsOfOCairo is an OCaml (4.02.3+) library to reuse Cairo-based drawing code in web browsers.
+It's an adapter, implementing (a reasonable subset of) the interface of [Cairo OCaml](https://github.com/Chris00/ocaml-cairo/)
+targeting HTML5 canvas elements as exposed to OCaml by [js_of_ocaml](https://ocsigen.org/js_of_ocaml/) (3.0.0+)."""

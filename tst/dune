@@ -28,12 +28,15 @@
   (targets node_modules.sentinel)
   (deps npm-install.sh)
   (action (progn
-;    (system "./npm-install.sh 'canvas@>=1.6.10 <2' 'pixelmatch@>=4.0.2 <5' browserify"); Uncomment for dev mode
-    (run %{bin:npm} install "canvas@>=1.6.10 <2" "pixelmatch@>=4.0.2 <5" browserify); Comment for dev mode
+    (system "./npm-install.sh 'canvas@>=1.6.10 <2' 'pixelmatch@>=4.0.2 <5' browserify")
     (write-file node_modules.sentinel sentinel)
   ))
 )
 
+
+; tests_in_node can't run during `opam install JsOfOCairo --build-test`:
+; with opam 2, the sandbox mode forbids downloading npm dependencies.
+; So, we use the runtest-full alias to run them in our dev cycle script
 
 (executable
   (name tests_in_node)
@@ -54,7 +57,7 @@
 )
 
 (alias
-  (name runtest)
+  (name runtest-full)
   (deps tests_in_node.sentinel)
 )
 
@@ -76,6 +79,6 @@
 )
 
 (alias
-  (name runtest)
+  (name runtest-full)
   (deps tests_in_browser.html pixelmatch.js tests_in_browser.bc.js tests_in_native.sentinel)
 )

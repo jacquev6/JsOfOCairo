@@ -3,25 +3,25 @@ dist: trusty
 sudo: false
 addons:
   apt:
-    sources:
-    - avsm
     packages:
     - aspcud
-    - opam
     - libcairo2-dev
     - libjpeg8-dev
     - libpango1.0-dev
     - libgif-dev
 install:
-  - opam init --yes
-  - opam update --yes
-  - opam switch --yes $OCAML_VERSION
-  - eval `opam config env`
-  - opam switch
-  - opam pin add --yes --no-action General --dev-repo
-  - opam install --yes dune js_of_ocaml-ppx js_of_ocaml-compiler conf-npm cairo2 General
-  - opam upgrade --yes
-  - opam list
+  - wget --output-document=$HOME/opam2 https://github.com/ocaml/opam/releases/download/2.0.1/opam-2.0.1-x86_64-linux
+  - chmod +x $HOME/opam2
+  - test -d $HOME/.opam/repo || $HOME/opam2 init --yes --disable-sandboxing
+  - $HOME/opam2 update --yes
+  - test -d $HOME/.opam/$OCAML_VERSION || $HOME/opam2 switch create --yes $OCAML_VERSION
+  - eval `$HOME/opam2 config env`
+  - $HOME/opam2 switch list
+  - $HOME/opam2 pin add --yes --no-action General --dev-repo
+  - $HOME/opam2 install --yes dune js_of_ocaml-ppx js_of_ocaml-compiler conf-npm cairo2=0.5 General
+  - $HOME/opam2 upgrade --yes
+  - $HOME/opam2 install --yes cairo2=0.5
+  - $HOME/opam2 list
 script:
   - dune build @runtest-full
 env:

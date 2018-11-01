@@ -14,7 +14,7 @@ rm -f _build/default/tst/*.sentinel
 # https://github.com/aantron/bisect_ppx/blob/master/doc/advanced.md#Dune suggests
 # modifying the dune file for release. Let's modify it for tests instead.
 sed -i "s/^;\(.*; Uncomment for dev mode\)$/\1/; s/^;*\(.*; Comment for dev mode\)$/;\1/" $(find src tst -name dune)
-dune runtest
+dune build @runtest-full
 sed -i "s/^;*\(.*; Uncomment for dev mode\)$/;\1/; s/^;\(.*; Comment for dev mode\)$/\1/" $(find src tst -name dune)
 echo
 bisect-summary _build/default/tst/bisect????.out
@@ -38,7 +38,7 @@ cp _build/default/tst/pixelmatch.js docs
 # OPAM package
 # ============
 
-opam pin --yes --no-action add .
+opam pin --yes --no-action add --kind=path .
 opam reinstall --yes JsOfOCairo --build-test
 
 cd demo
