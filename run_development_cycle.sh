@@ -5,17 +5,17 @@
 set -o errexit
 
 eval `opam config env`
-opam install --yes jbuilder js_of_ocaml-ppx js_of_ocaml-compiler conf-npm cairo2 General bisect_ppx bisect-summary
+opam install --yes dune js_of_ocaml-ppx js_of_ocaml-compiler conf-npm cairo2 General bisect_ppx bisect-summary
 
 clear
 
 rm -f _build/default/tst/*.sentinel
 
-# https://github.com/aantron/bisect_ppx/blob/master/doc/advanced.md#Jbuilder suggests
-# modifying the jbuild file for release. Let's modify it for tests instead.
-sed -i "s/^;\(.*; Uncomment for dev mode\)$/\1/; s/^;*\(.*; Comment for dev mode\)$/;\1/" $(find . -name jbuild)
-jbuilder runtest --dev
-sed -i "s/^;*\(.*; Uncomment for dev mode\)$/;\1/; s/^;\(.*; Comment for dev mode\)$/\1/" $(find . -name jbuild)
+# https://github.com/aantron/bisect_ppx/blob/master/doc/advanced.md#Dune suggests
+# modifying the dune file for release. Let's modify it for tests instead.
+sed -i "s/^;\(.*; Uncomment for dev mode\)$/\1/; s/^;*\(.*; Comment for dev mode\)$/;\1/" $(find src tst -name dune)
+dune runtest
+sed -i "s/^;*\(.*; Uncomment for dev mode\)$/;\1/; s/^;\(.*; Comment for dev mode\)$/\1/" $(find src tst -name dune)
 echo
 bisect-summary _build/default/tst/bisect????.out
 echo

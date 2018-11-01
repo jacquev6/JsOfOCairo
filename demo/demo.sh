@@ -3,7 +3,7 @@
 
 set -o errexit
 
-jbuilder build draw_on_command_line.bc draw_in_browser.bc.js
+dune build --root=. draw_on_command_line.bc draw_in_browser.bc.js
 
 _build/default/draw_on_command_line.bc
 

@@ -34,8 +34,8 @@ Install from OPAM::
 
 The files described below are available as a `demo directory <https://github.com/jacquev6/JsOfOCairo/tree/master/demo>`_.
 Have a look at this directory for the details about compiling.
-In particular see the `jbuild file <https://github.com/jacquev6/JsOfOCairo/blob/master/demo/jbuild>`_
-and the `call to jbuilder <https://github.com/jacquev6/JsOfOCairo/blob/master/demo/demo.sh>`_.
+In particular see the `dune file <https://github.com/jacquev6/JsOfOCairo/blob/master/demo/dune>`_
+and the `call to dune <https://github.com/jacquev6/JsOfOCairo/blob/master/demo/demo.sh>`_.
 
 Create a functor implementing your drawing code against the ``JsOfOCairo.S`` signature.
 File ``drawings.ml``::

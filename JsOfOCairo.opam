@@ -9,13 +9,13 @@ doc: "https://github.com/jacquev6/JsOfOCairo"
 bug-reports: "http://github.com/jacquev6/JsOfOCairo/issues/"
 available: [ocaml-version >= "4.02.3"]
 build: [
-  ["jbuilder" "build" "-p" name "-j" jobs]
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 build-test: [
-  ["jbuilder" "runtest" "-p" name]
+  ["dune" "runtest" "-p" name]
 ]
 depends: [
-  "jbuilder" {build & >= "1.0+beta17"}
+  "dune" {build}
   "js_of_ocaml-compiler" {build & >= "3.0" & < "4.0"}
   "js_of_ocaml-ppx" {build & >= "3.0" & < "4.0"}
   "js_of_ocaml" {>= "3.0" & < "4.0"}
