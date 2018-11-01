@@ -12,7 +12,7 @@ module T = Tests.Make(struct
     let name = "Cairo"
 
     let create () =
-      let img = Cairo.Image.create Cairo.Image.ARGB32 ~width:10 ~height:10 in
+      let img = Cairo.Image.create Cairo.Image.ARGB32 ~w:10 ~h:10 in
       Cairo.create img
 
     let backend = `Cairo
@@ -22,7 +22,7 @@ module T = Tests.Make(struct
     type t = {name: string; width: int; height: int; draw: C.context -> unit}
   end) = struct
     let run {T.name; width; height; draw} =
-      let img = Cairo.Image.create Cairo.Image.ARGB32 ~width ~height in
+      let img = Cairo.Image.create Cairo.Image.ARGB32 ~w:width ~h:height in
       let ctx = Cairo.create img in
       draw ctx;
       Cairo.PNG.write img (Frmt.apply "Tests/Drawing/Cairo/%s.png" name);
@@ -32,7 +32,7 @@ module T = Tests.Make(struct
     type t = {name: string; width: int; height: int; draws: (C.context -> string list) list}
   end) = struct
     let run {L.name; width; height; draws} =
-      let img = Cairo.Image.create Cairo.Image.ARGB32 ~width ~height in
+      let img = Cairo.Image.create Cairo.Image.ARGB32 ~w:width ~h:height in
       draws
       |> Li.iter_i ~f:(fun ~i draw ->
         let ctx = Cairo.create img in

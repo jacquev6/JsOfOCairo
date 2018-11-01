@@ -44,34 +44,34 @@ end) = struct
     make_n "save, restore" [save; restore] ["save"; "restore"];
     make "invalid restore" (catch INVALID_RESTORE restore) "restore -> raise (%s.Error(INVALID_RESTORE))" backend_name;
 
-    make "scale" (scale ~x:3. ~y:2.) "scale ~x:3.00 ~y:2.00";
-    make "translate" (translate ~x:3. ~y:2.) "translate ~x:3.00 ~y:2.00";
-    make "rotate" (rotate ~angle:3.) "rotate ~angle:3.00";
+    make "scale" (fun c -> scale c 3. 2.) "scale 3.00 2.00";
+    make "translate" (fun c -> translate c 3. 2.) "translate 3.00 2.00";
+    make "rotate" (fun c -> rotate c 3.) "rotate 3.00";
     make "transform" (fun c -> transform c {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.}) "transform {xx=1.00; xy=2.00; yx=3.00; yy=4.00; x0=5.00; y0=6.00}";
     make "set_matrix" (fun c -> set_matrix c {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.}) "set_matrix {xx=1.00; xy=2.00; yx=3.00; yy=4.00; x0=5.00; y0=6.00}";
     make "identity_matrix" identity_matrix "identity_matrix";
     make "get_matrix" get_matrix "get_matrix -> {xx=1.00; xy=0.00; yx=0.00; yy=1.00; x0=0.00; y0=0.00}";
-    make "user_to_device" (user_to_device ~x:2. ~y:3.) "user_to_device ~x:2.00 ~y:3.00 -> (2.00, 3.00)";
-    make "user_to_device_distance" (user_to_device_distance ~x:2. ~y:3.) "user_to_device_distance ~x:2.00 ~y:3.00 -> (2.00, 3.00)";
-    make "device_to_user" (device_to_user ~x:2. ~y:3.) "device_to_user ~x:2.00 ~y:3.00 -> (2.00, 3.00)";
-    make "device_to_user_distance" (device_to_user_distance ~x:2. ~y:3.) "device_to_user_distance ~x:2.00 ~y:3.00 -> (2.00, 3.00)";
+    make "user_to_device" (fun c -> user_to_device c 2. 3.) "user_to_device 2.00 3.00 -> (2.00, 3.00)";
+    make "user_to_device_distance" (fun c -> user_to_device_distance c 2. 3.) "user_to_device_distance 2.00 3.00 -> (2.00, 3.00)";
+    make "device_to_user" (fun c -> device_to_user c 2. 3.) "device_to_user 2.00 3.00 -> (2.00, 3.00)";
+    make "device_to_user_distance" (fun c -> device_to_user_distance c 2. 3.) "device_to_user_distance 2.00 3.00 -> (2.00, 3.00)";
 
-    make "move_to" (move_to ~x:4.05 ~y:2.957) "move_to ~x:4.05 ~y:2.96";
-    make "invalid rel_move_to" (catch NO_CURRENT_POINT (rel_move_to ~x:4.05 ~y:2.957)) "rel_move_to ~x:4.05 ~y:2.96 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
-    make_n "rel_move_to" [move_to ~x:1. ~y:2.; rel_move_to ~x:3. ~y:4.] ["move_to ~x:1.00 ~y:2.00"; "rel_move_to ~x:3.00 ~y:4.00"];
-    make "line_to" (line_to ~x:4.05 ~y:2.957) "line_to ~x:4.05 ~y:2.96";
-    make "invalid rel_line_to" (catch NO_CURRENT_POINT (rel_line_to ~x:4.05 ~y:2.957)) "rel_line_to ~x:4.05 ~y:2.96 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
-    make_n "rel_line_to" [move_to ~x:1. ~y:2.; rel_line_to ~x:3. ~y:4.] ["move_to ~x:1.00 ~y:2.00"; "rel_line_to ~x:3.00 ~y:4.00"];
-    make "curve_to" (curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.) "curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00";
-    make "invalid rel_curve_to" (catch NO_CURRENT_POINT (rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.)) "rel_curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
-    make_n "rel_curve_to" [move_to ~x:1. ~y:2.; rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.] ["move_to ~x:1.00 ~y:2.00"; "rel_curve_to ~x1:1.00 ~y1:2.00 ~x2:3.00 ~y2:4.00 ~x3:5.00 ~y3:6.00"];
-    make "rectangle" (rectangle ~x:2. ~y:3. ~w:4. ~h:5.) "rectangle ~x:2.00 ~y:3.00 ~w:4.00 ~h:5.00";
-    make "arc" (arc ~x:1. ~y:2. ~r:3. ~a1:4. ~a2:5.) "arc ~x:1.00 ~y:2.00 ~r:3.00 ~a1:4.00 ~a2:5.00";
-    make "arc_negative" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:4. ~a2:5.) "arc_negative ~x:1.00 ~y:2.00 ~r:3.00 ~a1:4.00 ~a2:5.00";
+    make "move_to" (fun c -> move_to c 4.05 2.957) "move_to 4.05 2.96";
+    make "invalid rel_move_to" (catch NO_CURRENT_POINT (fun c -> rel_move_to c 4.05 2.957)) "rel_move_to 4.05 2.96 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
+    make_n "rel_move_to" [(fun c -> move_to c 1. 2.); fun c -> rel_move_to c 3. 4.] ["move_to 1.00 2.00"; "rel_move_to 3.00 4.00"];
+    make "line_to" (fun c -> line_to c 4.05 2.957) "line_to 4.05 2.96";
+    make "invalid rel_line_to" (catch NO_CURRENT_POINT (fun c -> rel_line_to c 4.05 2.957)) "rel_line_to 4.05 2.96 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
+    make_n "rel_line_to" [(fun c -> move_to c 1. 2.); fun c -> rel_line_to c 3. 4.] ["move_to 1.00 2.00"; "rel_line_to 3.00 4.00"];
+    make "curve_to" (fun c -> curve_to c 1. 2. 3. 4. 5. 6.) "curve_to 1.00 2.00 3.00 4.00 5.00 6.00";
+    make "invalid rel_curve_to" (catch NO_CURRENT_POINT (fun c -> rel_curve_to c 1. 2. 3. 4. 5. 6.)) "rel_curve_to 1.00 2.00 3.00 4.00 5.00 6.00 -> raise (%s.Error(NO_CURRENT_POINT))" backend_name;
+    make_n "rel_curve_to" [(fun c -> move_to c 1. 2.); fun c -> rel_curve_to c 1. 2. 3. 4. 5. 6.] ["move_to 1.00 2.00"; "rel_curve_to 1.00 2.00 3.00 4.00 5.00 6.00"];
+    make "rectangle" (fun c -> rectangle c 2. 3. ~w:4. ~h:5.) "rectangle 2.00 3.00 ~w:4.00 ~h:5.00";
+    make "arc" (fun c -> arc c 1. 2. ~r:3. ~a1:4. ~a2:5.) "arc 1.00 2.00 ~r:3.00 ~a1:4.00 ~a2:5.00";
+    make "arc_negative" (fun c -> arc_negative c 1. 2. ~r:3. ~a1:4. ~a2:5.) "arc_negative 1.00 2.00 ~r:3.00 ~a1:4.00 ~a2:5.00";
     make "Path.close" Path.close "Path.close";
     make "Path.clear" Path.clear "Path.clear";
     make "Path.get_current_point" Path.get_current_point "Path.get_current_point -> (0.00, 0.00)";
-    make_n "move_to, Path.get_current_point" [move_to ~x:1. ~y:2.; ignore % Path.get_current_point] ["move_to ~x:1.00 ~y:2.00"; "Path.get_current_point -> (1.00, 2.00)"];
+    make_n "move_to, Path.get_current_point" [(fun c -> move_to c 1. 2.); ignore % Path.get_current_point] ["move_to 1.00 2.00"; "Path.get_current_point -> (1.00, 2.00)"];
 
     make "stroke" stroke "stroke";
     make "stroke_preserve" stroke_preserve "stroke_preserve";
@@ -114,9 +114,9 @@ end) = struct
   ]) @ [
     make "get_operator" get_operator "get_operator -> OVER";
 
-    make "set_source_rgb" (set_source_rgb ~r:0.5 ~g:0.6 ~b:0.7) "set_source_rgb ~r:0.50 ~g:0.60 ~b:0.70";
-    make "set_source_rgba" (set_source_rgba ~r:0.5 ~g:0.6 ~b:0.7 ~a:0.8) "set_source_rgba ~r:0.50 ~g:0.60 ~b:0.70 ~a:0.80";
-    make "set_source Rgba" (fun c -> set_source c (Pattern.create_rgb ~r:0.5 ~g:0.6 ~b:0.7)) "set_source (Rgba {r=0.50; g=0.60; b=0.70; a=1.00})";
+    make "set_source_rgb" (fun c -> set_source_rgb c 0.5 0.6 0.7) "set_source_rgb 0.50 0.60 0.70";
+    make "set_source_rgba" (fun c -> set_source_rgba c 0.5 0.6 0.7 0.8) "set_source_rgba 0.50 0.60 0.70 0.80";
+    make "set_source Rgba" (fun c -> set_source c (Pattern.create_rgb 0.5 0.6 0.7)) "set_source (Rgba {r=0.50; g=0.60; b=0.70; a=1.00})";
     make
       "set_source LinearGradient"
       (fun c ->

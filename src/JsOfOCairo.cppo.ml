@@ -78,7 +78,7 @@ end = struct
           size = 10.;
           family = "sans-serif";
         };
-        source = !(Pattern.create_rgb ~r:0. ~g:0. ~b:0.);
+        source = !(Pattern.create_rgb 0. 0. 0.);
         fill_rule = WINDING;
       };
     ];
@@ -176,29 +176,29 @@ let get_matrix context =
 let transform context m =
   set_matrix context (Matrix.multiply (Local.transformation context.local) m)
 
-let scale context ~x ~y =
-  transform context (Matrix.init_scale ~x ~y)
+let scale context x y =
+  transform context (Matrix.init_scale x y)
 
-let translate context ~x ~y =
-  transform context (Matrix.init_translate ~x ~y)
+let translate context x y =
+  transform context (Matrix.init_translate x y)
 
-let rotate context ~angle =
-  transform context (Matrix.init_rotate ~angle)
+let rotate context angle =
+  transform context (Matrix.init_rotate angle)
 
 let identity_matrix context =
   set_matrix context (Matrix.init_identity ())
 
-let device_to_user context ~x ~y =
-  Matrix.transform_point (Matrix.init_inverse (Local.transformation context.local)) ~x ~y
+let device_to_user context x y =
+  Matrix.transform_point (Matrix.init_inverse (Local.transformation context.local)) x y
 
-let device_to_user_distance context ~x ~y =
-  Matrix.transform_distance (Matrix.init_inverse (Local.transformation context.local)) ~dx:x ~dy:y
+let device_to_user_distance context dx dy =
+  Matrix.transform_distance (Matrix.init_inverse (Local.transformation context.local)) ~dx ~dy
 
-let user_to_device context ~x ~y =
-  Matrix.transform_point (Local.transformation context.local) ~x ~y
+let user_to_device context x y =
+  Matrix.transform_point (Local.transformation context.local) x y
 
-let user_to_device_distance context ~x ~y =
-  Matrix.transform_distance (Local.transformation context.local) ~dx:x ~dy:y
+let user_to_device_distance context dx dy =
+  Matrix.transform_distance (Local.transformation context.local) ~dx ~dy
 
 
 let make_rel context ~x:dx ~y:dy =
@@ -206,40 +206,40 @@ let make_rel context ~x:dx ~y:dy =
     | None -> raise (Error NO_CURRENT_POINT)
     | Some (x, y) -> (x +. dx, y +. dy)
 
-let move_to context ~x ~y =
+let move_to context x y =
   context.html##moveTo x y;
   Local.set_start_point context.local (x, y);
   Local.set_start_point_as_current_point context.local
 
-let rel_move_to context ~x ~y =
+let rel_move_to context x y =
   let (x, y) = make_rel context ~x ~y in
-  move_to context ~x ~y
+  move_to context x y
 
-let line_to context ~x ~y =
+let line_to context x y =
   context.html##lineTo x y;
   Local.set_start_point_if_none context.local (x, y);
   Local.set_current_point context.local (x, y)
 
-let rel_line_to context ~x ~y =
+let rel_line_to context x y =
   let (x, y) = make_rel context ~x ~y in
-  line_to context ~x ~y
+  line_to context x y
 
-let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
+let curve_to context x1 y1 x2 y2 x3 y3 =
   context.html##bezierCurveTo x1 y1 x2 y2 x3 y3;
   Local.set_start_point_if_none context.local (x1, y1);
   Local.set_current_point context.local (x3, y3)
 
-let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
+let rel_curve_to context x1 y1 x2 y2 x3 y3 =
   let (x1, y1) = make_rel context ~x:x1 ~y:y1
   and (x2, y2) = make_rel context ~x:x2 ~y:y2
   and (x3, y3) = make_rel context ~x:x3 ~y:y3 in
-  curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3
+  curve_to context x1 y1 x2 y2 x3 y3
 
-let rectangle context ~x ~y ~w ~h =
+let rectangle context x y ~w ~h =
   Local.set_current_point context.local (x, y);
   context.html##rect x y w h
 
-let arc_ ~dir context ~x ~y ~r ~a1 ~a2 =
+let arc_ ~dir context x y ~r ~a1 ~a2 =
   context.html##arc x y r a1 a2 dir;
   Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
   Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
@@ -422,11 +422,11 @@ let set_source context pattern =
 let get_source context =
   ref (Local.source context.local)
 
-let set_source_rgb context ~r ~g ~b =
-  set_source context (Pattern.create_rgb ~r ~g ~b)
+let set_source_rgb context r g b =
+  set_source context (Pattern.create_rgb r g b)
 
-let set_source_rgba context ~r ~g ~b ~a =
-  set_source context (Pattern.create_rgba ~r ~g ~b ~a)
+let set_source_rgba context r g b a =
+  set_source context (Pattern.create_rgba r g b a)
 
 
 let _set_font context ({slant; weight; size; family} as font) =

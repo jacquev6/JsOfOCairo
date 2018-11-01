@@ -50,7 +50,7 @@ module Mock = struct
         miter_limit = 10.;
         ofs = 0.;
         operator = OVER;
-        source = !(Pattern.create_rgb ~r:0. ~g:0. ~b:0.);
+        source = !(Pattern.create_rgb 0. 0. 0.);
         transformation = Matrix.init_identity ();
       };
     ];
@@ -90,28 +90,28 @@ module Mock = struct
   let transform context m =
     mutate_state context (transform_ m)
 
-  let scale context ~x ~y =
-    mutate_state context (transform_ (Matrix.init_scale ~x ~y))
+  let scale context x y =
+    mutate_state context (transform_ (Matrix.init_scale x y))
 
-  let translate context ~x ~y =
-    mutate_state context (transform_ (Matrix.init_translate ~x ~y))
+  let translate context x y =
+    mutate_state context (transform_ (Matrix.init_translate x y))
 
-  let rotate context ~angle =
-    mutate_state context (transform_ (Matrix.init_rotate ~angle))
+  let rotate context angle =
+    mutate_state context (transform_ (Matrix.init_rotate angle))
 
   let identity_matrix context =
     mutate_state context (fun s -> {s with transformation=Matrix.init_identity ()})
 
-  let device_to_user context ~x ~y =
-    Matrix.transform_point (Matrix.init_inverse (state context).transformation) ~x ~y
+  let device_to_user context x y =
+    Matrix.transform_point (Matrix.init_inverse (state context).transformation) x y
 
-  let device_to_user_distance context ~x:dx ~y:dy =
+  let device_to_user_distance context dx dy =
     Matrix.transform_distance (Matrix.init_inverse (state context).transformation) ~dx ~dy
 
-  let user_to_device context ~x ~y =
-    Matrix.transform_point (state context).transformation ~x ~y
+  let user_to_device context x y =
+    Matrix.transform_point (state context).transformation x y
 
-  let user_to_device_distance context ~x:dx ~y:dy =
+  let user_to_device_distance context dx dy =
     Matrix.transform_distance (state context).transformation ~dx ~dy
 
 
@@ -144,31 +144,31 @@ module Mock = struct
     end
 
 
-  let move_to context ~x ~y =
+  let move_to context x y =
     mutate_points context ~start:(`Set (x, y)) ~current:`FromStart
 
-  let rel_move_to context ~x ~y =
+  let rel_move_to context x y =
     mutate_points context ~start:(`Relative (x, y)) ~current:`FromStart
 
-  let line_to context ~x ~y =
+  let line_to context x y =
     mutate_points context ~start:(`IfNone (x, y)) ~current:(`Set (x, y))
 
-  let rel_line_to context ~x ~y =
+  let rel_line_to context x y =
     mutate_points context ~start:(`IfNone (x, y)) ~current:(`Relative (x, y))
 
-  let curve_to context ~x1 ~y1 ~x2:_ ~y2:_ ~x3 ~y3 =
+  let curve_to context x1 y1 _ _ x3 y3 =
     mutate_points context ~start:(`IfNone (x1, y1)) ~current:(`Set (x3, y3))
 
-  let rel_curve_to context ~x1 ~y1 ~x2:_ ~y2:_ ~x3 ~y3 =
+  let rel_curve_to context x1 y1 _ _ x3 y3 =
     mutate_points context ~start:(`IfNone (x1, y1)) ~current:(`Relative (x3, y3))
 
-  let rectangle context ~x ~y ~w:_ ~h:_ =
+  let rectangle context x y ~w:_ ~h:_ =
     mutate_points context ~start:`None ~current:(`Set (x, y))
 
-  let arc context ~x ~y ~r ~a1 ~a2 =
+  let arc context x y ~r ~a1 ~a2 =
     mutate_points context ~start:(`IfNone (x +. r *. (cos a1), y +. r *. (sin a1))) ~current:(`Set (x +. r *. (cos a2), y +. r *. (sin a2)))
 
-  let arc_negative context ~x ~y ~r ~a1 ~a2 =
+  let arc_negative context x y ~r ~a1 ~a2 =
     mutate_points context ~start:(`IfNone (x +. r *. (cos a1), y +. r *. (sin a1))) ~current:(`Set (x +. r *. (cos a2), y +. r *. (sin a2)))
 
   module Path = struct
@@ -258,12 +258,12 @@ module Mock = struct
   let get_source context =
     ref (state context).source
 
-  let set_source_rgb context ~r ~g ~b =
-    let source = !(Pattern.create_rgb ~r ~g ~b) in
+  let set_source_rgb context r g b =
+    let source = !(Pattern.create_rgb r g b) in
     mutate_state context (fun s -> {s with source})
 
-  let set_source_rgba context ~r ~g ~b ~a =
-    let source = !(Pattern.create_rgba ~r ~g ~b ~a) in
+  let set_source_rgba context r g b a =
+    let source = !(Pattern.create_rgba r g b a) in
     mutate_state context (fun s -> {s with source})
 
 
@@ -606,57 +606,57 @@ module Decorate(C: S) = struct
   let transform context m =
     CC "transform %a" A.matrix m P.unit (fun c -> C.transform c m)
 
-  let scale context ~x ~y =
-    CC "scale ~x:%.2f ~y:%.2f" x y P.unit (C.scale ~x ~y)
+  let scale context x y =
+    CC "scale %.2f %.2f" x y P.unit (fun c -> C.scale c x y)
 
-  let translate context ~x ~y =
-    CC "translate ~x:%.2f ~y:%.2f" x y P.unit (C.translate ~x ~y)
+  let translate context x y =
+    CC "translate %.2f %.2f" x y P.unit (fun c -> C.translate c x y)
 
-  let rotate context ~angle =
-    CC "rotate ~angle:%.2f" angle P.unit (C.rotate ~angle)
+  let rotate context angle =
+    CC "rotate %.2f" angle P.unit (fun c -> C.rotate c angle)
 
   let identity_matrix context =
     CC "identity_matrix" P.unit C.identity_matrix
 
-  let device_to_user context ~x ~y =
-    CC "device_to_user ~x:%.2f ~y:%.2f" x y P.coords (C.device_to_user ~x ~y)
+  let device_to_user context x y =
+    CC "device_to_user %.2f %.2f" x y P.coords (fun c -> C.device_to_user c x y)
 
-  let device_to_user_distance context ~x ~y =
-    CC "device_to_user_distance ~x:%.2f ~y:%.2f" x y P.coords (C.device_to_user_distance ~x ~y)
+  let device_to_user_distance context x y =
+    CC "device_to_user_distance %.2f %.2f" x y P.coords (fun c -> C.device_to_user_distance c x y)
 
-  let user_to_device context ~x ~y =
-    CC "user_to_device ~x:%.2f ~y:%.2f" x y P.coords (C.user_to_device ~x ~y)
+  let user_to_device context x y =
+    CC "user_to_device %.2f %.2f" x y P.coords (fun c -> C.user_to_device c x y)
 
-  let user_to_device_distance context ~x ~y =
-    CC "user_to_device_distance ~x:%.2f ~y:%.2f" x y P.coords (C.user_to_device_distance ~x ~y)
+  let user_to_device_distance context x y =
+    CC "user_to_device_distance %.2f %.2f" x y P.coords (fun c -> C.user_to_device_distance c x y)
 
 
-  let move_to context ~x ~y =
-    CC "move_to ~x:%.2f ~y:%.2f" x y P.unit (C.move_to ~x ~y)
+  let move_to context x y =
+    CC "move_to %.2f %.2f" x y P.unit (fun c -> C.move_to c x y)
 
-  let rel_move_to context ~x ~y =
-    CC "rel_move_to ~x:%.2f ~y:%.2f" x y P.unit (C.rel_move_to ~x ~y)
+  let rel_move_to context x y =
+    CC "rel_move_to %.2f %.2f" x y P.unit (fun c -> C.rel_move_to c x y)
 
-  let line_to context ~x ~y =
-    CC "line_to ~x:%.2f ~y:%.2f" x y P.unit (C.line_to ~x ~y)
+  let line_to context x y =
+    CC "line_to %.2f %.2f" x y P.unit (fun c -> C.line_to c x y)
 
-  let rel_line_to context ~x ~y =
-    CC "rel_line_to ~x:%.2f ~y:%.2f" x y P.unit (C.rel_line_to ~x ~y)
+  let rel_line_to context x y =
+    CC "rel_line_to %.2f %.2f" x y P.unit (fun c -> C.rel_line_to c x y)
 
-  let curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-    CC "curve_to ~x1:%.2f ~y1:%.2f ~x2:%.2f ~y2:%.2f ~x3:%.2f ~y3:%.2f" x1 y1 x2 y2 x3 y3 P.unit (C.curve_to ~x1 ~y1 ~x2 ~y2 ~x3 ~y3)
+  let curve_to context x1 y1 x2 y2 x3 y3 =
+    CC "curve_to %.2f %.2f %.2f %.2f %.2f %.2f" x1 y1 x2 y2 x3 y3 P.unit (fun c -> C.curve_to c x1 y1 x2 y2 x3 y3)
 
-  let rel_curve_to context ~x1 ~y1 ~x2 ~y2 ~x3 ~y3 =
-    CC "rel_curve_to ~x1:%.2f ~y1:%.2f ~x2:%.2f ~y2:%.2f ~x3:%.2f ~y3:%.2f" x1 y1 x2 y2 x3 y3 P.unit (C.rel_curve_to ~x1 ~y1 ~x2 ~y2 ~x3 ~y3)
+  let rel_curve_to context x1 y1 x2 y2 x3 y3 =
+    CC "rel_curve_to %.2f %.2f %.2f %.2f %.2f %.2f" x1 y1 x2 y2 x3 y3 P.unit (fun c -> C.rel_curve_to c x1 y1 x2 y2 x3 y3)
 
-  let rectangle context ~x ~y ~w ~h =
-    CC "rectangle ~x:%.2f ~y:%.2f ~w:%.2f ~h:%.2f" x y w h P.unit (C.rectangle ~x ~y ~w ~h)
+  let rectangle context x y ~w ~h =
+    CC "rectangle %.2f %.2f ~w:%.2f ~h:%.2f" x y w h P.unit (fun c -> C.rectangle c x y ~w ~h)
 
-  let arc context ~x ~y ~r ~a1 ~a2 =
-    CC "arc ~x:%.2f ~y:%.2f ~r:%.2f ~a1:%.2f ~a2:%.2f" x y r a1 a2 P.unit (C.arc ~x ~y ~r ~a1 ~a2)
+  let arc context x y ~r ~a1 ~a2 =
+    CC "arc %.2f %.2f ~r:%.2f ~a1:%.2f ~a2:%.2f" x y r a1 a2 P.unit (fun c -> C.arc c x y ~r ~a1 ~a2)
 
-  let arc_negative context ~x ~y ~r ~a1 ~a2 =
-    CC "arc_negative ~x:%.2f ~y:%.2f ~r:%.2f ~a1:%.2f ~a2:%.2f" x y r a1 a2 P.unit (C.arc_negative ~x ~y ~r ~a1 ~a2)
+  let arc_negative context x y ~r ~a1 ~a2 =
+    CC "arc_negative %.2f %.2f ~r:%.2f ~a1:%.2f ~a2:%.2f" x y r a1 a2 P.unit (fun c -> C.arc_negative c x y ~r ~a1 ~a2)
 
   module Path = struct
     let get_current_point context =
@@ -740,11 +740,11 @@ module Decorate(C: S) = struct
   let get_source context =
     CC "get_source" P.source C.get_source
 
-  let set_source_rgb context ~r ~g ~b =
-    CC "set_source_rgb ~r:%.2f ~g:%.2f ~b:%.2f" r g b P.unit (C.set_source_rgb ~r ~g ~b)
+  let set_source_rgb context r g b =
+    CC "set_source_rgb %.2f %.2f %.2f" r g b P.unit (fun c -> C.set_source_rgb c r g b)
 
-  let set_source_rgba context ~r ~g ~b ~a =
-    CC "set_source_rgba ~r:%.2f ~g:%.2f ~b:%.2f ~a:%.2f" r g b a P.unit (C.set_source_rgba ~r ~g ~b ~a)
+  let set_source_rgba context r g b a =
+    CC "set_source_rgba %.2f %.2f %.2f %.2f" r g b a P.unit (fun c -> C.set_source_rgba c r g b a)
 
 
   let select_font_face context ?slant ?weight family =

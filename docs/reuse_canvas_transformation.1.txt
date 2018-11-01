@@ -1,5 +1,5 @@
 <pre>
-move_to ~x:10.00 ~y:10.00
-line_to ~x:40.00 ~y:10.00
+move_to 10.00 10.00
+line_to 40.00 10.00
 stroke
 </pre>

@@ -25,6 +25,17 @@ Questions? Remarks? Bugs? Want to contribute? `Open an issue <https://github.com
 .. image:: https://img.shields.io/github/stars/jacquev6/JsOfOCairo.svg
     :target: https://github.com/jacquev6/JsOfOCairo/stargazers
 
+Versions
+========
+
+A breaking change was `introduced in OCaml Cairo version 0.6 <https://github.com/Chris00/ocaml-cairo/commit/9aa9ce403fd16c56245c695eb0108aebdedec150#diff-d9fad5803a4c2c22f5c1be3854b69e50>`_.
+
+`JsOfOCairo version 2 <https://opam.ocaml.org/packages/JsOfOCairo/JsOfOCairo.2.0.0/>`_ implements a subset of
+the interface of `OCaml Cairo version 0.6 <https://opam.ocaml.org/packages/cairo2/cairo2.0.6/>`_,
+while
+`JsOfOCairo version 1 <https://opam.ocaml.org/packages/JsOfOCairo/JsOfOCairo.1.1.1/>`_ implements a subset of
+the interface of `OCaml Cairo version 0.5 <https://opam.ocaml.org/packages/cairo2/cairo2.0.5/>`_.
+
 Quick start
 ===========
 
@@ -43,7 +54,7 @@ File ``drawings.ml``::
     module Make(C: JsOfOCairo.S) = struct
       let draw ctx =
         C.save ctx;
-        C.arc ctx ~x:50. ~y:50. ~r:40. ~a1:0. ~a2:5.;
+        C.arc ctx 50. 50. ~r:40. ~a1:0. ~a2:5.;
         C.stroke ctx;
         C.restore ctx
     end
@@ -54,7 +65,7 @@ File ``draw_on_command_line.ml``::
     module Drawings = Drawings.Make(Cairo)
 
     let () = begin
-      let image = Cairo.Image.create Cairo.Image.ARGB32 ~width:100 ~height:100 in
+      let image = Cairo.Image.create Cairo.Image.ARGB32 ~w:100 ~h:100 in
       Drawings.draw (Cairo.create image);
       Cairo.PNG.write image "draw_on_command_line.png";
     end
@@ -99,7 +110,7 @@ calls made on the context object. You can use it to automate some tests on your 
     let () = begin
       let ctx = CairoMock.create () in
       Drawings.draw ctx;
-      assert (CairoMock.calls ctx = ["save"; "arc ~x:50.00 ~y:50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"; "restore"])
+      assert (CairoMock.calls ctx = ["save"; "arc 50.00 50.00 ~r:40.00 ~a1:0.00 ~a2:5.00"; "stroke"; "restore"])
     end
 
 *CairoMock* itself is split into *CairoMock.Mock*, an actual mock implementation of ``JsOfOCairo.S`` that does nothing, and *CairoMock.Decorate*, that can be used to record calls made on *any* implementation of ``JsOfOCairo.S``. So, you can draw and record calls at the same time.

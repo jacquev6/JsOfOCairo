@@ -20,7 +20,6 @@ install:
   - $HOME/opam2 pin add --yes --no-action General --dev-repo
   - $HOME/opam2 install --yes dune js_of_ocaml-ppx js_of_ocaml-compiler conf-npm cairo2=0.5 General
   - $HOME/opam2 upgrade --yes
-  - $HOME/opam2 install --yes cairo2=0.5
   - $HOME/opam2 list
 script:
   - dune build @runtest-full

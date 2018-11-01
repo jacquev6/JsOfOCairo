@@ -147,13 +147,13 @@ module Matrix = struct
   let init_identity () =
     {xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.}
 
-  let init_translate ~x ~y =
+  let init_translate x y =
     {xx=1.; xy=0.; yx=0.; yy=1.; x0=x; y0=y}
 
-  let init_scale ~x ~y =
+  let init_scale x y =
     {xx=x; xy=0.; yx=0.; yy=y; x0=0.; y0=0.}
 
-  let init_rotate ~angle =
+  let init_rotate angle =
     {
       xx = cos angle;
       xy = -.sin angle;
@@ -183,7 +183,7 @@ module Matrix = struct
     and y0 = yx *. x0' +. yy *. y0' +. y0 in
     {xx; xy; yx; yy; x0; y0}
 
-  let transform_point {xx; xy; yx; yy; x0; y0} ~x ~y =
+  let transform_point {xx; xy; yx; yy; x0; y0} x y =
     (xx *. x +. xy *. y +. x0, yx *. x +. yy *. y +. y0)
 
   let transform_distance {xx; xy; yx; yy; x0=_; y0=_} ~dx ~dy =
@@ -197,14 +197,14 @@ module Matrix = struct
     m.x0 <- x0;
     m.y0 <- y0
 
-  let scale m ~x ~y =
-    set m (multiply m (init_scale ~x ~y))
+  let scale m x y =
+    set m (multiply m (init_scale x y))
 
-  let translate m ~x ~y =
-    set m (multiply m (init_translate ~x ~y))
+  let translate m x y =
+    set m (multiply m (init_translate x y))
 
-  let rotate m ~angle =
-    set m (multiply m (init_rotate ~angle))
+  let rotate m angle =
+    set m (multiply m (init_rotate angle))
 
   let invert m =
     set m (init_inverse m)
@@ -299,11 +299,11 @@ module Pattern = struct
 
   type any = [`Solid | `Surface | `Gradient | `Linear | `Radial] t
 
-  let create_rgba ~r ~g ~b ~a =
+  let create_rgba r g b a =
     ref (Rgba (r, g, b, a))
 
-  let create_rgb ~r ~g ~b =
-    create_rgba ~r ~g ~b ~a:1.
+  let create_rgb r g b =
+    create_rgba r g b 1.
 
   let get_rgba pattern =
     match !pattern with
@@ -430,17 +430,17 @@ end = struct
   }
 
   let set_start points ~transformation ~x ~y =
-    points.start <- Some (Matrix.transform_point transformation ~x ~y)
+    points.start <- Some (Matrix.transform_point transformation x y)
 
   let set_start_if_none points ~transformation ~x ~y =
     if points.start = None then
-    points.start <- Some (Matrix.transform_point transformation ~x ~y)
+    points.start <- Some (Matrix.transform_point transformation x y)
 
   let reset_start points =
     points.start <- None
 
   let set_current points ~transformation ~x ~y =
-    points.current <- Some (Matrix.transform_point transformation ~x ~y)
+    points.current <- Some (Matrix.transform_point transformation x y)
 
   let set_current_from_start points =
     points.current <- points.start
@@ -451,5 +451,5 @@ end = struct
   let current points ~transformation =
     match points.current with
       | None -> None
-      | Some (x, y) -> Some (Matrix.transform_point (Matrix.init_inverse transformation) ~x ~y)
+      | Some (x, y) -> Some (Matrix.transform_point (Matrix.init_inverse transformation) x y)
 end

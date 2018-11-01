@@ -135,7 +135,7 @@ end) = struct
         ];
         make
           "source"
-          (fun c (r, g, b, a) -> set_source_rgba c ~r ~g ~b ~a)
+          (fun c (r, g, b, a) -> set_source_rgba c r g b a)
           (fun c -> get_source c |> Pattern.get_rgba)
           (check_float_tuple_4)
           (0., 0., 0., 1.)
@@ -216,11 +216,11 @@ end) = struct
         ))
       in
       [
-        make "translate" (translate ~x:2. ~y:3.) {xx=1.; xy=0.; yx=0.; yy=1.; x0=2.; y0=3.};
-        make "scale" (scale ~x:2. ~y:3.) {xx=2.; xy=0.; yx=0.; yy=3.; x0=0.; y0=0.};
-        make "rotate" (rotate ~angle:(Fl.pi /. 4.)) (let s = Fl.sqrt(2.) /. 2. in {xx=s; xy=(-.s); yx=s; yy=s; x0=0.; y0=0.});
+        make "translate" (fun c -> translate c 2. 3.) {xx=1.; xy=0.; yx=0.; yy=1.; x0=2.; y0=3.};
+        make "scale" (fun c -> scale c 2. 3.) {xx=2.; xy=0.; yx=0.; yy=3.; x0=0.; y0=0.};
+        make "rotate" (fun c -> rotate c (Fl.pi /. 4.)) (let s = Fl.sqrt(2.) /. 2. in {xx=s; xy=(-.s); yx=s; yy=s; x0=0.; y0=0.});
         make "set_matrix" (fun c -> set_matrix c {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.}) {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.};
-        make "transform" (fun c -> scale c ~x:2. ~y:3.; transform c {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.}) {xx=2.; xy=4.; yx=9.; yy=12.; x0=10.; y0=18.};
+        make "transform" (fun c -> scale c 2. 3.; transform c {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.}) {xx=2.; xy=4.; yx=9.; yy=12.; x0=10.; y0=18.};
       ]
     );
     "matrix" >:: [
@@ -228,13 +228,13 @@ end) = struct
         check_matrix ~expected:{xx=1.; xy=0.; yx=0.; yy=1.; x0=0.; y0=0.} (Matrix.init_identity ())
       ));
       "init_translate" >: (lazy (
-        check_matrix ~expected:{xx=1.; xy=0.; yx=0.; yy=1.; x0=2.; y0=3.} (Matrix.init_translate ~x:2. ~y:3.)
+        check_matrix ~expected:{xx=1.; xy=0.; yx=0.; yy=1.; x0=2.; y0=3.} (Matrix.init_translate 2. 3.)
       ));
       "init_scale" >: (lazy (
-        check_matrix ~expected:{xx=2.; xy=0.; yx=0.; yy=3.; x0=0.; y0=0.} (Matrix.init_scale ~x:2. ~y:3.)
+        check_matrix ~expected:{xx=2.; xy=0.; yx=0.; yy=3.; x0=0.; y0=0.} (Matrix.init_scale 2. 3.)
       ));
       "init_rotate" >: (lazy (
-        check_matrix ~expected:{xx=(Fl.sqrt 3. /. 2.); xy=(-0.5); yx=0.5; yy=(Fl.sqrt 3. /. 2.); x0=0.; y0=0.} (Matrix.init_rotate ~angle:(Fl.pi /. 6.))
+        check_matrix ~expected:{xx=(Fl.sqrt 3. /. 2.); xy=(-0.5); yx=0.5; yy=(Fl.sqrt 3. /. 2.); x0=0.; y0=0.} (Matrix.init_rotate (Fl.pi /. 6.))
       ));
       "invert" >:: [
         "non invertible" >: (lazy (
@@ -251,17 +251,17 @@ end) = struct
       ];
       "scale" >: (lazy (
         let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
-        Matrix.scale m ~x:7. ~y:8.;
+        Matrix.scale m 7. 8.;
         check_matrix ~expected:{xx=7.; xy=16.; yx=21.; yy=32.; x0=5.; y0=6.} m
       ));
       "translate" >: (lazy (
         let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
-        Matrix.translate m ~x:7. ~y:8.;
+        Matrix.translate m 7. 8.;
         check_matrix ~expected:{xx=1.; xy=2.; yx=3.; yy=4.; x0=28.; y0=59.} m
       ));
       "rotate" >: (lazy (
         let m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
-        Matrix.rotate m ~angle:(Fl.pi /. 6.);
+        Matrix.rotate m (Fl.pi /. 6.);
         let s = Fl.sqrt 3. /. 2. in
         check_matrix ~expected:{xx=(s +. 1.); xy=(2. *. s -. 0.5); yx=(3. *. s +. 2.); yy=(4. *. s -. 1.5); x0=5.; y0=6.} m
       ));
@@ -270,11 +270,11 @@ end) = struct
       let ctx = N.create ()
       and m = {xx=1.; xy=2.; yx=3.; yy=4.; x0=5.; y0=6.} in
       set_matrix ctx m;
-      check_coords ~expected:(-2., 2.) (device_to_user ctx ~x:7. ~y:8.);
-      check_coords ~expected:(-6., 6.5) (device_to_user_distance ctx ~x:7. ~y:8.);
-      check_coords ~expected:(28., 59.) (user_to_device ctx ~x:7. ~y:8.);
-      check_coords ~expected:(23., 53.) (user_to_device_distance ctx ~x:7. ~y:8.);
-      check_coords ~expected:(28., 59.) (Matrix.transform_point m ~x:7. ~y:8.);
+      check_coords ~expected:(-2., 2.) (device_to_user ctx 7. 8.);
+      check_coords ~expected:(-6., 6.5) (device_to_user_distance ctx 7. 8.);
+      check_coords ~expected:(28., 59.) (user_to_device ctx 7. 8.);
+      check_coords ~expected:(23., 53.) (user_to_device_distance ctx 7. 8.);
+      check_coords ~expected:(28., 59.) (Matrix.transform_point m 7. 8.);
       check_coords ~expected:(23., 53.) (Matrix.transform_distance m ~dx:7. ~dy:8.);
     ));
     "invalid restore" >: (lazy (
@@ -289,13 +289,13 @@ end) = struct
         ))
       in
       [
-        make "rel_move_to" (rel_move_to ~x:1. ~y:2.);
-        make "rel_line_to" (rel_line_to ~x:1. ~y:2.);
-        make "rel_curve_to" (rel_curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.);
-        make "Path.clear" (fun c -> move_to c ~x:1. ~y:2.; Path.clear c; rel_move_to c ~x:3. ~y:4.);
-        make "stroke" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; stroke c; rel_move_to c ~x:3. ~y:4.);
-        make "fill" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; fill c; rel_move_to c ~x:3. ~y:4.);
-        make "clip" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip c; rel_move_to c ~x:3. ~y:4.);
+        make "rel_move_to" (fun c -> rel_move_to c 1. 2.);
+        make "rel_line_to" (fun c -> rel_line_to c 1. 2.);
+        make "rel_curve_to" (fun c -> rel_curve_to c 1. 2. 3. 4. 5. 6.);
+        make "Path.clear" (fun c -> move_to c 1. 2.; Path.clear c; rel_move_to c 3. 4.);
+        make "stroke" (fun c -> move_to c 1. 2.; line_to c 3. 4.; stroke c; rel_move_to c 3. 4.);
+        make "fill" (fun c -> move_to c 1. 2.; line_to c 3. 4.; fill c; rel_move_to c 3. 4.);
+        make "clip" (fun c -> move_to c 1. 2.; line_to c 3. 4.; clip c; rel_move_to c 3. 4.);
       ]
     );
     "current point" >:: (
@@ -312,48 +312,48 @@ end) = struct
       in
       [
         make "no-op" (fun _ -> ()) (0., 0.);
-        make "move_to" (move_to ~x:1. ~y:2.) (1., 2.);
+        make "move_to" (fun c -> move_to c 1. 2.) (1., 2.);
         make "paint" paint (0., 0.);
-        make "move_to, paint" (fun c -> move_to c ~x:1. ~y:2.; paint c) (1., 2.);
+        make "move_to, paint" (fun c -> move_to c 1. 2.; paint c) (1., 2.);
         make "save, move_to, restore"
           (fun c ->
             save c;
-            move_to c ~x:1. ~y:2.;
+            move_to c 1. 2.;
             restore c;
           )
           (1., 2.);
         make "save, scale, move_to, restore"
           (fun c ->
             save c;
-            scale c ~x:3. ~y:4.;
-            move_to c ~x:1. ~y:2.;
+            scale c 3. 4.;
+            move_to c 1. 2.;
             restore c;
           )
           (3., 8.);
-        make "rel_move_to" (fun c -> move_to c ~x:1. ~y:2.; rel_move_to c ~x:3. ~y:4.) (4., 6.);
-        make "line_to" (line_to ~x:1. ~y:2.) (1., 2.);
-        make "rel_line_to" (fun c -> move_to c ~x:1. ~y:2.; rel_line_to c ~x:3. ~y:4.) (4., 6.);
-        make "rectangle" (rectangle ~x:1. ~y:2. ~w:3. ~h:4.) (1., 2.);
+        make "rel_move_to" (fun c -> move_to c 1. 2.; rel_move_to c 3. 4.) (4., 6.);
+        make "line_to" (fun c -> line_to c 1. 2.) (1., 2.);
+        make "rel_line_to" (fun c -> move_to c 1. 2.; rel_line_to c 3. 4.) (4., 6.);
+        make "rectangle" (fun c -> rectangle c 1. 2. ~w:3. ~h:4.) (1., 2.);
         "arc" >:: [
-          make "0" (arc ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:0.) (4., 2.);
-          make "pi / 6" (arc ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 6.)) (1. +. 3. *. Fl.sqrt(3.) /. 2., 2. +. 3. *. 0.5);
-          make "pi / 4" (arc ~x:1. ~y:2. ~r:3. ~a1:0. ~a2:(Fl.pi /. 4.)) (1. +. 3. *. Fl.sqrt(2.) /. 2., 2. +. 3. *. Fl.sqrt(2.) /. 2.);
-          make "pi / 2" (arc ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 2.)) (1., 5.);
-          make "3 pi" (arc ~x:1. ~y:2. ~r:3. ~a1:(Fl.pi /. 2.) ~a2:(3. *. Fl.pi)) (-2., 2.);
+          make "0" (fun c -> arc c 1. 2. ~r:3. ~a1:(-1.) ~a2:0.) (4., 2.);
+          make "pi / 6" (fun c -> arc c 1. 2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 6.)) (1. +. 3. *. Fl.sqrt(3.) /. 2., 2. +. 3. *. 0.5);
+          make "pi / 4" (fun c -> arc c 1. 2. ~r:3. ~a1:0. ~a2:(Fl.pi /. 4.)) (1. +. 3. *. Fl.sqrt(2.) /. 2., 2. +. 3. *. Fl.sqrt(2.) /. 2.);
+          make "pi / 2" (fun c -> arc c 1. 2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 2.)) (1., 5.);
+          make "3 pi" (fun c -> arc c 1. 2. ~r:3. ~a1:(Fl.pi /. 2.) ~a2:(3. *. Fl.pi)) (-2., 2.);
         ];
         "arc_negative" >:: [
-          make "0" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:0.) (4., 2.);
-          make "pi / 6" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 6.)) (1. +. 3. *. Fl.sqrt(3.) /. 2., 2. +. 3. *. 0.5);
-          make "pi / 4" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:0. ~a2:(Fl.pi /. 4.)) (1. +. 3. *. Fl.sqrt(2.) /. 2., 2. +. 3. *. Fl.sqrt(2.) /. 2.);
-          make "pi / 2" (arc_negative ~x:1. ~y:2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 2.)) (1., 5.);
+          make "0" (fun c -> arc_negative c 1. 2. ~r:3. ~a1:(-1.) ~a2:0.) (4., 2.);
+          make "pi / 6" (fun c -> arc_negative c 1. 2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 6.)) (1. +. 3. *. Fl.sqrt(3.) /. 2., 2. +. 3. *. 0.5);
+          make "pi / 4" (fun c -> arc_negative c 1. 2. ~r:3. ~a1:0. ~a2:(Fl.pi /. 4.)) (1. +. 3. *. Fl.sqrt(2.) /. 2., 2. +. 3. *. Fl.sqrt(2.) /. 2.);
+          make "pi / 2" (fun c -> arc_negative c 1. 2. ~r:3. ~a1:(-1.) ~a2:(Fl.pi /. 2.)) (1., 5.);
         ];
-        make "curve_to" (curve_to ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.) (5., 6.);
-        make "rel_line_to" (fun c -> move_to c ~x:1. ~y:2.; rel_curve_to c ~x1:1. ~y1:2. ~x2:3. ~y2:4. ~x3:5. ~y3:6.) (6., 8.);
-        make "Path.close" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; line_to c ~x:5. ~y:6.; Path.close c) (1., 2.);
-        make "stroke_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; stroke_preserve c) (3., 4.);
-        make "fill_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; fill_preserve c) (3., 4.);
-        make "clip_preserve" (fun c -> move_to c ~x:1. ~y:2.; line_to c ~x:3. ~y:4.; clip_preserve c) (3., 4.);
-        make' "show_text" (fun c -> move_to c ~x:1. ~y:2.; show_text c "Hello") (fun (x, y) ->
+        make "curve_to" (fun c -> curve_to c 1. 2. 3. 4. 5. 6.) (5., 6.);
+        make "rel_line_to" (fun c -> move_to c 1. 2.; rel_curve_to c 1. 2. 3. 4. 5. 6.) (6., 8.);
+        make "Path.close" (fun c -> move_to c 1. 2.; line_to c 3. 4.; line_to c 5. 6.; Path.close c) (1., 2.);
+        make "stroke_preserve" (fun c -> move_to c 1. 2.; line_to c 3. 4.; stroke_preserve c) (3., 4.);
+        make "fill_preserve" (fun c -> move_to c 1. 2.; line_to c 3. 4.; fill_preserve c) (3., 4.);
+        make "clip_preserve" (fun c -> move_to c 1. 2.; line_to c 3. 4.; clip_preserve c) (3., 4.);
+        make' "show_text" (fun c -> move_to c 1. 2.; show_text c "Hello") (fun (x, y) ->
           check_float_in ~low:10. ~high:50. x;
           check_float ~expected:2. y
         );
@@ -361,22 +361,22 @@ end) = struct
     );
     "patterns" >:: Pattern.[
       "create_rgb, get_rgba" >: (lazy (
-        let p = create_rgb ~r:0.1 ~g:0.2 ~b:0.3 in
+        let p = create_rgb 0.1 0.2 0.3 in
         check_float_tuple_4 ~expected:(0.1, 0.2, 0.3, 1.) (get_rgba p)
       ));
       "set_source_rgb, get_rgba" >: (lazy (
         let ctx = N.create () in
-        set_source_rgb ctx ~r:0.1 ~g:0.2 ~b:0.3;
+        set_source_rgb ctx 0.1 0.2 0.3;
         let p = get_source ctx in
         check_float_tuple_4 ~expected:(0.1, 0.2, 0.3, 1.) (get_rgba p)
       ));
       "create_rgba, get_rgba" >: (lazy (
-        let p = create_rgba ~r:0.1 ~g:0.2 ~b:0.3 ~a:0.4 in
+        let p = create_rgba 0.1 0.2 0.3 0.4 in
         check_float_tuple_4 ~expected:(0.1, 0.2, 0.3, 0.4) (get_rgba p)
       ));
       "set_source_rgba, get_rgba" >: (lazy (
         let ctx = N.create () in
-        set_source_rgba ctx ~r:0.1 ~g:0.2 ~b:0.3 ~a:0.4;
+        set_source_rgba ctx 0.1 0.2 0.3 0.4;
         let p = get_source ctx in
         check_float_tuple_4 ~expected:(0.1, 0.2, 0.3, 0.4) (get_rgba p)
       ));
@@ -414,7 +414,7 @@ end) = struct
       ));
       "create_rgb, add_color_stop_rgb" >: (lazy (
         let ctx = N.create () in
-        set_source ctx (create_rgb ~r:0.1 ~g:0.2 ~b:0.3);
+        set_source ctx (create_rgb 0.1 0.2 0.3);
         let p = get_source ctx in
         (* This is a bit weird: add_color_stop_rgb returns silently, but puts the pattern in a state where all getters fail. *)
         add_color_stop_rgb p ~ofs:0.1 0.1 0.1 0.1;
@@ -436,10 +436,10 @@ end) = struct
           ))
         in
         [
-          make "create_rgb, get_linear_points" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_linear_points;
-          make "create_rgb, get_radial_circles" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_radial_circles;
-          make "create_rgb, get_color_stop_count" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) get_color_stop_count;
-          make "create_rgb, get_color_stop_rgba" (create_rgb ~r:0.1 ~g:0.2 ~b:0.3) (get_color_stop_rgba ~idx:0);
+          make "create_rgb, get_linear_points" (create_rgb 0.1 0.2 0.3) get_linear_points;
+          make "create_rgb, get_radial_circles" (create_rgb 0.1 0.2 0.3) get_radial_circles;
+          make "create_rgb, get_color_stop_count" (create_rgb 0.1 0.2 0.3) get_color_stop_count;
+          make "create_rgb, get_color_stop_rgba" (create_rgb 0.1 0.2 0.3) (get_color_stop_rgba ~idx:0);
           make "create_linear, get_rgba" (create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4.) get_rgba;
           make "create_linear, get_radial_circles" (create_linear ~x0:1. ~y0:2. ~x1:3. ~y1:4.) get_radial_circles;
           make "create_radial, get_rgba" (create_radial ~x0:1. ~y0:2. ~r0:3. ~x1:4. ~y1:5. ~r1:6.) get_rgba;

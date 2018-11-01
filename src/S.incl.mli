@@ -77,16 +77,16 @@ module Matrix: sig
   type t = matrix
 
   val init_identity: unit -> t
-  val init_translate: x:float -> y:float -> t
-  val init_scale: x:float -> y:float -> t
-  val init_rotate: angle:float -> t
-  val translate: t -> x:float -> y:float -> unit
-  val scale: t -> x:float -> y:float -> unit
-  val rotate: t -> angle:float -> unit
+  val init_translate: float -> float -> t
+  val init_scale: float -> float -> t
+  val init_rotate: float -> t
+  val translate: t -> float -> float -> unit
+  val scale: t -> float -> float -> unit
+  val rotate: t -> float -> unit
   val invert: t -> unit
   val multiply: t -> t -> t
   val transform_distance: t -> dx:float -> dy:float -> float * float
-  val transform_point: t -> x:float -> y:float -> float * float
+  val transform_point: t -> float -> float -> float * float
 end
 
 type text_extents = {
@@ -304,8 +304,8 @@ module Pattern: sig
   val add_color_stop_rgba: [> `Gradient] t -> ?ofs:float -> float -> float -> float -> float -> unit
   val get_color_stop_count: [> `Gradient] t -> int
   val get_color_stop_rgba: [> `Gradient] t -> idx:int -> float * float * float * float * float
-  val create_rgb: r:float -> g:float -> b:float -> [`Solid] t
-  val create_rgba: r:float -> g:float -> b:float -> a:float -> [`Solid] t
+  val create_rgb: float -> float -> float -> [`Solid] t
+  val create_rgba: float -> float -> float -> float -> [`Solid] t
   val get_rgba: [> `Solid] t -> float * float * float * float
   val create_linear: x0:float -> y0:float -> x1:float -> y1:float -> [`Linear | `Gradient] t
   val get_linear_points: [> `Linear | `Gradient] t -> float * float * float * float
@@ -325,8 +325,8 @@ val restore: context -> unit
   val get_target: context -> Surface.t
 end *)
 
-val set_source_rgb: context -> r:float -> g:float -> b:float -> unit
-val set_source_rgba: context -> r:float -> g:float -> b:float -> a:float -> unit
+val set_source_rgb: context -> float -> float -> float -> unit
+val set_source_rgba: context -> float -> float -> float -> float -> unit
 val set_source: context -> 'a Pattern.t -> unit
 val get_source: context -> Pattern.any
 
@@ -388,23 +388,23 @@ module Path: sig
   (* val of_array: path_data array -> t *)
 end
 
-val arc: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit
-val arc_negative: context -> x:float -> y:float -> r:float -> a1:float -> a2:float -> unit
-val curve_to: context -> x1:float -> y1:float -> x2:float -> y2:float -> x3:float -> y3:float -> unit
-val line_to: context -> x:float -> y:float -> unit
-val move_to: context -> x:float -> y:float -> unit
-val rectangle: context -> x:float -> y:float -> w:float -> h:float -> unit
-val rel_curve_to: context -> x1:float -> y1:float -> x2:float -> y2:float -> x3:float -> y3:float -> unit
-val rel_line_to: context -> x:float -> y:float -> unit
-val rel_move_to: context -> x:float -> y:float -> unit
-val translate: context -> x:float -> y:float -> unit
-val scale: context -> x:float -> y:float -> unit
-val rotate: context -> angle:float -> unit
+val arc: context -> float -> float -> r:float -> a1:float -> a2:float -> unit
+val arc_negative: context -> float -> float -> r:float -> a1:float -> a2:float -> unit
+val curve_to: context -> float -> float -> float -> float -> float -> float -> unit
+val line_to: context -> float -> float -> unit
+val move_to: context -> float -> float -> unit
+val rectangle: context -> float -> float -> w:float -> h:float -> unit
+val rel_curve_to: context -> float -> float -> float -> float -> float -> float -> unit
+val rel_line_to: context -> float -> float -> unit
+val rel_move_to: context -> float -> float -> unit
+val translate: context -> float -> float -> unit
+val scale: context -> float -> float -> unit
+val rotate: context -> float -> unit
 val transform: context -> Matrix.t -> unit
 val set_matrix: context -> Matrix.t -> unit
 val get_matrix: context -> Matrix.t
 val identity_matrix: context -> unit
-val user_to_device: context -> x:float -> y:float -> float * float
-val user_to_device_distance: context -> x:float -> y:float -> float * float
-val device_to_user: context -> x:float -> y:float -> float * float
-val device_to_user_distance: context -> x:float -> y:float -> float * float
+val user_to_device: context -> float -> float -> float * float
+val user_to_device_distance: context -> float -> float -> float * float
+val device_to_user: context -> float -> float -> float * float
+val device_to_user_distance: context -> float -> float -> float * float
