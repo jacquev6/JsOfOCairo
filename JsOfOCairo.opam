@@ -17,7 +17,7 @@ depends: [
   "js_of_ocaml-compiler" {build & >= "3.0" & < "4.0"}
   "js_of_ocaml-ppx" {build & >= "3.0" & < "4.0"}
   "js_of_ocaml" {>= "3.0" & < "4.0"}
-  "General" {with-test & >= "0.5.0"}
+  "General" {with-test & >= "0.6.0"}
   "cairo2" {with-test & >= "0.6" & < "0.7"}
   "conf-npm" {with-test}
 ]

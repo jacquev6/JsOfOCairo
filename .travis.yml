@@ -24,8 +24,8 @@ script:
   - dune build @runtest-full
 env:
   - OCAML_VERSION=4.02.3
-  - OCAML_VERSION=4.06.0
-  - OCAML_VERSION=4.06.0+flambda
+  - OCAML_VERSION=4.07.1
+  - OCAML_VERSION=4.07.1+flambda
 cache:
   directories:
   - $HOME/.opam
