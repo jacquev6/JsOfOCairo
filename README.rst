@@ -1,17 +1,30 @@
+.. GENI: intro
+.. GENERATED SECTION, MANUAL EDITS WILL BE LOST
+
 *JsOfOCairo* is an OCaml (4.02.3+) library to reuse Cairo-based drawing code in web browsers.
 It's an adapter, implementing (a reasonable subset of) the interface of `Cairo OCaml <https://github.com/Chris00/ocaml-cairo/>`_
 targeting HTML5 canvas elements as exposed to OCaml by `js_of_ocaml <https://ocsigen.org/js_of_ocaml/>`_ (3.0.0+).
 
+.. END OF GENERATED SECTION
+
+.. GENI: info
+.. GENERATED SECTION, MANUAL EDITS WILL BE LOST
+
 It's licensed under the `MIT license <http://choosealicense.com/licenses/mit/>`_.
-It's available on `OPAM <https://opam.ocaml.org/packages/JsOfOCairo/>`_.
+It's available on `OPAM <https://opam.ocaml.org/packages/JsOfOCairo>`_.
 Its `source code <https://github.com/jacquev6/JsOfOCairo>`_ is on GitHub.
+
+.. END OF GENERATED SECTION
 
 Here is `DrawGrammar <https://jacquev6.github.io/DrawGrammar/>`_, a real-life aplication of JsOfOCairo.
 
 There is no real documentation besides this README.rst file.
 See below what is implemented, what behaves differently from Cairo, and what is not implemented.
 
-Questions? Remarks? Bugs? Want to contribute? `Open an issue <https://github.com/jacquev6/JsOfOCairo/issues>`__!
+.. GENI: badges
+.. GENERATED SECTION, MANUAL EDITS WILL BE LOST
+
+Questions? Remarks? Bugs? Want to contribute? `Open an issue <https://github.com/jacquev6/JsOfOCairo/issues>`_!
 
 .. image:: https://img.shields.io/travis/jacquev6/JsOfOCairo/master.svg
     :target: https://travis-ci.org/jacquev6/JsOfOCairo
@@ -25,6 +38,7 @@ Questions? Remarks? Bugs? Want to contribute? `Open an issue <https://github.com
 .. image:: https://img.shields.io/github/stars/jacquev6/JsOfOCairo.svg
     :target: https://github.com/jacquev6/JsOfOCairo/stargazers
 
+.. END OF GENERATED SECTION
 Versions
 ========
 
@@ -119,7 +133,7 @@ What is implemented
 ===================
 
 See the `interface file (S.incl.ml) <https://github.com/jacquev6/JsOfOCairo/blob/master/src/S.incl.mli>`_.
-If a function is present, it should behave as described in the `Cairo OCaml Tutorial <http://cairo.forge.ocamlcore.org/tutorial/index.html>`__.
+If a function is present, it should behave as described in the `Cairo OCaml Tutorial <http://cairo.forge.ocamlcore.org/tutorial/index.html>`_.
 
 How to avoid pitfalls
 =====================
