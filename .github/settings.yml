@@ -5,6 +5,7 @@ repository:
   homepage: ""
   private: false
   has_issues: true
+  has_projects: false
   has_wiki: false
   default_branch: master
   allow_squash_merge: true
