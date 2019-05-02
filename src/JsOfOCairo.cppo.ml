@@ -21,7 +21,7 @@ let () = Printexc.register_printer (function
 )
 
 module Html = struct
-  type t = Dom_html.canvasRenderingContext2D Js.t
+  type t = Js_of_ocaml.Dom_html.canvasRenderingContext2D Js_of_ocaml.Js.t
 end
 
 module Local: sig
@@ -244,9 +244,9 @@ let arc_ ~dir context x y ~r ~a1 ~a2 =
   Local.set_start_point_if_none context.local (x +. r *. (cos a1), y +. r *. (sin a1));
   Local.set_current_point context.local (x +. r *. (cos a2), y +. r *. (sin a2))
 
-let arc = arc_ ~dir:Js._false
+let arc = arc_ ~dir:Js_of_ocaml.Js._false
 
-let arc_negative = arc_ ~dir:Js._true
+let arc_negative = arc_ ~dir:Js_of_ocaml.Js._true
 
 module Path = struct
   let get_current_point context =
@@ -274,7 +274,7 @@ let stroke context =
 let fill_preserve context =
   match Local.fill_rule context.local with
     | WINDING -> context.html##fill
-    | EVEN_ODD -> (Js.Unsafe.coerce context.html)##fill (Js.string "evenodd")
+    | EVEN_ODD -> (Js_of_ocaml.Js.Unsafe.coerce context.html)##fill (Js_of_ocaml.Js.string "evenodd")
 
 let fill context =
   fill_preserve context;
@@ -304,13 +304,13 @@ let get_line_width context =
   context.html##.lineWidth
 
 let set_dash context ?(ofs=0.) dashes =
-  let html = Js.Unsafe.coerce context.html in
+  let html = Js_of_ocaml.Js.Unsafe.coerce context.html in
   html##.lineDashOffset := ofs;
-  html##setLineDash (Js.array dashes)
+  html##setLineDash (Js_of_ocaml.Js.array dashes)
 
 let get_dash context =
-  let html = Js.Unsafe.coerce context.html in
-  (Js.to_array (html##getLineDash), html##.lineDashOffset)
+  let html = Js_of_ocaml.Js.Unsafe.coerce context.html in
+  (Js_of_ocaml.Js.to_array (html##getLineDash), html##.lineDashOffset)
 
 let set_fill_rule context fill_rule =
   Local.set_fill_rule context.local ~fill_rule
@@ -324,10 +324,10 @@ let set_line_cap context cap =
     | ROUND -> "round"
     | SQUARE -> "square"
   in
-  context.html##.lineCap := Js.string cap
+  context.html##.lineCap := Js_of_ocaml.Js.string cap
 
 let get_line_cap context =
-  match Js.to_string context.html##.lineCap with
+  match Js_of_ocaml.Js.to_string context.html##.lineCap with
     | "round" -> ROUND
     | "square" -> SQUARE
     | _ -> BUTT
@@ -338,10 +338,10 @@ let set_line_join context join =
     | JOIN_ROUND -> "round"
     | JOIN_BEVEL -> "bevel"
   in
-  context.html##.lineJoin := Js.string join
+  context.html##.lineJoin := Js_of_ocaml.Js.string join
 
 let get_line_join context =
-  match Js.to_string context.html##.lineJoin with
+  match Js_of_ocaml.Js.to_string context.html##.lineJoin with
     | "round" -> JOIN_ROUND
     | "bevel" -> JOIN_BEVEL
     | _ -> JOIN_MITER
@@ -369,10 +369,10 @@ let set_operator context operator =
     | DEST -> failwith "Unsupported operator DEST"
     | SATURATE -> failwith "Unsupported operator SATURATE"
   in
-  context.html##.globalCompositeOperation := Js.string operator
+  context.html##.globalCompositeOperation := Js_of_ocaml.Js.string operator
 
 let get_operator context =
-  match Js.to_string context.html##.globalCompositeOperation with
+  match Js_of_ocaml.Js.to_string context.html##.globalCompositeOperation with
     | "over" -> OVER (* Special case for node-canvas which seems to have a wrong default value *)
     | "add" -> ADD (* Special case for node-canvas *)
     | "source-over" -> OVER
@@ -390,7 +390,7 @@ let get_operator context =
 
 let set_source context pattern =
   let convert x = string_of_int (int_of_float (255.0 *. x)) in
-  let convert_rgba r g b a = Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
+  let convert_rgba r g b a = Js_of_ocaml.Js.string (Printf.sprintf "rgba(%s, %s, %s, %f)" (convert r) (convert g) (convert b) a) in
   let source = !pattern in
   Local.set_source context.local ~source;
   match source with
@@ -440,7 +440,7 @@ let _set_font context ({slant; weight; size; family} as font) =
     | Bold -> "bold"
   in
   let font = Printf.sprintf "%s %s %npx %s" font_style font_weight (int_of_float size) family in
-  context.html##.font := Js.string font
+  context.html##.font := Js_of_ocaml.Js.string font
 
 let select_font_face context ?(slant=Upright) ?(weight=Normal) family =
   _set_font context {(Local.font context.local) with slant; weight; family}
@@ -450,9 +450,9 @@ let set_font_size context size =
 
 let show_text context s =
   let (x, y) = Path.get_current_point context
-  and w = (context.html##measureText (Js.string s))##.width in
+  and w = (context.html##measureText (Js_of_ocaml.Js.string s))##.width in
   Local.set_current_point context.local (x +. w, y);
-  context.html##fillText (Js.string s) x y
+  context.html##fillText (Js_of_ocaml.Js.string s) x y
 
 let font_extents context =
   let {size; _} = (Local.font context.local) in
@@ -466,7 +466,7 @@ let font_extents context =
 
 let text_extents context s =
   let {size; _} = (Local.font context.local)
-  and w = (context.html##measureText (Js.string s))##.width in
+  and w = (context.html##measureText (Js_of_ocaml.Js.string s))##.width in
   {
     x_bearing = 0.;
     y_bearing = 0.;
@@ -477,7 +477,7 @@ let text_extents context s =
   }
 
 let create canvas =
-  let html = canvas##getContext Dom_html._2d_
+  let html = canvas##getContext Js_of_ocaml.Dom_html._2d_
   and local = Local.create () in
   let context = {
     html;

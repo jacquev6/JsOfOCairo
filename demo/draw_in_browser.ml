@@ -2,6 +2,6 @@
 
 module Drawings = Drawings.Make(JsOfOCairo)
 
-let () = Js.export "draw" (fun canvas ->
+let () = Js_of_ocaml.Js.export "draw" (fun canvas ->
   Drawings.draw (JsOfOCairo.create canvas)
 )

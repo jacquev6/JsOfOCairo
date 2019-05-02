@@ -89,7 +89,7 @@ File ``draw_in_browser.ml``::
 
     module Drawings = Drawings.Make(JsOfOCairo)
 
-    let () = Js.export "draw" (fun canvas ->
+    let () = Js_of_ocaml.Js.export "draw" (fun canvas ->
       Drawings.draw (JsOfOCairo.create canvas)
     )
 

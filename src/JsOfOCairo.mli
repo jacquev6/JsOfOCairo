@@ -4,4 +4,4 @@ module type S = CairoMock.S
 
 include S
 
-val create: Dom_html.canvasElement Js.t -> context
+val create: Js_of_ocaml.Dom_html.canvasElement Js_of_ocaml.Js.t -> context
